@@ -1,0 +1,31 @@
+[alias]
+    # Status court
+    s = status -s
+    # Historique beau
+    hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+    # Voir les fichiers modifiés
+    what = diff --name-only
+    # Annuler tous les changements
+    undo = reset --hard HEAD
+    # Voir les branches
+    branches = branch -a
+
+[user]
+    name = Ton Nom
+    email = ton-email@example.com
+
+[color]
+    ui = auto
+    diff = auto
+    status = auto
+    branch = auto
+    interactive = auto
+
+[push]
+    default = simple
+
+[pull]
+    rebase = false
+
+[init]
+    defaultBranch = main

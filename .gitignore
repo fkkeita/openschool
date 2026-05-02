@@ -1,52 +1,27 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
-
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+# Build
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/
 
 # Node
-/node_modules
+node_modules/
 npm-debug.log
 yarn-error.log
 
-# IDEs and editors
+# IDEs
 .idea/
-.project
-.classpath
-.c9/
-*.launch
+.vscode/
 .settings/
 *.sublime-workspace
 
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/
-
-# Miscellaneous
-.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Environment
+# Environment (sensitive)
 .env
 .env.local
 .env.*.local
 
-# Build
+# Build outputs
 *.js.map
 *.d.ts.map
 
@@ -54,10 +29,13 @@ Thumbs.db
 *.log
 logs/
 
-# OS
-.DS_Store
-Thumbs.db
-
 # Test
 coverage/
 .nyc_output/
+
+# Temp/dev files (not needed in repo)
+*.txt
+!README.md
+replace-*.js
+fix-syntax.js
+componentReact*.txt
