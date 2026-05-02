@@ -1,0 +1,405 @@
+<div class="eleves-layout">
+    <!-- Sidebar existant -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Contenu principal -->
+    <main class="eleves-main">
+        <div class="container">
+            <!-- =================== PAGE D'ACCUEIL =================== -->
+            <section *ngIf="vue === 'accueil'" id="accueilPage">
+                <div class="header">
+                    <h1><i class="fas fa-school"></i> Plan de Travail - Gestion des Étudiants</h1>
+                    <div class="user-info">
+                        <span>École :</span>
+                        <strong>École Secondaire Modèle</strong>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text"
+                               [ngModel]="rechercheAccueil"
+                               (ngModelChange)="onRechercheAccueilChange($event)"
+                               placeholder="Rechercher un étudiant, une classe, un professeur...">
+                    </div>
+                    <!-- Bouton global : donne accès à TOUTES les classes -->
+                    <button class="btn-ajouter" type="button" (click)="ouvrirModalAjout(true)"
+                            style="background: white; color: var(--color-primary); border: 2px solid var(--color-primary); padding: 10px 22px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-user-plus"></i> Ajouter un élève
+                    </button>
+                    <button class="filter-btn" type="button" (click)="infoFiltreAvance()">
+                        <i class="fas fa-filter"></i>
+                        Filtre Avancé
+                    </button>
+                </div>
+
+                <div class="main-content" id="cyclesContainer">
+                    <div class="cycle-section"
+                         *ngFor="let cycle of cycles"
+                         [id]="cycle.nom"
+                         [class.expanded]="cycleOuvert[cycle.nom]">
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle" type="button">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card"
+                                     *ngFor="let annee of anneesVisibles(cycle)"
+                                     [attr.data-year]="annee.nom">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+                                        <div class="year-stats">
+                                            <ng-container *ngIf="calculerStatsAnnee(annee.nom) as stats">
+                                                <div class="stat-item">
+                                                    <div class="stat-value">{{ stats.totalEleves }}</div>
+                                                    <div class="stat-label">ÉLÈVES</div>
+                                                </div>
+                                                <div class="stat-item class-stat-trigger">
+                                                    <div class="stat-value">
+                                                        {{ stats.nbClasses }} <i class="fas fa-chevron-down"></i>
+                                                    </div>
+                                                    <div class="stat-label">CLASSES</div>
+                                                    <div class="class-dropdown">
+                                                        <div class="class-item"
+                                                             *ngFor="let classe of recupererClassesParAnnee(annee.nom)"
+                                                             (click)="ouvrirModalClasse(classe); $event.stopPropagation();">
+                                                            <span class="class-name">{{ classe }}</span>
+                                                            <span class="class-count">{{ effectifClasse(classe) }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <div class="stat-value">{{ stats.presence }}</div>
+                                                    <div class="stat-label">PRÉSENCE</div>
+                                                </div>
+                                            </ng-container>
+                                        </div>
+                                        <p class="year-description">{{ annee.description }}</p>
+                                        <div class="year-actions">
+                                            <button class="action-btn primary"
+                                                    type="button"
+                                                    (click)="ouvrirModalAnnee(annee.nom); $event.stopPropagation();">
+                                                Voir les élèves
+                                            </button>
+                                            <button class="action-btn secondary gestion-btn"
+                                                    type="button"
+                                                    (click)="ouvrirGestion(annee.nom); $event.stopPropagation();">
+                                                Gérer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p><i class="fas fa-code"></i> Application de Gestion Scolaire - Version 3.0 | © 2025 Tous droits réservés</p>
+                    <p><i class="fas fa-sync-alt"></i> Cycles complets : 1er (1-6), 2ème (7-9), Lycée (10-12)</p>
+                </div>
+            </section>
+
+            <!-- =================== PAGE DE GESTION =================== -->
+            <section *ngIf="vue === 'gestion'" id="gestionPage">
+                <div class="gestion-header">
+                    <h2><i class="fas fa-users-cog"></i> Gestion des classes et élèves</h2>
+                    <button class="btn-ajouter" type="button" (click)="ouvrirModalAjout()">
+                        <i class="fas fa-user-plus"></i> Ajouter un élève
+                    </button>
+                    <button class="btn-retour" type="button" (click)="revenirAccueil()">
+                        <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                    </button>
+                </div>
+
+                <div class="gestion-container">
+                    <!-- Colonne gauche : classes -->
+                    <div class="classes-panel">
+                        <h3><i class="fas fa-chalkboard"></i> Classes (<span>{{ classesFiltrees.length }}</span>)</h3>
+                        <div class="recherche-classe">
+                            <i class="fas fa-search"></i>
+                            <input type="text"
+                                   [(ngModel)]="rechercheClasse"
+                                   placeholder="Filtrer les classes...">
+                        </div>
+                        <div class="liste-classes">
+                            <div class="classe-item"
+                                 *ngFor="let classe of classesFiltrees"
+                                 [class.active]="classeActive === classe"
+                                 (click)="selectionnerClasse(classe)">
+                                <span class="classe-nom">{{ classe }}</span>
+                                <span class="classe-effectif">{{ effectifClasse(classe) }} élève(s)</span>
+                            </div>
+                            <div *ngIf="classesFiltrees.length === 0" class="no-selection" style="padding:20px">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Aucune classe trouvée</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colonne droite : élèves -->
+                    <div class="eleves-panel">
+                        <h3>
+                            <span><i class="fas fa-user-graduate"></i> Élèves de <span class="classe-titre">{{ classeActive || 'aucune classe' }}</span></span>
+                            <span class="eleves-header-right">
+                                <span class="recherche-eleve">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           [(ngModel)]="rechercheEleve"
+                                           placeholder="Rechercher un élève...">
+                                </span>
+                            </span>
+                        </h3>
+
+                        <div class="liste-eleves" *ngIf="classeActive; else inviteSelection">
+                            <div *ngIf="elevesFiltres.length === 0" class="no-selection">
+                                <i class="fas fa-user-slash"></i>
+                                <p>Aucun élève trouvé</p>
+                            </div>
+
+                            <div class="eleve-card"
+                                 *ngFor="let eleve of elevesFiltres; trackBy: trackByEleveId"
+                                 [class.expanded]="estEleveOuvert(eleve.id)">
+                                <div class="eleve-header" (click)="basculerEleve(eleve.id)">
+                                    <div class="eleve-info-principale">
+                                        <div class="eleve-avatar">{{ eleve.prenom[0] }}{{ eleve.nom[0] }}</div>
+                                        <div>
+                                            <div class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</div>
+                                            <div class="eleve-detail"><i class="fas fa-id-card"></i> Élève • {{ eleve.presence }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="expand-icon"><i class="fas fa-chevron-down"></i></div>
+                                </div>
+                                <div class="eleve-details" [style.maxHeight]="estEleveOuvert(eleve.id) ? '400px' : '0'">
+                                    <div class="details-content">
+                                        <div class="detail-item"><i class="fas fa-envelope"></i><span>Email: <strong>{{ eleve.email }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-phone"></i><span>Tél: <strong>{{ eleve.telephone }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-user-tie"></i><span>Parent: <strong>{{ eleve.parent }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-chart-line"></i><span>Moyenne: <strong>--/20</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-calculator"></i><span>Maths: <strong>{{ eleve.notes.maths }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-book"></i><span>Français: <strong>{{ eleve.notes.francais }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-language"></i><span>Anglais: <strong>{{ eleve.notes.anglais }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-calendar-check"></i><span>Présence: <strong class="badge" [class.present]="eleve.presence === 'Présent'" [class.absent]="eleve.presence === 'Absent'">{{ eleve.presence }}</strong></span></div>
+                                        <div class="eleve-actions">
+                                            <button class="btn-action modifier" type="button" (click)="ouvrirModalEdition(eleve, classeActive!); $event.stopPropagation();"><i class="fas fa-edit"></i> Modifier</button>
+                                            <button class="btn-action supprimer" type="button" (click)="supprimerEleve(eleve.id); $event.stopPropagation();"><i class="fas fa-trash"></i> Supprimer</button>
+                                            <button class="btn-action notes" type="button" (click)="voirNotes(eleve); $event.stopPropagation();"><i class="fas fa-star"></i> Notes</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ng-template #inviteSelection>
+                            <div class="liste-eleves">
+                                <div class="no-selection">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <p>Sélectionnez une classe à gauche pour voir ses élèves</p>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- =================== MODALE AJOUT / ÉDITION =================== -->
+        <div class="modal-overlay" *ngIf="afficherModalEleve" (click)="afficherModalEleve = false">
+            <div class="modal-container" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-graduate"></i> {{ modeEdition ? 'Modifier un élève' : 'Ajouter un élève' }}</h3>
+                    <button class="modal-close" type="button" (click)="afficherModalEleve = false"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="timeline">
+                        <div class="timeline-step" [class.active]="etapeCourante === 1" (click)="allerEtape(1)">
+                            <div class="step-number">1</div>
+                            <div class="step-info"><h4>Informations personnelles</h4><p>Nom, prénom, photo...</p></div>
+                        </div>
+                        <div class="timeline-step" [class.active]="etapeCourante === 2" (click)="allerEtape(2)">
+                            <div class="step-number">2</div>
+                            <div class="step-info"><h4>Tuteur</h4><p>Coordonnées du responsable</p></div>
+                        </div>
+                        <div class="timeline-step" [class.active]="etapeCourante === 3" (click)="allerEtape(3)">
+                            <div class="step-number">3</div>
+                            <div class="step-info"><h4>Scolarité</h4><p>Classe, date d'inscription</p></div>
+                        </div>
+                        <div class="timeline-step" [class.active]="etapeCourante === 4" (click)="allerEtape(4)">
+                            <div class="step-number">4</div>
+                            <div class="step-info"><h4>Paiement</h4><p>Frais, mensualités</p></div>
+                        </div>
+                        <div class="timeline-step" [class.active]="etapeCourante === 5" (click)="allerEtape(5)">
+                            <div class="step-number">5</div>
+                            <div class="step-info"><h4>Calcul automatique</h4><p>Récapitulatif</p></div>
+                        </div>
+                    </div>
+
+                    <div class="form-container">
+                        <!-- Étape 1 -->
+                        <div class="form-step" [class.active]="etapeCourante === 1">
+                            <div class="form-group"><label>Prénom *</label><input type="text" [(ngModel)]="formData.prenom" class="form-control" placeholder="Prénom"></div>
+                            <div class="form-group"><label>Nom *</label><input type="text" [(ngModel)]="formData.nom" class="form-control" placeholder="Nom"></div>
+                            <div class="form-group"><label>Date de naissance</label><input type="date" [(ngModel)]="formData.dateNaiss" class="form-control"></div>
+                            <div class="form-group"><label>Lieu de naissance</label><input type="text" [(ngModel)]="formData.lieuNaiss" class="form-control" placeholder="Ville"></div>
+                            <div class="form-group"><label>Sexe</label><select [(ngModel)]="formData.sexe" class="form-control"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+                            <div class="form-group"><label>Nationalité</label><input type="text" [(ngModel)]="formData.nationalite" class="form-control" value="Malienne"></div>
+                            <div class="form-group"><label>Photo</label><div class="photo-upload"><div class="photo-preview"><i class="fas fa-camera"></i></div><input type="file" accept="image/*"></div></div>
+                        </div>
+
+                        <!-- Étape 2 -->
+                        <div class="form-step" [class.active]="etapeCourante === 2">
+                            <div class="form-group"><label>Nom du tuteur</label><input type="text" [(ngModel)]="formData.tuteurNom" class="form-control" placeholder="Nom"></div>
+                            <div class="form-group"><label>Prénom du tuteur</label><input type="text" [(ngModel)]="formData.tuteurPrenom" class="form-control" placeholder="Prénom"></div>
+                            <div class="form-group"><label>Téléphone</label><input type="tel" [(ngModel)]="formData.tuteurTel" class="form-control" placeholder="06 12 34 56 78"></div>
+                            <div class="form-group"><label>Email</label><input type="email" [(ngModel)]="formData.tuteurEmail" class="form-control" placeholder="parent@exemple.fr"></div>
+                            <div class="form-group"><label>Adresse</label><textarea [(ngModel)]="formData.tuteurAdresse" class="form-control" rows="2" placeholder="Adresse complète"></textarea></div>
+                        </div>
+
+                        <!-- Étape 3 : Scolarité -->
+                        <div class="form-step" [class.active]="etapeCourante === 3">
+                            <div class="form-group">
+                                <label>Classe *</label>
+                                <!-- classesDisponiblesForm = toutes classes (global) ou classes de l'année (contextuel) -->
+                                <select [(ngModel)]="formData.classe" class="form-control">
+                                    <option value="">-- Choisir une classe --</option>
+                                    <option *ngFor="let classe of classesDisponiblesForm" [value]="classe">{{ classe }}</option>
+                                </select>
+                                <small *ngIf="!ajoutGlobal && filtreAnneeCourante" style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                                    <i class="fas fa-info-circle"></i> Seules les classes de <strong>{{ filtreAnneeCourante }}</strong> sont disponibles.
+                                </small>
+                            </div>
+                            <div class="form-group"><label>Date d'inscription</label><input type="date" [(ngModel)]="formData.dateInscription" class="form-control"></div>
+                            <div class="form-group"><label>Matricule (automatique)</label><input type="text" [(ngModel)]="formData.matricule" class="form-control" readonly></div>
+                        </div>
+
+                        <!-- Étape 4 -->
+                        <div class="form-step" [class.active]="etapeCourante === 4">
+                            <div class="form-group"><label>Frais d'inscription (€)</label><input type="number" [(ngModel)]="formData.fraisInscription" class="form-control"></div>
+                            <div class="form-group"><label>Mensualité (€)</label><input type="number" [(ngModel)]="formData.mensualite" class="form-control"></div>
+                            <div class="form-group"><label>Mode de paiement</label><select [(ngModel)]="formData.modePaiement" class="form-control"><option value="especes">Espèces</option><option value="cheque">Chèque</option><option value="virement">Virement</option><option value="prelevement">Prélèvement</option></select></div>
+                            <div class="form-group"><label>Échéances</label><input type="text" [(ngModel)]="formData.echeances" class="form-control" placeholder="Ex: 10 de chaque mois"></div>
+                        </div>
+
+                        <!-- Étape 5 -->
+                        <div class="form-step" [class.active]="etapeCourante === 5">
+                            <div class="form-group"><label>Total annuel (frais + 12 mensualités)</label><input type="text" [(ngModel)]="formData.totalAnnuel" class="form-control" readonly></div>
+                            <div class="form-group"><label>Reste à payer (simulé)</label><input type="text" [(ngModel)]="formData.resteAPayer" class="form-control" readonly></div>
+                            <div class="form-group"><label>Statut</label><input type="text" [(ngModel)]="formData.statutPaiement" class="form-control" readonly></div>
+                            <p style="color: #64748b; margin-top: 20px;"><i class="fas fa-info-circle"></i> Les calculs sont automatiques.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-prev" type="button" [disabled]="etapeCourante === 1" (click)="allerEtape(etapeCourante - 1)"><i class="fas fa-arrow-left"></i> Précédent</button>
+                    <div>
+                        <button class="btn-next" type="button" *ngIf="etapeCourante < 5" (click)="allerEtape(etapeCourante + 1)">Suivant <i class="fas fa-arrow-right"></i></button>
+                        <button class="btn-submit" type="button" *ngIf="etapeCourante === 5" (click)="enregistrerEleve()">Enregistrer <i class="fas fa-check"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== MODALE LISTE ÉLÈVES PAR ANNÉE =================== -->
+        <div class="modal-overlay" *ngIf="afficherModalAnnee" (click)="fermerToutesModales()">
+            <div class="modal-container" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3><i class="fas fa-users"></i> Liste des élèves - <span>{{ modalAnnee?.annee }}</span></h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-print" type="button" (click)="imprimer()"><i class="fas fa-print"></i> Imprimer</button>
+                        <button class="modal-close" type="button" (click)="fermerToutesModales()"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="liste-eleves-annee">
+                    <div class="classe-groupe" *ngFor="let bloc of modalAnnee?.classes">
+                        <div class="classe-titre-modal">
+                            {{ bloc.nom }}
+                            <span>{{ bloc.eleves.length }} élève(s)</span>
+                        </div>
+                        <table class="eleves-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Parent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let e of bloc.eleves">
+                                    <td>{{ e.nom }}</td>
+                                    <td>{{ e.prenom }}</td>
+                                    <td>{{ e.email }}</td>
+                                    <td>{{ e.telephone }}</td>
+                                    <td>{{ e.parent }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== MODALE LISTE ÉLÈVES D'UNE CLASSE =================== -->
+        <div class="modal-overlay" *ngIf="afficherModalClasse" (click)="fermerToutesModales()">
+            <div class="modal-container" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3><i class="fas fa-users"></i> Liste des élèves - <span>{{ modalClasse?.classe }}</span></h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-print" type="button" (click)="imprimer()"><i class="fas fa-print"></i> Imprimer</button>
+                        <button class="modal-close" type="button" (click)="fermerToutesModales()"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="liste-eleves-annee">
+                    <div class="classe-groupe">
+                        <div class="classe-titre-modal">
+                            {{ modalClasse?.classe }}
+                            <span>{{ modalClasse?.eleves?.length ?? 0 }} élève(s)</span>
+                        </div>
+                        <table class="eleves-table">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Parent/Tuteur</th>
+                                    <th>Présence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let e of modalClasse?.eleves; let i = index">
+                                    <td>{{ i + 1 }}</td>
+                                    <td>{{ e.nom }}</td>
+                                    <td>{{ e.prenom }}</td>
+                                    <td>{{ e.email }}</td>
+                                    <td>{{ e.telephone }}</td>
+                                    <td>{{ e.parent }}</td>
+                                    <td><span class="badge" [class.present]="e.presence === 'Présent'" [class.absent]="e.presence === 'Absent'">{{ e.presence }}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

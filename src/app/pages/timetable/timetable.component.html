@@ -1,0 +1,483 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="eleves-main">
+
+        <!-- ══════════════════════════════════════════════
+             PAGE ACCUEIL — Accordéon cycles + cartes
+        ═══════════════════════════════════════════════ -->
+        <ng-container *ngIf="mode === 'home'">
+            <div class="container">
+
+                <div class="header">
+                    <div class="header-left">
+                        <h1><i class="fas fa-calendar-alt"></i> Emploi du Temps</h1>
+                        <p class="header-sub">École El Farouk de Bamako — Gestion des plannings</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn-add-global" type="button" (click)="showVoirModal = true; voirAnnee = null">
+                            <i class="fas fa-eye"></i> Voir un emploi du temps
+                        </button>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [(ngModel)]="rechercheAccueil"
+                            placeholder="Rechercher une année, un cycle...">
+                    </div>
+                </div>
+
+                <div class="main-content">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [class.expanded]="cycleOuvert[cycle.nom]">
+
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle" type="button">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+
+                                        <div class="year-stats" *ngIf="statsPourAnnee(annee.nom) as stats">
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbEnseignants }}</div>
+                                                <div class="stat-label">ENSEIGNANTS</div>
+                                            </div>
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbClasses }}
+                                                    <i class="fas fa-chevron-down" style="font-size:11px"></i>
+                                                </div>
+                                                <div class="stat-label">CLASSES</div>
+                                                <div class="class-dropdown">
+                                                    <div class="class-item" *ngFor="let cl of stats.classes"
+                                                        (click)="selectClasseGerer(cl); selectedAnnee = annee; $event.stopPropagation()">
+                                                        <span class="class-name">{{ cl }}</span>
+                                                        <i class="fas fa-edit" style="font-size:11px;color:#94a3b8"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbMatieres }}</div>
+                                                <div class="stat-label">MATIÈRES</div>
+                                            </div>
+                                        </div>
+
+                                        <p class="year-description">{{ annee.description }}</p>
+
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" type="button"
+                                                (click)="ouvrirVoir(annee)">
+                                                <i class="fas fa-eye"></i> Voir l'emploi du temps
+                                            </button>
+                                            <button class="action-btn secondary" type="button"
+                                                (click)="ouvrirGerer(annee)">
+                                                <i class="fas fa-edit"></i> Gérer
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- ══════════════════════════════════════════════
+             PICKER CLASSE (GÉRER)
+        ═══════════════════════════════════════════════ -->
+        <ng-container *ngIf="mode === 'gerer-picker'">
+            <div class="container">
+                <div class="gestion-header">
+                    <h2><i class="fas fa-edit"></i> Gérer — {{ selectedAnnee?.nom }}</h2>
+                    <button class="btn-retour" type="button" (click)="retourAccueil()">
+                        <i class="fas fa-arrow-left"></i> Retour
+                    </button>
+                </div>
+                <div class="picker-grid">
+                    <p class="picker-intro">Sélectionnez la classe à planifier :</p>
+                    <div class="classes-grid">
+                        <div class="class-picker-btn" *ngFor="let cl of getClassesAnnee(selectedAnnee)"
+                            (click)="selectClasseGerer(cl)">
+                            <i class="fas fa-users"></i>
+                            <span>{{ cl }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- ══════════════════════════════════════════════
+             ÉDITEUR D'EMPLOI DU TEMPS (GÉRER)
+        ═══════════════════════════════════════════════ -->
+        <ng-container *ngIf="mode === 'gerer'">
+            <div class="container">
+                <div id="gestionPage">
+
+                    <div class="gestion-header">
+                        <div>
+                            <h2><i class="fas fa-calendar-alt"></i> Emploi du temps — {{ selectedClasse }}</h2>
+                            <p style="font-size:14px;opacity:0.8;margin-top:4px">Édition du planning hebdomadaire</p>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center">
+                            <button class="btn-retour" type="button" (click)="downloadPDF()" title="Télécharger en PDF">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="btn-retour" type="button" (click)="retourAccueil()">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation semaine -->
+                    <div class="week-nav">
+                        <button class="action-btn secondary" type="button" (click)="previousWeek()">
+                            <i class="fas fa-chevron-left"></i> Semaine précédente
+                        </button>
+                        <span class="week-range">
+                            Semaine du {{ weekDates[0] | date:'dd/MM' }} au {{ weekDates[weekDates.length-1] |
+                            date:'dd/MM/yyyy' }}
+                        </span>
+                        <button class="action-btn secondary" type="button" (click)="nextWeek()">
+                            Semaine suivante <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <input type="date" class="form-control date-pick" [ngModel]="selectedDateStr"
+                            (change)="onDateSelected($event)">
+                    </div>
+
+                    <!-- Actions : sauvegarde, réinitialisation, configuration des horaires, toggle samedi -->
+                    <div class="save-bar">
+                        <button class="action-btn secondary" type="button" (click)="resetCurrentWeek()">
+                            <i class="fas fa-undo-alt"></i> Réinitialiser
+                        </button>
+                        <button class="action-btn primary" type="button" (click)="saveCurrentWeek()">
+                            <i class="fas fa-save"></i> Sauvegarder
+                        </button>
+                        <button class="action-btn secondary" type="button" (click)="openSlotConfig()">
+                            <i class="fas fa-clock"></i> Configurer les horaires
+                        </button>
+                        <!-- Toggle samedi corrigé (un seul clic) -->
+                        <label class="toggle-samedi">
+                            <input type="checkbox" [checked]="includeSamedi" (change)="onToggleSamedi($event)">
+                            <span class="toggle-label">Samedi</span>
+                        </label>
+                    </div>
+
+                    <!-- Tableau éditeur avec sub-slots -->
+                    <div class="timetable-wrapper" id="timetableContent">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="th-horaire">Horaires</th>
+                                    <th *ngFor="let day of visibleDays; let i = index" class="th-day">
+                                        {{ day }}<br>
+                                        <span class="th-date">{{ weekDates[i] | date:'dd/MM' }}</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ng-container *ngFor="let slot of customSlots">
+                                    <tr *ngIf="slot.isPause" class="pause-row">
+                                        <th class="td-slot pause-slot">
+                                            {{ slot.name || 'Pause' }}<br>
+                                            <span style="font-size:11px;font-weight:400">
+                                                {{ slot.startTime }} – {{ slot.endTime }}
+                                            </span>
+                                        </th>
+                                        <td *ngFor="let d of visibleDays; let dIdx = index" class="td-cell pause-cell">
+                                            <div class="pause-label">{{ slot.name || 'Pause' }}</div>
+                                        </td>
+                                    </tr>
+
+                                    <tr *ngIf="!slot.isPause">
+                                        <th class="td-slot">
+                                            {{ slot.startTime }} – {{ slot.endTime }}
+                                        </th>
+                                        <td *ngFor="let d of visibleDays; let dIdx = index" class="td-cell">
+                                            <div class="subslots-container">
+                                                <div *ngFor="let sub of currentTimetable[slot.id][dIdx].subSlots; let si = index"
+                                                    class="subslot-editor">
+                                                    <div class="subslot-time">
+                                                        {{ sub.startTime }} – {{ sub.endTime }}
+                                                        <button
+                                                            *ngIf="currentTimetable[slot.id][dIdx].subSlots.length > 1"
+                                                            class="icon-btn-xs danger" type="button"
+                                                            (click)="removeSubSlot(slot.id, dIdx, si)"
+                                                            title="Supprimer ce sous-créneau">
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                    <select class="form-control cell-input" [ngModel]="sub.subject"
+                                                        (ngModelChange)="onSubjectChange(slot.id, dIdx, si, $event)">
+                                                        <option value="">-- Matière --</option>
+                                                        <option *ngFor="let m of getMatieresClasse()" [value]="m">{{ m
+                                                            }}</option>
+                                                    </select>
+                                                    <select class="form-control cell-input" [ngModel]="sub.teacherId"
+                                                        (ngModelChange)="onTeacherChange(slot.id, dIdx, si, $event)">
+                                                        <option [ngValue]="null">-- Enseignant --</option>
+                                                        <option *ngFor="let t of getEnseignantsPourMatiere(sub.subject)"
+                                                            [ngValue]="t.id">
+                                                            {{ t.prenom }} {{ t.nom }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <button class="btn-split" type="button"
+                                                    (click)="splitSlot(slot.id, dIdx)" title="Scinder en 2 cours">
+                                                    ✂️ Scinder
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-container>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- ══════════════════════════════════════════════
+             VUE LECTURE SEULE
+        ═══════════════════════════════════════════════ -->
+        <ng-container *ngIf="mode === 'voir'">
+            <div class="container">
+                <div id="gestionPage">
+
+                    <div class="gestion-header">
+                        <div>
+                            <h2><i class="fas fa-eye"></i> Emploi du temps — {{ selectedClasse }}</h2>
+                            <p style="font-size:14px;opacity:0.8;margin-top:4px">Vue lecture seule</p>
+                        </div>
+                        <div style="display:flex;gap:10px">
+                            <button class="btn-ajouter" type="button" (click)="downloadPDF()">
+                                <i class="fas fa-file-pdf"></i> Télécharger PDF
+                            </button>
+                            <button class="btn-retour" type="button" (click)="retourAccueil()">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </button>
+                            <button class="btn-ajouter" type="button" (click)="mode = 'gerer'; loadWeekData()">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="week-nav">
+                        <button class="action-btn secondary" type="button" (click)="previousWeek()">
+                            <i class="fas fa-chevron-left"></i> Précédente
+                        </button>
+                        <span class="week-range">
+                            Semaine du {{ weekDates[0] | date:'dd/MM' }} au {{ weekDates[weekDates.length-1] |
+                            date:'dd/MM/yyyy' }}
+                        </span>
+                        <button class="action-btn secondary" type="button" (click)="nextWeek()">
+                            Suivante <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="timetable-wrapper" id="timetableContent">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="th-horaire">Horaires</th>
+                                    <th *ngFor="let day of visibleDays; let i = index" class="th-day">
+                                        {{ day }}<br>
+                                        <span class="th-date">{{ weekDates[i] | date:'dd/MM' }}</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ng-container *ngFor="let slot of customSlots">
+                                    <tr *ngIf="slot.isPause" class="pause-row">
+                                        <th class="td-slot pause-slot">
+                                            {{ slot.name }}<br>
+                                            <span style="font-size:11px;font-weight:400">
+                                                {{ slot.startTime }} – {{ slot.endTime }}
+                                            </span>
+                                        </th>
+                                        <td *ngFor="let d of visibleDays" class="td-cell pause-cell">
+                                            <div class="pause-label">{{ slot.name }}</div>
+                                        </td>
+                                    </tr>
+
+                                    <tr *ngIf="!slot.isPause">
+                                        <th class="td-slot">{{ slot.startTime }} – {{ slot.endTime }}</th>
+                                        <td *ngFor="let d of visibleDays; let dIdx = index" class="td-cell">
+                                            <div *ngFor="let sub of currentTimetable[slot.id][dIdx].subSlots"
+                                                class="cell-readonly" [class.cell-filled]="sub.subject">
+                                                <ng-container *ngIf="sub.subject; else emptyCell">
+                                                    <span class="cell-time">{{ sub.startTime }}–{{ sub.endTime }}</span>
+                                                    <span class="cell-subject">{{ sub.subject }}</span>
+                                                    <span class="cell-teacher" *ngIf="sub.teacherId">
+                                                        <i class="fas fa-user-tie"></i>
+                                                        {{ nomEnseignant(sub.teacherId) }}
+                                                    </span>
+                                                </ng-container>
+                                                <ng-template #emptyCell>
+                                                    <span class="cell-empty">—</span>
+                                                </ng-template>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-container>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- ══════════════════════════════════════════════
+             POPUP — Choisir une classe pour "Voir"
+        ═══════════════════════════════════════════════ -->
+        <div class="modal-overlay" *ngIf="showVoirModal" (click)="showVoirModal = false">
+            <div class="modal-container voir-modal" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-eye"></i>
+                        Voir l'emploi du temps
+                        <span *ngIf="voirAnnee"> — {{ voirAnnee.nom }}</span>
+                    </h3>
+                    <button class="modal-close" type="button" (click)="showVoirModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding:20px">
+
+                    <ng-container *ngIf="!voirAnnee">
+                        <p style="color:#64748b;margin-bottom:20px">
+                            Choisissez une année puis une classe pour consulter l'emploi du temps :
+                        </p>
+                        <div *ngFor="let cycle of cycles" style="margin-bottom:20px">
+                            <h4
+                                style="font-size:13px;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;letter-spacing:1px">
+                                {{ cycle.nom }}
+                            </h4>
+                            <div *ngFor="let annee of cycle.annees" style="margin-bottom:12px">
+                                <p style="font-weight:700;color:#2c3e50;font-size:14px;margin-bottom:6px">{{ annee.nom
+                                    }}</p>
+                                <div class="classes-grid-voir">
+                                    <div class="class-voir-btn" *ngFor="let cl of getClassesAnnee(annee)"
+                                        (click)="selectClasseVoir(cl)">
+                                        <i class="fas fa-users"></i> {{ cl }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <ng-container *ngIf="voirAnnee">
+                        <p style="color:#64748b;margin-bottom:20px">
+                            Choisissez une classe de <strong>{{ voirAnnee.nom }}</strong> :
+                        </p>
+                        <div class="classes-grid-voir">
+                            <div class="class-voir-btn" *ngFor="let cl of getClassesAnnee(voirAnnee)"
+                                (click)="selectClasseVoir(cl)">
+                                <i class="fas fa-users"></i> {{ cl }}
+                            </div>
+                        </div>
+                        <button class="back-link" type="button" (click)="voirAnnee = null" style="margin-top:16px">
+                            <i class="fas fa-arrow-left"></i> Voir toutes les classes
+                        </button>
+                    </ng-container>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════
+             POPUP — Configuration des horaires (créneaux)
+        ═══════════════════════════════════════════════ -->
+        <div class="modal-overlay" *ngIf="showSlotConfigModal" (click)="closeSlotConfig()">
+            <div class="modal-container config-modal" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h3><i class="fas fa-clock"></i> Configuration des horaires</h3>
+                    <button class="modal-close" type="button" (click)="closeSlotConfig()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body config-body">
+                    <p class="config-info">
+                        <i class="fas fa-info-circle"></i>
+                        Définissez les créneaux horaires (cours et pauses).
+                        Les modifications réinitialiseront les emplois du temps non sauvegardés.
+                    </p>
+
+                    <!-- Liste des créneaux avec inputs time simples -->
+                    <div class="slot-list">
+                        <div class="slot-row" *ngFor="let slot of editableSlots; let i = index"
+                            [class.pause-slot]="slot.isPause">
+                            <div class="slot-order">
+                                <button class="icon-btn-xs" (click)="moveSlotUp(i)" *ngIf="i > 0"
+                                    title="Monter">▲</button>
+                                <button class="icon-btn-xs" (click)="moveSlotDown(i)"
+                                    *ngIf="i < editableSlots.length - 1" title="Descendre">▼</button>
+                            </div>
+                            <div class="slot-times">
+                                <label>Début</label>
+                                <input type="time" [(ngModel)]="slot.startTime" class="form-control time-input">
+                                <label>Fin</label>
+                                <input type="time" [(ngModel)]="slot.endTime" class="form-control time-input">
+                            </div>
+                            <div class="slot-type">
+                                <label>Type</label>
+                                <select [(ngModel)]="slot.isPause" class="form-control">
+                                    <option [ngValue]="false">Cours</option>
+                                    <option [ngValue]="true">Pause</option>
+                                </select>
+                            </div>
+                            <div class="slot-name" *ngIf="slot.isPause">
+                                <input type="text" [(ngModel)]="slot.name" placeholder="Nom de la pause"
+                                    class="form-control">
+                            </div>
+                            <div class="slot-actions">
+                                <button class="btn-action supprimer" type="button" (click)="removeSlot(i)"
+                                    title="Supprimer ce créneau">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-add-slot" type="button" (click)="addSlot()">
+                        <i class="fas fa-plus"></i> Ajouter un créneau
+                    </button>
+                </div>
+
+                <div class="modal-footer config-footer">
+                    <button class="btn-prev" type="button" (click)="closeSlotConfig()">
+                        Annuler
+                    </button>
+                    <button class="btn-submit" type="button" (click)="saveSlotConfig()">
+                        <i class="fas fa-check"></i> Enregistrer la grille horaire
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>

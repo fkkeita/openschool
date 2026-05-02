@@ -1,0 +1,144 @@
+<!-- Layout avec sidebar et contenu principal -->
+<div class="dashboard-layout">
+    <!-- Sidebar de navigation -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Contenu principal -->
+    <main class="dashboard-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div>
+                <h1>Tableau de Bord</h1>
+                <p class="subtitle">Vue d'ensemble de l'établissement</p>
+            </div>
+
+            <!-- Barre de recherche globale (optionnelle) -->
+            <div class="search-bar">
+                <span class="material-icons">search</span>
+                <input type="text" placeholder="Rechercher...">
+            </div>
+        </header>
+
+        <!-- Indicateurs clés (KPI Cards) -->
+        <section class="stats-grid">
+            <!-- Card 1: Élèves inscrits -->
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon bg-blue">
+                    <span class="material-icons">people</span>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Élèves Inscrits</p>
+                    <p class="stat-value">{{ stats.totalStudents }}</p>
+                </div>
+            </div>
+
+            <!-- Card 2: Présence aujourd'hui -->
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon bg-green">
+                    <span class="material-icons">check_circle</span>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Présence Aujourd'hui</p>
+                    <div class="stat-value-with-trend">
+                        <p class="stat-value">{{ stats.attendanceRate }}%</p>
+                        <span class="trend-up">
+                            <span class="material-icons">trending_up</span>
+                            +2%
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Absences non justifiées -->
+            <div class="stat-card stat-card-error">
+                <div class="stat-icon bg-red">
+                    <span class="material-icons">warning</span>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Absences Non Justifiées</p>
+                    <p class="stat-value">{{ stats.absentToday }}</p>
+                </div>
+            </div>
+
+            <!-- Card 4: Paiements en retard -->
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon bg-orange">
+                    <span class="material-icons">account_balance_wallet</span>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Paiements en Retard</p>
+                    <p class="stat-value">{{ stats.unpaidAmount | number }} €</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alertes et Derniers paiements -->
+        <section class="dashboard-grid">
+            <!-- Alertes -->
+            <div class="dashboard-card">
+                <h3 class="card-title">Alertes</h3>
+                <div class="alerts-list">
+                    <div *ngFor="let alert of alerts" [class]="'alert alert-' + alert.severity">
+                        <div class="alert-content">
+                            <span class="material-icons alert-icon">warning</span>
+                            <span class="alert-message">{{ alert.message }}</span>
+                        </div>
+                        <button [class]="'alert-button btn-' + alert.severity">
+                            Voir Détails
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Derniers paiements -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">Derniers Paiements</h3>
+                    <button class="link-button">Voir Tous</button>
+                </div>
+                <div class="payments-list">
+                    <div *ngFor="let payment of latestPayments" class="payment-item">
+                        <div class="payment-info">
+                            <div class="payment-avatar">
+                                <span class="material-icons">person</span>
+                            </div>
+                            <div>
+                                <p class="payment-name">{{ payment.name }}</p>
+                                <p class="payment-desc">Paiement enregistré</p>
+                            </div>
+                        </div>
+                        <span class="payment-amount">{{ payment.amount | number }} €</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activité récente -->
+        <section class="dashboard-card activity-card">
+            <div class="card-header">
+                <h3 class="card-title">Activité Récente</h3>
+                <button class="link-button">Voir Tous</button>
+            </div>
+            <div class="activity-list">
+                <div *ngFor="let activity of recentActivity" class="activity-item">
+                    <div [class]="'activity-dot dot-' + getActivityColor(activity.type)"></div>
+                    <div class="activity-content">
+                        <div class="activity-header">
+                            <p class="activity-message">{{ activity.message }}</p>
+                            <span class="activity-time">{{ activity.time }}</span>
+                        </div>
+                        <span [class]="'activity-status status-' + getActivityColor(activity.type)">
+                            {{ activity.status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Message de chargement -->
+        <div *ngIf="isLoading" class="loading-overlay">
+            <div class="spinner-large"></div>
+            <p>Chargement des données...</p>
+        </div>
+    </main>
+</div>

@@ -1,0 +1,149 @@
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <!-- Header -->
+        <header class="page-header">
+            <div>
+                <h1>Assiduité</h1>
+                <p class="subtitle">Suivi des présences - {{ selectedDate | date: 'dd/MM/yyyy' }}</p>
+            </div>
+            <button class="btn btn-primary">
+                <span class="material-icons">qr_code_scanner</span>
+                Scanner Badge
+            </button>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card stat-success">
+                <span class="material-icons">check_circle</span>
+                <div class="stat-content">
+                    <p class="stat-label">Présents</p>
+                    <p class="stat-value">{{ stats.present }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-error">
+                <span class="material-icons">cancel</span>
+                <div class="stat-content">
+                    <p class="stat-label">Absents</p>
+                    <p class="stat-value">{{ stats.absent }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-warning">
+                <span class="material-icons">schedule</span>
+                <div class="stat-content">
+                    <p class="stat-label">Retards</p>
+                    <p class="stat-value">{{ stats.late }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-info">
+                <span class="material-icons">event_busy</span>
+                <div class="stat-content">
+                    <p class="stat-label">Justifiés</p>
+                    <p class="stat-value">{{ stats.excused }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-card">
+            <div class="filters-grid">
+                <div class="search-input">
+                    <span class="material-icons">search</span>
+                    <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher un élève...">
+                </div>
+
+                <input type="date" [(ngModel)]="selectedDate" (ngModelChange)="onDateChange()"
+                    class="form-control date-input">
+
+                <select [(ngModel)]="selectedStatus" class="form-select">
+                    <option value="all">Tous les statuts</option>
+                    <option value="PRESENT">Présents</option>
+                    <option value="ABSENT">Absents</option>
+                    <option value="LATE">Retards</option>
+                    <option value="EXCUSED">Justifiés</option>
+                </select>
+
+                <button class="btn btn-outline">
+                    <span class="material-icons">download</span>
+                    Exporter
+                </button>
+            </div>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Élève</th>
+                            <th>Classe</th>
+                            <th>Heure d'arrivée</th>
+                            <th>Statut</th>
+                            <th>Méthode</th>
+                            <th>Notes</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let attendance of filteredAttendance">
+                            <td>
+                                <div class="student-cell">
+                                    <div class="student-avatar" [class]="'bg-' + getStatusColor(attendance.status)">
+                                        <span class="material-icons">{{ getStatusIcon(attendance.status) }}</span>
+                                    </div>
+                                    <span class="student-name">{{ attendance.studentName }}</span>
+                                </div>
+                            </td>
+                            <td>{{ attendance.classId ? 'Classe ' + attendance.classId : '-' }}</td>
+                            <td>{{ attendance.arrivalTime || '-' }}</td>
+                            <td>
+                                <span [class]="'status-badge status-' + getStatusColor(attendance.status)">
+                                    {{ getStatusLabel(attendance.status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="method-badge">
+                                    <span class="material-icons">{{ attendance.method === 'BADGE' ? 'badge' :
+                                        attendance.method === 'QR_CODE' ? 'qr_code' : 'edit' }}</span>
+                                    {{ attendance.method }}
+                                </span>
+                            </td>
+                            <td>{{ attendance.notes || '-' }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="icon-btn" title="Modifier">
+                                        <span class="material-icons">edit</span>
+                                    </button>
+                                    <button class="icon-btn" title="Historique">
+                                        <span class="material-icons">history</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr *ngIf="filteredAttendance.length === 0">
+                            <td colspan="7" class="text-center">
+                                <div class="empty-state">
+                                    <span class="material-icons">info</span>
+                                    <p>Aucune donnée d'assiduité pour cette date</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement...</p>
+        </div>
+    </main>
+</div>

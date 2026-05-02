@@ -1,0 +1,365 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+    <main class="eleves-main">
+        <div class="container">
+
+            <!-- ═══════════ ACCUEIL (identique aux autres composants) ═══════════ -->
+            <ng-container *ngIf="mode === 'home'">
+                <div class="header">
+                    <div class="header-left">
+                        <h1><i class="fas fa-star"></i> Notes & Évaluations</h1>
+                        <p class="header-sub">Suivi des notes — Devoirs, Interros, Trimestres, Compositions, Examens</p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [(ngModel)]="rechercheAccueil"
+                            placeholder="Rechercher une année, un cycle...">
+                    </div>
+                </div>
+
+                <div class="main-content">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [class.expanded]="cycleOuvert[cycle.nom]">
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+                                        <div class="year-stats" *ngIf="statsPourAnnee(annee.nom) as stats">
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbClasses }}</div>
+                                                <div class="stat-label">CLASSES</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbEleves }}</div>
+                                                <div class="stat-label">ÉLÈVES</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-value">—</div>
+                                                <div class="stat-label">MOY. GÉN.</div>
+                                            </div>
+                                        </div>
+                                        <p class="year-description">{{ annee.description }}</p>
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" (click)="ouvrirVoir(annee)">
+                                                <i class="fas fa-eye"></i> Voir les notes
+                                            </button>
+                                            <button class="action-btn secondary" (click)="ouvrirGerer(annee)">
+                                                <i class="fas fa-edit"></i> Gérer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- ═══════════ PICKER CLASSE (GÉRER) ═══════════ -->
+            <ng-container *ngIf="mode === 'gerer-picker'">
+                <div class="container">
+                    <div class="gestion-header">
+                        <h2><i class="fas fa-edit"></i> Gérer — {{ selectedAnnee?.nom }}</h2>
+                        <button class="btn-retour" (click)="retourAccueil()"><i class="fas fa-arrow-left"></i>
+                            Retour</button>
+                    </div>
+                    <div class="picker-grid">
+                        <p class="picker-intro">Sélectionnez la classe :</p>
+                        <div class="classes-grid">
+                            <div class="class-picker-btn" *ngFor="let cl of getClassesAnnee(selectedAnnee)"
+                                (click)="selectClasseGerer(cl)">
+                                <i class="fas fa-book"></i>
+                                <span>{{ cl }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+        </div>
+    </main>
+
+    <!-- ═══════════ POPUP VOIR LES NOTES ═══════════ -->
+    <div class="modal-overlay" *ngIf="showVoirModal" (click)="showVoirModal = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> Voir les notes <span *ngIf="voirAnnee"> — {{ voirAnnee.nom }}</span></h3>
+                <button class="modal-close" (click)="showVoirModal = false">×</button>
+            </div>
+            <div class="modal-body voir-modal-body">
+                <ng-container *ngIf="!voirAnnee">
+                    <p class="voir-intro">Choisissez une année scolaire :</p>
+                    <div *ngFor="let cycle of cycles" class="voir-cycle-section">
+                        <h4 class="voir-cycle-title">{{ cycle.nom }}</h4>
+                        <div class="classes-grid-voir">
+                            <div class="class-voir-btn" *ngFor="let annee of cycle.annees" (click)="voirAnnee = annee">
+                                <i class="fas fa-graduation-cap"></i> <span>{{ annee.nom }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                <ng-container *ngIf="voirAnnee">
+                    <p class="voir-intro">Classe de <strong>{{ voirAnnee.nom }}</strong> :</p>
+                    <div class="classes-grid-voir">
+                        <div class="class-voir-btn" *ngFor="let cl of getClassesAnnee(voirAnnee)"
+                            (click)="selectClasseVoir(cl)">
+                            <i class="fas fa-book"></i> <span>{{ cl }}</span>
+                        </div>
+                    </div>
+                    <button class="back-link" (click)="voirAnnee = null"><i class="fas fa-arrow-left"></i>
+                        Toutes les années</button>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP LISTE ÉLÈVES (après sélection classe) ═══════════ -->
+    <div class="modal-overlay" *ngIf="showElevesModal" (click)="fermerElevesModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> Élèves de {{ selectedClasse }}</h3>
+                <button class="modal-close" (click)="fermerElevesModal()">×</button>
+            </div>
+            <div class="modal-body eleves-modal-body">
+                <div class="eleve-list">
+                    <div class="eleve-item" *ngFor="let eleve of showElevesModal" (click)="selectEleve(eleve)">
+                        <span>{{ eleve.prenom }} {{ eleve.nom }}</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP NOTES D'UN ÉLÈVE ═══════════ -->
+    <div class="modal-overlay" *ngIf="selectedEleve" (click)="fermerNotesEleve()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-check"></i> Notes de {{ selectedEleve.prenom }} {{ selectedEleve.nom }}</h3>
+                <button class="modal-close" (click)="fermerNotesEleve()">×</button>
+            </div>
+            <div class="modal-body notes-modal-body">
+                <div class="no-notes" *ngIf="getNotesEleve(selectedEleve.id).length === 0">
+                    <i class="fas fa-clipboard"></i>
+                    <p>Aucune note enregistrée</p>
+                </div>
+                <table class="eleves-table" *ngIf="getNotesEleve(selectedEleve.id).length > 0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Titre</th>
+                            <th>Matière</th>
+                            <th>Note</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let note of getNotesEleve(selectedEleve.id)">
+                            <td><span class="note-type-badge" [attr.data-type]="note.type">{{ note.type }}</span></td>
+                            <td>{{ note.titre }}</td>
+                            <td>{{ note.matiere }}</td>
+                            <td><span class="note-value" [class.high]="note.note >= 15" [class.low]="note.note < 10">{{ note.note }}/20</span></td>
+                            <td>{{ note.date }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP GÉRER CLASSE (actions) ═══════════ -->
+    <div class="modal-overlay" *ngIf="showGererClasseModal" (click)="fermerGererClasseModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Gérer les notes de {{ showGererClasseModal }}</h3>
+                <button class="modal-close" (click)="fermerGererClasseModal()">×</button>
+            </div>
+            <div class="modal-body gerer-actions-body">
+                <div class="gerer-intro">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>Choisissez une action :</p>
+                </div>
+                <div class="gerer-actions">
+                    <button class="gerer-action-btn" (click)="ouvrirCreationDevoir()">
+                        <div class="action-icon"><i class="fas fa-pencil-alt"></i></div>
+                        <div class="action-text">
+                            <span class="action-title">Créer un Devoir</span>
+                            <span class="action-desc">Évaluation notée</span>
+                        </div>
+                    </button>
+                    <button class="gerer-action-btn" (click)="ouvrirCreationEvenement()">
+                        <div class="action-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="action-text">
+                            <span class="action-title">Créer Trimestre/Composition</span>
+                            <span class="action-desc">Évaluation collective</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODALE CRÉATION DEVOIR/INTERRO ═══════════ -->
+    <div class="modal-overlay" *ngIf="showCreateDevoirModal" (click)="showCreateDevoirModal = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-pencil-alt"></i> Nouveau {{ formDevoir.type === 'devoir' ? 'Devoir' :
+                    'Interrogation' }}</h3>
+                <button class="modal-close" (click)="showCreateDevoirModal = false">×</button>
+            </div>
+            <div class="modal-body form-modal-body">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select class="form-control" [(ngModel)]="formDevoir.type">
+                        <option value="devoir">Devoir</option>
+                        <option value="interrogation">Interrogation</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Titre</label><input class="form-control" [(ngModel)]="formDevoir.titre">
+                </div>
+                <div class="form-group"><label>Matière</label>
+                    <select class="form-control" [(ngModel)]="formDevoir.matiere">
+                        <option *ngFor="let m of getMatieresClasse()" [value]="m">{{ m }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Date</label><input type="date" class="form-control"
+                        [(ngModel)]="formDevoir.date"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showCreateDevoirModal = false">Annuler</button>
+                <button class="btn-submit" (click)="creerDevoir()">Créer et attribuer les notes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODALE CRÉATION ÉVÉNEMENT COLLECTIF ═══════════ -->
+    <div class="modal-overlay" *ngIf="showCreateEvenementModal" (click)="showCreateEvenementModal = false">
+        <div class="modal-container modal-large" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-alt"></i> Nouvel événement</h3>
+                <button class="modal-close" (click)="showCreateEvenementModal = false">×</button>
+            </div>
+            <div class="modal-body evenement-modal-body">
+                <div class="form-row">
+                    <div class="form-group half"><label>Type</label><select class="form-control"
+                            [(ngModel)]="formEvenement.type">
+                            <option value="trimestre">Trimestre</option>
+                            <option value="composition">Composition</option>
+                            <option value="examen">Examen</option>
+                        </select></div>
+                    <div class="form-group half"><label>Titre</label><input class="form-control"
+                            [(ngModel)]="formEvenement.titre"></div>
+                </div>
+                <div class="form-group"><label>Date</label><input type="date" class="form-control"
+                        [(ngModel)]="formEvenement.date"></div>
+
+                <h4 class="evenement-subtitle">Ajouter une matière</h4>
+                <div class="form-row">
+                    <div class="form-group half"><label>Nom</label><input class="form-control"
+                            [(ngModel)]="formEvenement.nouvelleMatiere.nom"></div>
+                    <div class="form-group half"><label>Moyenne classe/20</label><input type="number"
+                            class="form-control" [(ngModel)]="formEvenement.nouvelleMatiere.moyenneClasse" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label>Note max</label><input type="number" class="form-control"
+                            [(ngModel)]="formEvenement.nouvelleMatiere.noteMax"></div>
+                    <div class="form-group half"><label>Moyenne/20</label><input type="number" class="form-control"
+                            [(ngModel)]="formEvenement.nouvelleMatiere.moyenne" step="0.01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label>Coefficient</label><input type="number" class="form-control"
+                            [(ngModel)]="formEvenement.nouvelleMatiere.coefficient" step="1"></div>
+                    <div class="form-group half"><label>Appréciation</label><input class="form-control"
+                            [(ngModel)]="formEvenement.nouvelleMatiere.appreciation"></div>
+                </div>
+                <button class="btn-ajouter" (click)="ajouterMatiereEvenement()"><i class="fas fa-plus"></i>
+                    Ajouter</button>
+
+                <table *ngIf="formEvenement.matieres.length > 0" class="eleves-table">
+                    <thead>
+                        <tr>
+                            <th>Matière</th>
+                            <th>Moy.classe</th>
+                            <th>Note max</th>
+                            <th>Moy/20</th>
+                            <th>Coef</th>
+                            <th>Moy coef</th>
+                            <th>Appr.</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let m of formEvenement.matieres; let i = index">
+                            <td>{{ m.nom }}</td>
+                            <td>{{ m.moyenneClasse }}</td>
+                            <td>{{ m.noteMax }}</td>
+                            <td>{{ m.moyenne }}</td>
+                            <td>{{ m.coefficient }}</td>
+                            <td>{{ m.moyenneCoefficientee | number:'1.2-2' }}</td>
+                            <td>{{ m.appreciation }}</td>
+                            <td><button class="btn-action supprimer" (click)="supprimerMatiereEvenement(i)"><i
+                                        class="fas fa-trash"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="evenement-totaux" *ngIf="formEvenement.matieres.length > 0">
+                    <span>Total coefficient : {{ formEvenement.totalCoefficient }}</span>
+                    <span>Total moy coef : {{ formEvenement.totalMoyenneCoefficientee | number:'1.2-2' }}</span>
+                    <span>Moyenne générale : {{ formEvenement.moyenneGenerale | number:'1.2-2' }}</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showCreateEvenementModal = false">Annuler</button>
+                <button class="btn-submit" (click)="enregistrerEvenement()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODALE ATTRIBUTION NOTES ═══════════ -->
+    <div class="modal-overlay" *ngIf="showAttribuerNotesModal as ctx" (click)="showAttribuerNotesModal = null">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-clipboard-list"></i> Attribuer les notes — {{ ctx.titre }}</h3>
+                <button class="modal-close" (click)="showAttribuerNotesModal = null">×</button>
+            </div>
+            <div class="modal-body attribution-modal-body">
+                <div class="attribution-intro">
+                    <p>Saisissez la note de chaque élève (sur 20) :</p>
+                </div>
+                <div class="eleve-list attribution-list">
+                    <div class="eleve-item attribution-item" *ngFor="let att of formAttribuer; let i = index">
+                        <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
+                        <div class="attribution-input-wrap">
+                            <input type="number" [(ngModel)]="att.note" class="form-control attribution-input" min="0"
+                                max="40" placeholder="0">
+                            <span class="attribution-max">/20</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showAttribuerNotesModal = null">Annuler</button>
+                <button class="btn-submit" (click)="enregistrerAttribution()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+</div>

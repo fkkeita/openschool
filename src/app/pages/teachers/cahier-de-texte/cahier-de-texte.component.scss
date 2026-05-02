@@ -1,0 +1,1088 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ================================================================
+   cahier-de-texte.component.scss
+   Design 100% aligné sur Matieres et Timetable.
+   ================================================================ */
+
+:host {
+    display: block;
+    min-height: 100vh;
+    background-image: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    color: #333;
+    line-height: 1.6;
+}
+
+.eleves-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+}
+
+.eleves-main {
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ---------- HEADER ---------- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.header h1 {
+    color: var(--color-primary, #3b5998);
+    font-weight: 700;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-sub {
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* ---------- CONTROLS ---------- */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    gap: 20px;
+}
+
+.search-bar {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 14px 20px 14px 50px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.15);
+}
+
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 18px;
+}
+
+/* ---------- ACCORDEON CYCLES ---------- */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cycle-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+    transition: all 0.4s ease;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.cycle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    background: var(--color-primary);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cycle-header:hover {
+    background: var(--color-primary-dark, #2d4373);
+}
+
+.cycle-title {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cycle-icon {
+    font-size: 22px;
+    background-color: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cycle-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.cycle-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.cycle-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cycle-section.expanded .cycle-content {
+    max-height: 4000px;
+    overflow: visible;
+}
+
+/* ---------- GRILLE DES CARTES ---------- */
+.year-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 30px;
+}
+
+.year-card {
+    background: linear-gradient(145deg, #f8fafc, #ffffff);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--color-primary);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+    overflow: visible;
+    z-index: 1;
+}
+
+.cycle-section.expanded .year-card {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Variantes de couleurs */
+.year-card:nth-child(1) {
+    transition-delay: 0.1s;
+    border-left-color: var(--color-primary);
+
+    .card-decoration {
+        background: var(--color-primary);
+    }
+}
+
+.year-card:nth-child(2) {
+    transition-delay: 0.2s;
+    border-left-color: #3a9d9d;
+
+    .card-decoration {
+        background: #3a9d9d;
+    }
+}
+
+.year-card:nth-child(3) {
+    transition-delay: 0.3s;
+    border-left-color: #ff9a3d;
+
+    .card-decoration {
+        background: #ff9a3d;
+    }
+}
+
+.year-card:nth-child(4) {
+    transition-delay: 0.4s;
+    border-left-color: #ff6b6b;
+
+    .card-decoration {
+        background: #ff6b6b;
+    }
+}
+
+.year-card:nth-child(5) {
+    transition-delay: 0.5s;
+    border-left-color: #9d4edd;
+
+    .card-decoration {
+        background: #9d4edd;
+    }
+}
+
+.year-card:nth-child(6) {
+    transition-delay: 0.6s;
+    border-left-color: #43aa8b;
+
+    .card-decoration {
+        background: #43aa8b;
+    }
+}
+
+.year-card:nth-child(7) {
+    transition-delay: 0.7s;
+    border-left-color: #577590;
+
+    .card-decoration {
+        background: #577590;
+    }
+}
+
+.year-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.year-card:hover .card-decoration {
+    transform: scale(1.3);
+    opacity: 0.15;
+}
+
+.year-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.year-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.year-badge {
+    background-color: #e0e7ff;
+    color: var(--color-primary);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.year-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.stat-item {
+    text-align: center;
+    position: relative;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.class-stat-trigger {
+    position: relative;
+    cursor: pointer;
+}
+
+.class-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    transform: none;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+    padding: 8px 0;
+    min-width: 230px;
+    z-index: 9999;
+    display: none;
+    border: 1px solid #e2e8f0;
+    animation: slideDown 0.18s ease;
+    pointer-events: auto;
+}
+
+.class-stat-trigger:hover .class-dropdown {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.class-item {
+    padding: 10px 15px;
+    margin: 2px 0;
+    background: white;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.class-item:hover {
+    background: #f0f4ff;
+    color: var(--color-primary);
+}
+
+.class-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.class-item:hover .class-name {
+    color: var(--color-primary);
+}
+
+.year-description {
+    color: #64748b;
+    margin-bottom: 20px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.year-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 14px;
+}
+
+.action-btn.primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background-color: var(--color-primary-dark, #2d4373);
+}
+
+.action-btn.secondary {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.action-btn.secondary:hover {
+    background-color: #e2e8f0;
+}
+
+.card-decoration {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    top: 0;
+    right: 0;
+    border-top-right-radius: 12px;
+    border-bottom-left-radius: 100%;
+    z-index: 0;
+    opacity: 0.1;
+    transition: all 0.3s ease;
+}
+
+.year-card-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- PAGE CAHIER DE TEXTE ---------- */
+#gestionPage {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.gestion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: var(--color-primary);
+    color: white;
+    gap: 12px;
+}
+
+.gestion-header h2 {
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-retour {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-retour:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-5px);
+}
+
+.btn-ajouter {
+    background: white;
+    border: none;
+    color: var(--color-primary);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.btn-ajouter:hover {
+    background: #f0f4ff;
+    transform: scale(1.05);
+}
+
+/* ---------- NAVIGATION SEMAINE ---------- */
+.week-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 30px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.week-range {
+    font-weight: 600;
+    color: #475569;
+    font-size: 14px;
+    flex: 1;
+    text-align: center;
+}
+
+.date-pick {
+    width: 140px !important;
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+/* ---------- BARRE D'ALERTES ---------- */
+.save-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 30px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.save-bar .action-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: auto;
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.alert {
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-warning {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 4px solid #dc2626;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 4px solid #10b981;
+}
+
+/* ---------- TABLEAU DU CAHIER ---------- */
+.timetable-wrapper {
+    padding: 0 30px 20px;
+    overflow-x: auto;
+}
+
+.timetable-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.timetable-wrapper th,
+.timetable-wrapper td {
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.timetable-wrapper th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #475569;
+    font-size: 13px;
+}
+
+.th-horaire {
+    width: 110px;
+}
+
+.th-day {
+    background: var(--color-primary);
+    color: white;
+    font-size: 14px;
+}
+
+.th-date {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.td-slot {
+    font-weight: 600;
+    color: var(--color-primary);
+    background: #f8fafc;
+    font-size: 12px;
+}
+
+.td-cell {
+    padding: 8px 6px !important;
+}
+
+.cell-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+}
+
+/* ---------- LIGNES DE PAUSE ---------- */
+.pause-row {
+    background: #fef9c3;
+}
+
+.pause-slot {
+    background: #fef3c7 !important;
+    color: #92400e;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pause-cell {
+    background: repeating-linear-gradient(45deg, #fef9c3, #fef9c3 10px, #fef3c7 10px, #fef3c7 20px);
+    padding: 8px !important;
+}
+
+.pause-label {
+    text-align: center;
+    font-size: 12px;
+    color: #92400e;
+    font-weight: 600;
+}
+
+/* ---------- CELLULES LECTURE SEULE ---------- */
+.cell-readonly {
+    padding: 6px;
+    border-radius: 6px;
+    min-height: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 4px;
+}
+
+.cell-readonly.cell-filled {
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    border-left: 3px solid var(--color-primary);
+}
+
+.cell-time {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cell-subject {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.cell-teacher {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cell-empty {
+    color: #cbd5e1;
+    font-size: 18px;
+    text-align: center;
+    display: block;
+}
+
+/* ---------- BOUTONS D'ACTION ---------- */
+.cell-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.sign-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.sign-btn.signed {
+    background: #10b981;
+    cursor: default;
+    opacity: 0.8;
+}
+
+.edit-btn {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #1e293b;
+
+    &:hover {
+        background: #e2e8f0;
+    }
+}
+
+.sign-btn.disabled-btn,
+.edit-btn.disabled-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+/* ---------- INFO NOTE ---------- */
+.info-note {
+    background: #eef2ff;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin: 10px 30px;
+    font-size: 13px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    i {
+        color: var(--color-primary);
+    }
+}
+
+/* ---------- MODALES ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 20px;
+    width: 900px;
+    max-width: 95%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalAppear 0.3s ease;
+}
+
+@keyframes modalAppear {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: var(--color-primary);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 25px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Choix de classe centré */
+.classes-grid-voir.centered-grid {
+    justify-content: center;
+}
+
+/* Cartes de choix de classe */
+.classes-grid-voir {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.class-voir-btn {
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:hover {
+        background: #e0e7ff;
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        transform: translateY(-3px);
+    }
+}
+
+/* Professeurs */
+.teacher-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.teacher-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 5px;
+}
+
+.teacher-name i {
+    color: var(--color-primary);
+    margin-right: 6px;
+}
+
+.teacher-rate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+
+    label {
+        font-size: 13px;
+        color: #64748b;
+        min-width: 120px;
+    }
+
+    input {
+        width: 120px;
+    }
+}
+
+.teacher-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.salary-badge {
+    background: var(--color-primary);
+    color: white;
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.add-teacher-fixed {
+    flex-shrink: 0;
+}
+
+.add-teacher {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #f0f4ff;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.add-teacher input {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Formulaire */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #334155;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.1);
+}
+
+.modal-footer {
+    padding: 15px 0 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-prev {
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        background: #cbd5e1;
+    }
+}
+
+.btn-submit {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover {
+        background: #059669;
+    }
+}
+
+.btn-action.supprimer {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+
+    &:hover {
+        background: #fecaca;
+    }
+}
+
+.recap-info {
+    font-size: 13px;
+    text-align: center;
+    color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .eleves-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .timetable-wrapper {
+        padding: 0 10px 20px;
+    }
+
+    .week-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Éditeur emploi du temps - Mali (planification hebdomadaire)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #eef2ff 0%, #d4e2fc 100%);
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+    .glass-panel {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      box-shadow: 0 20px 40px -12px rgba(0, 20, 50, 0.25);
+      padding: 1.5rem 1.8rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(120deg, #1e3a8a, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h1 i {
+      background: white;
+      padding: 10px;
+      border-radius: 1.2rem;
+      color: #2563eb;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+    .sub {
+      color: #1e40af;
+      margin-top: 4px;
+      margin-left: 0.8rem;
+      border-left: 3px solid #3b82f6;
+      padding-left: 1rem;
+      font-weight: 500;
+    }
+    .week-nav {
+      background: rgba(255,255,240,0.7);
+      border-radius: 2rem;
+      padding: 0.5rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 15px;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(59,130,246,0.3);
+    }
+    .week-nav button {
+      background: #2563eb;
+      border: none;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .week-nav button:hover { background: #1d4ed8; }
+    .week-range {
+      font-weight: 700;
+      background: white;
+      padding: 4px 16px;
+      border-radius: 2rem;
+      color: #0c4a6e;
+    }
+    .save-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .btn-save {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 24px;
+      border-radius: 2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .btn-save:hover { background: #059669; }
+    .btn-reset {
+      background: #ef4444;
+    }
+    .btn-reset:hover { background: #dc2626; }
+    .timetable-wrapper {
+      overflow-x: auto;
+      border-radius: 1.2rem;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 0.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    th, td {
+      border: 1px solid #bfdbfe;
+      padding: 10px 6px;
+      vertical-align: top;
+      min-width: 150px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+    th {
+      background: #e2efff;
+      color: #1e3a8a;
+      font-weight: 700;
+    }
+    .cell-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    select, input {
+      border-radius: 30px;
+      border: 1px solid #bfdbfe;
+      padding: 6px 10px;
+      font-size: 0.7rem;
+      background: white;
+      width: 100%;
+    }
+    .subject-badge {
+      background: #dbeafe;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      color: #1e3a8a;
+      font-size: 0.7rem;
+      display: inline-block;
+    }
+    .info-note {
+      background: #e6f0ff;
+      border-radius: 1rem;
+      padding: 8px 15px;
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #1e40af;
+      border-left: 3px solid #3b82f6;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      color: #2c5282;
+    }
+  </style>
+</head>
+<body>
+<div class="glass-panel">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <h1><i class="fas fa-edit"></i> Éditeur d'emploi du temps <span style="font-size:0.8rem;">(planification hebdomadaire)</span></h1>
+    <div class="sub"><i class="fas fa-calendar-week"></i> Modifiez les matières & professeurs pour n’importe quelle semaine</div>
+  </div>
+
+  <div class="week-nav">
+    <button id="prevWeekBtn"><i class="fas fa-chevron-left"></i> Semaine précédente</button>
+    <span id="weekRangeDisplay" class="week-range">Semaine du ...</span>
+    <button id="nextWeekBtn">Semaine suivante <i class="fas fa-chevron-right"></i></button>
+    <div style="margin-left: auto;">
+      <i class="fas fa-calendar-day"></i>
+      <input type="date" id="weekPicker" style="border-radius: 2rem; padding: 4px 12px; border: 1px solid #3b82f6;">
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button id="resetWeekBtn" class="btn-save btn-reset"><i class="fas fa-undo-alt"></i> Réinitialiser cette semaine</button>
+    <button id="saveWeekBtn" class="btn-save"><i class="fas fa-save"></i> Sauvegarder l'emploi du temps</button>
+  </div>
+
+  <div class="timetable-wrapper">
+    <table id="timetableTable">
+      <thead id="timetableHead"></thead>
+      <tbody id="timetableBody"></tbody>
+    </table>
+  </div>
+  <div class="info-note">
+    <i class="fas fa-info-circle"></i> <strong>Fonctionnalités :</strong> 
+    Vous pouvez modifier chaque case (matière, professeur) pour la semaine sélectionnée. 
+    Les changements sont sauvegardés dans le même stockage que le cahier de texte principal. 
+    Cela permet d’anticiper les indisponibilités d’enseignants pour les semaines à venir.
+    <br><i class="fas fa-hand-peace"></i> Les signatures déjà effectuées sur des semaines passées ne sont pas altérées.
+  </div>
+  <footer>
+    <i class="fas fa-chalkboard"></i> Les modifications s’appliquent uniquement à la semaine choisie.
+  </footer>
+</div>
+
+<script>
+  // ---------- CONFIGURATION (identique au système principal) ----------
+  const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const SLOTS = [
+    "08:30 - 09:30",
+    "09:30 - 10:30",
+    "10:45 - 11:45 (récré incluse)",
+    "13:30 - 14:30",
+    "14:30 - 15:30",
+    "15:45 - 16:45"
+  ];
+
+  // Matières par défaut (identiques à celles du système principal)
+  const DEFAULT_SUBJECTS = {
+    "0_0": { subject: "Maths", teacherId: 1 },
+    "0_1": { subject: "Français", teacherId: 2 },
+    "0_2": { subject: "Vivre ensemble", teacherId: 3 },
+    "0_3": { subject: "Lecture", teacherId: 4 },
+    "0_4": { subject: "Découvrir le monde", teacherId: 2 },
+    "0_5": { subject: "EPS", teacherId: 3 },
+    "1_0": { subject: "Français", teacherId: 2 },
+    "1_1": { subject: "Maths", teacherId: 1 },
+    "1_2": { subject: "Lecture", teacherId: 4 },
+    "1_3": { subject: "Découvrir le monde", teacherId: 2 },
+    "1_4": { subject: "Français", teacherId: 2 },
+    "1_5": { subject: "Education artistique", teacherId: 4 },
+    "2_0": { subject: "Maths", teacherId: 1 },
+    "2_1": { subject: "Lecture", teacherId: 4 },
+    "2_2": { subject: "Français", teacherId: 2 },
+    "2_3": { subject: "EPS", teacherId: 3 },
+    "2_4": { subject: "Vivre ensemble", teacherId: 3 },
+    "2_5": { subject: "Education artistique", teacherId: 4 },
+    "3_0": { subject: "Français", teacherId: 2 },
+    "3_1": { subject: "Écriture", teacherId: 2 },
+    "3_2": { subject: "Maths", teacherId: 1 },
+    "3_3": { subject: "Français", teacherId: 2 },
+    "3_4": { subject: "Vivre ensemble", teacherId: 3 },
+    "3_5": { subject: "Lecture", teacherId: 4 },
+    "4_0": { subject: "Maths", teacherId: 1 },
+    "4_1": { subject: "B2i", teacherId: 3 },
+    "4_2": { subject: "Lecture", teacherId: 4 },
+    "4_3": { subject: "Vivre ensemble", teacherId: 3 },
+    "4_4": { subject: "Écriture", teacherId: 2 },
+    "4_5": { subject: "Education artistique", teacherId: 4 },
+    "5_0": { subject: "Maths", teacherId: 1 },
+    "5_1": { subject: "B2i", teacherId: 3 },
+    "5_2": { subject: "Lecture", teacherId: 4 },
+    "5_3": { subject: "Écriture", teacherId: 2 },
+    "5_4": { subject: "Maths", teacherId: 1 },
+    "5_5": { subject: "Education artistique", teacherId: 4 }
+  };
+
+  // Liste des professeurs (chargée depuis le localStorage partagé)
+  let teachers = [];
+
+  // Données des semaines (planning) : Map clé = "week_YYYY-MM-DD" (lundi)
+  let weeklyData = new Map();
+  let currentMonday = null;      // Lundi de la semaine affichée
+  let currentTimetable = [];     // Matrice [slot][day] = { teacherId, subject, signed (ignoré ici), lessonTitle (ignoré) }
+
+  // ----- Fonctions utilitaires -----
+  function getMonday(date) {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    const day = d.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    d.setDate(d.getDate() - diff);
+    return d;
+  }
+
+  function formatDateKey(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2,'0');
+    const dd = String(date.getDate()).padStart(2,'0');
+    return `week_${yyyy}-${mm}-${dd}`;
+  }
+
+  function getDatesOfWeek(monday) {
+    const dates = [];
+    for (let i = 0; i < DAYS.length; i++) {
+      const dayDate = new Date(monday);
+      dayDate.setDate(monday.getDate() + i);
+      dates.push(dayDate);
+    }
+    return dates;
+  }
+
+  // Créer un planning vierge (basé sur les matières par défaut, sans signatures)
+  function createEmptyTimetable() {
+    const tt = [];
+    for (let s = 0; s < SLOTS.length; s++) {
+      tt[s] = [];
+      for (let d = 0; d < DAYS.length; d++) {
+        const key = `${d}_${s}`;
+        let subject = "";
+        let teacherId = null;
+        if (DEFAULT_SUBJECTS[key]) {
+          subject = DEFAULT_SUBJECTS[key].subject;
+          teacherId = DEFAULT_SUBJECTS[key].teacherId;
+        }
+        // Vérifier que le teacherId existe dans la liste actuelle
+        if (teacherId && !teachers.find(t => t.id === teacherId)) teacherId = null;
+        tt[s][d] = { teacherId: teacherId, subject: subject }; // pas de signed/lessonTitle ici
+      }
+    }
+    return tt;
+  }
+
+  // Sauvegarder la semaine courante dans le Map et dans localStorage global
+  function saveCurrentWeek() {
+    if (!currentMonday) return;
+    const key = formatDateKey(currentMonday);
+    weeklyData.set(key, JSON.parse(JSON.stringify(currentTimetable)));
+    // Recharger les données globales depuis le localStorage existant (pour ne pas écraser les signatures)
+    loadTeachersAndMergeWeeks();
+  }
+
+  // Charger les professeurs et fusionner les semaines depuis le stockage principal
+  function loadTeachersAndMergeWeeks() {
+    const raw = localStorage.getItem("cahierMaliGlobal");
+    if (raw) {
+      try {
+        const globalData = JSON.parse(raw);
+        if (globalData.teachers) {
+          teachers = globalData.teachers.map(t => ({ id: t.id, name: t.name, hourlyRate: t.hourlyRate }));
+        }
+        if (globalData.weeks) {
+          for (let [k, v] of Object.entries(globalData.weeks)) {
+            if (!weeklyData.has(k)) {
+              weeklyData.set(k, v);
+            } else {
+              // Fusion : on garde la version existante en mémoire (éditée) pour la semaine courante
+              // mais on ajoute les autres semaines
+            }
+          }
+        }
+      } catch(e) {}
+    }
+    // Si pas de profs, initialiser profs par défaut
+    if (teachers.length === 0) {
+      teachers = [
+        { id: 1, name: "M. Amadou Diallo", hourlyRate: 2000 },
+        { id: 2, name: "Mme Fatoumata Traoré", hourlyRate: 2000 },
+        { id: 3, name: "M. Ibrahim Keïta", hourlyRate: 2000 },
+        { id: 4, name: "Mme Aissata Coulibaly", hourlyRate: 2000 }
+      ];
+    }
+    // S'assurer que la semaine courante a bien un planning dans le Map
+    if (currentMonday) {
+      const key = formatDateKey(currentMonday);
+      if (!weeklyData.has(key)) {
+        weeklyData.set(key, createEmptyTimetable());
+      }
+      currentTimetable = JSON.parse(JSON.stringify(weeklyData.get(key)));
+    }
+  }
+
+  // Sauvegarder l'intégralité des semaines + professeurs dans le localStorage partagé
+  function persistToGlobal() {
+    // Construire l'objet global identique à celui du système principal
+    const allWeeks = {};
+    for (let [k, v] of weeklyData.entries()) {
+      allWeeks[k] = v;
+    }
+    const globalSave = {
+      teachers: teachers.map(t => ({ id: t.id, name: t.name, hourlyRate: t.hourlyRate, totalSignedHours: 0 })),
+      nextTeacherId: 5, // valeur arbitraire, mais sera recalculée par le système principal
+      weeks: allWeeks,
+      lastMonday: currentMonday ? currentMonday.toISOString() : new Date().toISOString()
+    };
+    localStorage.setItem("cahierMaliGlobal", JSON.stringify(globalSave));
+  }
+
+  // Charger une semaine spécifique (par lundi)
+  function loadWeek(monday) {
+    currentMonday = monday;
+    loadTeachersAndMergeWeeks();  // Met à jour teachers et weeklyData, puis currentTimetable
+    renderTimetable();
+    updateWeekDisplay();
+  }
+
+  // Rendu du tableau avec des selects pour profs et inputs pour matière
+  function renderTimetable() {
+    const thead = document.getElementById("timetableHead");
+    const tbody = document.getElementById("timetableBody");
+    if (!thead || !tbody || !currentTimetable) return;
+    const weekDates = getDatesOfWeek(currentMonday);
+
+    // En-têtes avec dates
+    thead.innerHTML = `<tr><th>Horaires / Jours</th>${DAYS.map((day, idx) => {
+      const d = weekDates[idx];
+      const dateStr = d ? d.toLocaleDateString('fr-FR') : '';
+      return `<th>${day}<br><span style="font-size:0.65rem;">${dateStr}</span></th>`;
+    }).join('')}</tr>`;
+
+    tbody.innerHTML = "";
+    for (let s = 0; s < SLOTS.length; s++) {
+      const row = document.createElement("tr");
+      const slotCell = document.createElement("th");
+      slotCell.textContent = SLOTS[s];
+      slotCell.style.background = "#e2efff";
+      row.appendChild(slotCell);
+      for (let d = 0; d < DAYS.length; d++) {
+        const cell = currentTimetable[s][d];
+        const teacherId = cell.teacherId;
+        const subject = cell.subject || "";
+        const td = document.createElement("td");
+        
+        // Construction des listes déroulantes pour professeurs
+        const teacherOptions = teachers.map(t => `<option value="${t.id}" ${teacherId === t.id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
+        const teacherSelect = `<select class="teacher-select" data-slot="${s}" data-day="${d}"><option value="null">-- Aucun prof --</option>${teacherOptions}</select>`;
+        const subjectInput = `<input type="text" class="subject-input" data-slot="${s}" data-day="${d}" value="${escapeHtml(subject)}" placeholder="Matière">`;
+        
+        td.innerHTML = `
+          <div class="cell-editor">
+            <div class="subject-badge"><i class="fas fa-book"></i> Matière</div>
+            ${subjectInput}
+            <div class="subject-badge"><i class="fas fa-user-chalkboard"></i> Professeur</div>
+            ${teacherSelect}
+          </div>
+        `;
+        row.appendChild(td);
+      }
+      tbody.appendChild(row);
+    }
+
+    // Attacher les événements de modification en direct (mise à jour du modèle)
+    document.querySelectorAll('.teacher-select').forEach(select => {
+      select.addEventListener('change', (e) => {
+        const slot = parseInt(select.dataset.slot);
+        const day = parseInt(select.dataset.day);
+        let newTeacherId = select.value === "null" ? null : parseInt(select.value);
+        if (currentTimetable[slot] && currentTimetable[slot][day]) {
+          currentTimetable[slot][day].teacherId = newTeacherId;
+        }
+      });
+    });
+    document.querySelectorAll('.subject-input').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const slot = parseInt(input.dataset.slot);
+        const day = parseInt(input.dataset.day);
+        const newSubject = input.value.trim();
+        if (currentTimetable[slot] && currentTimetable[slot][day]) {
+          currentTimetable[slot][day].subject = newSubject;
+        }
+      });
+    });
+  }
+
+  function updateWeekDisplay() {
+    if (!currentMonday) return;
+    const weekDates = getDatesOfWeek(currentMonday);
+    if (weekDates.length) {
+      const start = weekDates[0].toLocaleDateString('fr-FR');
+      const end = weekDates[weekDates.length-1].toLocaleDateString('fr-FR');
+      document.getElementById("weekRangeDisplay").innerHTML = `<i class="fas fa-calendar-week"></i> Semaine du ${start} au ${end}`;
+    }
+    const picker = document.getElementById("weekPicker");
+    if (picker) {
+      const yyyy = currentMonday.getFullYear();
+      const mm = String(currentMonday.getMonth() + 1).padStart(2,'0');
+      const dd = String(currentMonday.getDate()).padStart(2,'0');
+      picker.value = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  function resetCurrentWeek() {
+    if (confirm("Réinitialiser l'emploi du temps de cette semaine avec les matières par défaut ?")) {
+      currentTimetable = createEmptyTimetable();
+      renderTimetable();
+      saveCurrentWeek();
+      persistToGlobal();
+    }
+  }
+
+  function saveCurrentWeekAndPersist() {
+    saveCurrentWeek();        // met à jour weeklyData
+    persistToGlobal();       // écrit dans localStorage
+    alert("✅ Emploi du temps sauvegardé pour cette semaine.");
+  }
+
+  function goPrevWeek() {
+    if (!currentMonday) return;
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() - 7);
+    loadWeek(newMonday);
+  }
+
+  function goNextWeek() {
+    if (!currentMonday) return;
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() + 7);
+    loadWeek(newMonday);
+  }
+
+  function setWeekFromPicker(dateValue) {
+    const newDate = new Date(dateValue);
+    if (!isNaN(newDate)) {
+      const monday = getMonday(newDate);
+      loadWeek(monday);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Initialisation
+  function bootstrap() {
+    // Charger les professeurs et semaines existantes
+    loadTeachersAndMergeWeeks();
+    if (!currentMonday) {
+      currentMonday = getMonday(new Date());
+    }
+    const key = formatDateKey(currentMonday);
+    if (!weeklyData.has(key)) {
+      weeklyData.set(key, createEmptyTimetable());
+    }
+    currentTimetable = JSON.parse(JSON.stringify(weeklyData.get(key)));
+    renderTimetable();
+    updateWeekDisplay();
+
+    document.getElementById("prevWeekBtn")?.addEventListener("click", goPrevWeek);
+    document.getElementById("nextWeekBtn")?.addEventListener("click", goNextWeek);
+    document.getElementById("weekPicker")?.addEventListener("change", (e) => setWeekFromPicker(e.target.value));
+    document.getElementById("saveWeekBtn")?.addEventListener("click", saveCurrentWeekAndPersist);
+    document.getElementById("resetWeekBtn")?.addEventListener("click", resetCurrentWeek);
+  }
+
+  bootstrap();
+</script>
+</body>
+</html>

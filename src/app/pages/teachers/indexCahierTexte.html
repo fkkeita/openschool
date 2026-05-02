@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Cahier de texte · Salaire Enseignants (Mali) - Traçabilité</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #eef2ff 0%, #d4e2fc 100%);
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+
+    .glass-panel {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      box-shadow: 0 20px 40px -12px rgba(0, 20, 50, 0.25);
+      padding: 1.5rem 1.8rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(120deg, #1e3a8a, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 i {
+      background: white;
+      padding: 10px;
+      border-radius: 1.2rem;
+      color: #2563eb;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+
+    .sub {
+      color: #1e40af;
+      margin-top: 6px;
+      margin-left: 0.8rem;
+      border-left: 3px solid #3b82f6;
+      padding-left: 1rem;
+      font-weight: 500;
+    }
+
+    .teachers-toggle-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 2rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      margin-left: 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .teachers-toggle-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .week-nav {
+      background: rgba(255,255,240,0.7);
+      border-radius: 2rem;
+      padding: 0.5rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 1rem;
+      backdrop-filter: blur(4px);
+      flex-wrap: wrap;
+    }
+
+    .week-nav button {
+      background: #2563eb;
+      border: none;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .week-nav button:hover { background: #1d4ed8; }
+    .week-range {
+      font-weight: 700;
+      color: #0c4a6e;
+      background: white;
+      padding: 4px 12px;
+      border-radius: 2rem;
+    }
+
+    /* Emploi du temps occupe désormais toute la largeur */
+    .timetable-card {
+      background: rgba(255,255,255,0.8);
+      border-radius: 1.6rem;
+      padding: 0.8rem;
+      margin-top: 1.8rem;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 0 0.5rem 1rem 0.5rem;
+    }
+    .reset-btn {
+      background: #eef2ff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 2rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .alert-banner {
+      background: #fffbeb;
+      border-left: 6px solid #f59e0b;
+      padding: 10px 15px;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      color: #92400e;
+    }
+    .alert-banner i {
+      margin-right: 8px;
+    }
+    .alert-danger {
+      background: #fee2e2;
+      border-left-color: #dc2626;
+      color: #991b1b;
+    }
+    .alert-success {
+      background: #e0f2fe;
+      border-left-color: #0ea5e9;
+      color: #0c4a6e;
+    }
+
+    .timetable-wrapper {
+      overflow-x: auto;
+      border-radius: 1.2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.6);
+      border-radius: 1rem;
+    }
+    th, td {
+      border: 1px solid #bfdbfe;
+      padding: 10px 6px;
+      vertical-align: top;
+      min-width: 150px;
+    }
+    th {
+      background: #e2efff;
+      color: #1e3a8a;
+      font-weight: 700;
+    }
+    .cell-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .subject-badge {
+      font-weight: 700;
+      background: #dbeafe;
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: inline-block;
+      font-size: 0.7rem;
+    }
+    .lesson-title {
+      font-size: 0.7rem;
+      color: #2d3748;
+      background: #fef9e3;
+      padding: 2px 6px;
+      border-radius: 12px;
+      margin-top: 2px;
+      font-style: italic;
+    }
+    .teacher-assign {
+      font-size: 0.7rem;
+      color: #075985;
+      font-weight: 600;
+    }
+    .sign-btn, .edit-cell-btn {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 30px;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-top: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: 0.1s;
+    }
+    .sign-btn.signed {
+      background: #22c55e;
+      color: white;
+      cursor: default;
+      opacity: 0.7;
+    }
+    .sign-btn.disabled-btn, .edit-cell-btn.disabled-btn {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #e2e8f0;
+    }
+    .edit-cell-btn:active { transform: scale(0.97); }
+
+    /* Styles pour la modale des professeurs */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.8rem;
+      width: 500px;
+      max-width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.2rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #475569;
+    }
+    .modal-close:hover { color: #dc2626; }
+
+    footer {
+      text-align: center;
+      margin-top: 1.8rem;
+      font-size: 0.7rem;
+      color: #2c5282;
+    }
+    .info-note {
+      background: #e6f0ff;
+      border-radius: 1rem;
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="glass-panel">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <h1><i class="fas fa-chalkboard-user"></i> Cahier de texte · Mali</h1>
+    <div class="sub"><i class="fas fa-hand-peace"></i> Signature unique · Traçabilité hebdomadaire</div>
+  </div>
+
+  <!-- Bouton pour afficher le panneau des professeurs -->
+  <button id="showTeachersBtn" class="teachers-toggle-btn">
+    <i class="fas fa-users"></i> Professeurs
+  </button>
+
+  <!-- Navigation semaine -->
+  <div class="week-nav">
+    <button id="prevWeekBtn"><i class="fas fa-chevron-left"></i> Semaine précédente</button>
+    <span id="weekRangeDisplay" class="week-range">Semaine du ...</span>
+    <button id="nextWeekBtn">Semaine suivante <i class="fas fa-chevron-right"></i></button>
+    <div style="margin-left: auto;">
+      <i class="fas fa-calendar-day"></i>
+      <input type="date" id="currentDatePicker" style="border-radius: 2rem; padding: 4px 12px; border: 1px solid #3b82f6;">
+    </div>
+  </div>
+
+  <!-- Emploi du temps (pleine largeur) -->
+  <div class="timetable-card">
+    <div class="section-header">
+      <h2 style="font-size: 1.3rem;"><i class="fas fa-calendar-alt"></i> Emploi du temps – signature & suivi</h2>
+      <button id="resetPlanningBtn" class="reset-btn"><i class="fas fa-sync-alt"></i> Réinitialiser planning & signatures</button>
+    </div>
+    <div id="alertArea" class="alert-banner alert-success"><i class="fas fa-info-circle"></i> Chargement...</div>
+    <div class="timetable-wrapper">
+      <table id="timetableTable">
+        <thead id="timetableHead"></thead>
+        <tbody id="timetableBody"></tbody>
+      </table>
+    </div>
+    <div class="info-note" style="margin-top: 12px;">
+      <i class="fas fa-check-circle"></i> <strong>Règles :</strong> Seul le jour actif (en vert) est modifiable. Une fois signé, plus aucune modification possible. La signature demande obligatoirement le titre de la leçon.
+    </div>
+  </div>
+  <footer>
+    <i class="fas fa-money-bill-wave"></i> Taux horaire modifiable · Alerte si cours non signés pour la journée en cours
+  </footer>
+</div>
+
+<!-- La modale des professeurs sera injectée dynamiquement par le script -->
+<script>
+  // --------------------------------------------------------------
+  // CONFIGURATION MALI : Lundi -> Samedi (6 jours)
+  const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const SLOTS = [
+    "08:30 - 09:30",
+    "09:30 - 10:30",
+    "10:45 - 11:45 (récré incluse)",
+    "13:30 - 14:30",
+    "14:30 - 15:30",
+    "15:45 - 16:45"
+  ];
+
+  const DEFAULT_SUBJECTS = {
+    "0_0": { subject: "Maths", teacherId: 1 },
+    "0_1": { subject: "Français", teacherId: 2 },
+    "0_2": { subject: "Vivre ensemble", teacherId: 3 },
+    "0_3": { subject: "Lecture", teacherId: 4 },
+    "0_4": { subject: "Découvrir le monde", teacherId: 2 },
+    "0_5": { subject: "EPS", teacherId: 3 },
+    "1_0": { subject: "Français", teacherId: 2 },
+    "1_1": { subject: "Maths", teacherId: 1 },
+    "1_2": { subject: "Lecture", teacherId: 4 },
+    "1_3": { subject: "Découvrir le monde", teacherId: 2 },
+    "1_4": { subject: "Français", teacherId: 2 },
+    "1_5": { subject: "Education artistique", teacherId: 4 },
+    "2_0": { subject: "Maths", teacherId: 1 },
+    "2_1": { subject: "Lecture", teacherId: 4 },
+    "2_2": { subject: "Français", teacherId: 2 },
+    "2_3": { subject: "EPS", teacherId: 3 },
+    "2_4": { subject: "Vivre ensemble", teacherId: 3 },
+    "2_5": { subject: "Education artistique", teacherId: 4 },
+    "3_0": { subject: "Français", teacherId: 2 },
+    "3_1": { subject: "Écriture", teacherId: 2 },
+    "3_2": { subject: "Maths", teacherId: 1 },
+    "3_3": { subject: "Français", teacherId: 2 },
+    "3_4": { subject: "Vivre ensemble", teacherId: 3 },
+    "3_5": { subject: "Lecture", teacherId: 4 },
+    "4_0": { subject: "Maths", teacherId: 1 },
+    "4_1": { subject: "B2i", teacherId: 3 },
+    "4_2": { subject: "Lecture", teacherId: 4 },
+    "4_3": { subject: "Vivre ensemble", teacherId: 3 },
+    "4_4": { subject: "Écriture", teacherId: 2 },
+    "4_5": { subject: "Education artistique", teacherId: 4 },
+    "5_0": { subject: "Maths", teacherId: 1 },
+    "5_1": { subject: "B2i", teacherId: 3 },
+    "5_2": { subject: "Lecture", teacherId: 4 },
+    "5_3": { subject: "Écriture", teacherId: 2 },
+    "5_4": { subject: "Maths", teacherId: 1 },
+    "5_5": { subject: "Education artistique", teacherId: 4 }
+  };
+
+  let teachers = [
+    { id: 1, name: "M. Amadou Diallo", hourlyRate: 2000, totalSignedHours: 0 },
+    { id: 2, name: "Mme Fatoumata Traoré", hourlyRate: 2000, totalSignedHours: 0 },
+    { id: 3, name: "M. Ibrahim Keïta", hourlyRate: 2000, totalSignedHours: 0 },
+    { id: 4, name: "Mme Aissata Coulibaly", hourlyRate: 2000, totalSignedHours: 0 }
+  ];
+  let nextTeacherId = 5;
+  
+  // Stockage des plannings par semaine (clé = "week_YYYY-MM-DD" du lundi)
+  let weeklyData = new Map(); // key -> timetable (matrice)
+  let currentMonday = null;   // Date (lundi de la semaine affichée)
+  let currentTimetable = [];   // référence vers le tableau courant
+
+  // Fonctions de date
+  function getMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    d.setDate(d.getDate() - diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function formatDateKey(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2,'0');
+    const dd = String(date.getDate()).padStart(2,'0');
+    return `week_${yyyy}-${mm}-${dd}`;
+  }
+
+  function getDatesOfWeek(monday) {
+    const dates = [];
+    for (let i = 0; i < DAYS.length; i++) {
+      const dayDate = new Date(monday);
+      dayDate.setDate(monday.getDate() + i);
+      dates.push(dayDate);
+    }
+    return dates;
+  }
+
+  // Créer un nouveau planning vierge (non signé) basé sur DEFAULT_SUBJECTS
+  function createEmptyTimetable() {
+    const tt = [];
+    for (let s = 0; s < SLOTS.length; s++) {
+      tt[s] = [];
+      for (let d = 0; d < DAYS.length; d++) {
+        const key = `${d}_${s}`;
+        let subject = "";
+        let teacherId = null;
+        if (DEFAULT_SUBJECTS[key]) {
+          subject = DEFAULT_SUBJECTS[key].subject;
+          teacherId = DEFAULT_SUBJECTS[key].teacherId;
+        }
+        if (teacherId && !teachers.find(t => t.id === teacherId)) teacherId = null;
+        tt[s][d] = { teacherId: teacherId, subject: subject, signed: false, lessonTitle: "" };
+      }
+    }
+    return tt;
+  }
+
+  // Sauvegarder le planning courant dans le Map et localStorage
+  function saveCurrentWeek() {
+    if (!currentMonday) return;
+    const key = formatDateKey(currentMonday);
+    weeklyData.set(key, JSON.parse(JSON.stringify(currentTimetable)));
+    // Sauvegarde globale : teachers + toutes les semaines + nextTeacherId
+    const allWeeks = {};
+    for (let [k, v] of weeklyData.entries()) {
+      allWeeks[k] = v;
+    }
+    const globalSave = {
+      teachers: teachers.map(t => ({ id: t.id, name: t.name, hourlyRate: t.hourlyRate, totalSignedHours: 0 })), // total recalc later
+      nextTeacherId: nextTeacherId,
+      weeks: allWeeks,
+      lastMonday: currentMonday.toISOString()
+    };
+    localStorage.setItem("cahierMaliGlobal", JSON.stringify(globalSave));
+  }
+
+  // Charger toutes les données depuis localStorage
+  function loadGlobalData() {
+    const raw = localStorage.getItem("cahierMaliGlobal");
+    if (!raw) return false;
+    try {
+      const data = JSON.parse(raw);
+      teachers = data.teachers.map(t => ({ ...t, totalSignedHours: 0 }));
+      nextTeacherId = data.nextTeacherId;
+      weeklyData.clear();
+      for (let [k, v] of Object.entries(data.weeks)) {
+        weeklyData.set(k, v);
+      }
+      if (data.lastMonday) {
+        currentMonday = new Date(data.lastMonday);
+      } else {
+        currentMonday = getMonday(new Date());
+      }
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // Charger ou initialiser la semaine pour un lundi donné
+  function loadWeek(monday) {
+    const key = formatDateKey(monday);
+    if (weeklyData.has(key)) {
+      currentTimetable = JSON.parse(JSON.stringify(weeklyData.get(key)));
+    } else {
+      currentTimetable = createEmptyTimetable();
+      weeklyData.set(key, JSON.parse(JSON.stringify(currentTimetable)));
+    }
+    currentMonday = monday;
+    // Recalculer les heures signées pour chaque prof sur TOUTES les semaines (pour salaire global)
+    recalcAllSignedHours();
+    saveCurrentWeek();
+    refreshUI();
+  }
+
+  // Recalculer totalSignedHours pour tous les profs sur toutes les semaines stockées
+  function recalcAllSignedHours() {
+    teachers.forEach(t => t.totalSignedHours = 0);
+    for (let [key, timetableWeek] of weeklyData.entries()) {
+      for (let s = 0; s < SLOTS.length; s++) {
+        for (let d = 0; d < DAYS.length; d++) {
+          const cell = timetableWeek[s][d];
+          if (cell.signed === true && cell.teacherId !== null) {
+            const teacher = teachers.find(t => t.id === cell.teacherId);
+            if (teacher) teacher.totalSignedHours += 1;
+          }
+        }
+      }
+    }
+  }
+
+  // Vérifier si une cellule est modifiable (uniquement dans la semaine courante et le jour = aujourd'hui)
+  function isCellEditable(dayIndex, slotIndex) {
+    if (!currentMonday) return false;
+    const weekDates = getDatesOfWeek(currentMonday);
+    const cellDate = weekDates[dayIndex];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (!cellDate) return false;
+    const cellDateNorm = new Date(cellDate);
+    cellDateNorm.setHours(0,0,0,0);
+    // Seulement si la semaine affichée est la semaine courante (celle d'aujourd'hui)
+    const currentWeekMonday = getMonday(today);
+    if (currentMonday.getTime() !== currentWeekMonday.getTime()) return false;
+    // Et le jour doit être aujourd'hui
+    if (cellDateNorm.getTime() !== today.getTime()) return false;
+    const cell = currentTimetable[slotIndex][dayIndex];
+    if (cell.signed === true) return false;
+    return true;
+  }
+
+  // Alerte pour la semaine courante (si affichée)
+  function updateAlert() {
+    const alertDiv = document.getElementById("alertArea");
+    if (!alertDiv) return;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const currentWeekMonday = getMonday(today);
+    if (!currentMonday || currentMonday.getTime() !== currentWeekMonday.getTime()) {
+      alertDiv.innerHTML = `<i class="fas fa-info-circle"></i> Vous consultez une semaine antérieure ou future. Aucune alerte de signature pour aujourd'hui.`;
+      alertDiv.className = "alert-banner alert-success";
+      return;
+    }
+    const weekDates = getDatesOfWeek(currentMonday);
+    let todayIndex = -1;
+    for (let i=0; i<weekDates.length; i++) {
+      let d = new Date(weekDates[i]);
+      d.setHours(0,0,0,0);
+      if (d.getTime() === today.getTime()) { todayIndex = i; break; }
+    }
+    if (todayIndex === -1) {
+      alertDiv.innerHTML = `<i class="fas fa-calendar-day"></i> Aujourd'hui n'est pas dans la semaine affichée.`;
+      alertDiv.className = "alert-banner alert-danger";
+      return;
+    }
+    const unsigned = [];
+    for (let s=0; s<SLOTS.length; s++) {
+      const cell = currentTimetable[s][todayIndex];
+      if (!cell.signed && cell.teacherId !== null) {
+        const prof = teachers.find(t => t.id === cell.teacherId);
+        unsigned.push(`${SLOTS[s]} - ${cell.subject || "Sans matière"} (${prof ? prof.name : "Prof inconnu"})`);
+      }
+    }
+    if (unsigned.length === 0) {
+      alertDiv.innerHTML = `<i class="fas fa-check-circle"></i> ✅ Tous les cours d'aujourd'hui sont signés ! Aucune alerte.`;
+      alertDiv.className = "alert-banner alert-success";
+    } else {
+      alertDiv.innerHTML = `<i class="fas fa-bell"></i> ⚠️ ALERTE : ${unsigned.length} cours non signés aujourd'hui.<br>
+      <strong>Liste :</strong> ${unsigned.join(" ; ")}<br>
+      <small>Veuillez compléter les signatures avant la fin de journée.</small>`;
+      alertDiv.className = "alert-banner alert-danger";
+    }
+  }
+
+  // Navigation entre semaines
+  function goPrevWeek() {
+    if (!currentMonday) return;
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() - 7);
+    loadWeek(newMonday);
+  }
+
+  function goNextWeek() {
+    if (!currentMonday) return;
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() + 7);
+    loadWeek(newMonday);
+  }
+
+  function setCurrentDateFromPicker(dateValue) {
+    const newDate = new Date(dateValue);
+    if (!isNaN(newDate)) {
+      const newMonday = getMonday(newDate);
+      loadWeek(newMonday);
+    }
+  }
+
+  // Fonction pour ouvrir la modale des professeurs
+  function openTeachersModal() {
+    // Créer le contenu de la modale (identique à l'ancien bloc)
+    const modalHtml = `
+      <div class="modal-overlay" id="teachersModalOverlay">
+        <div class="modal-content">
+          <button class="modal-close" id="closeTeachersModal">&times;</button>
+          <h2 style="font-size:1.3rem; color:#0c4a6e; margin-bottom:1rem;"><i class="fas fa-users"></i> Professeurs</h2>
+          <div id="teachersListContainer" class="teacher-list" style="max-height:400px; overflow-y:auto;"></div>
+          <div class="add-teacher" style="display:flex; gap:8px; margin-top:1rem; background:#eaf3ff; padding:0.8rem; border-radius:1.2rem; flex-wrap:wrap;">
+            <input type="text" id="modalNewTeacherName" placeholder="Nom ex: M. Diallo" autocomplete="off" style="flex:1; border-radius:2rem; border:1px solid #bfdbfe; padding:8px 12px;">
+            <input type="number" id="modalNewTeacherRate" placeholder="Taux horaire (FCFA)" value="2000" step="100" style="width:130px; border-radius:2rem; border:1px solid #bfdbfe; padding:8px 12px;">
+            <button id="modalAddTeacherBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter</button>
+          </div>
+          <div class="info-note"><i class="fas fa-info-circle"></i> Salaire mensuel = somme des heures <strong>signées</strong> × taux horaire.</div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    // Remplir la liste des professeurs dans la modale
+    renderTeachersListInModal();
+    // Gestionnaires d'événements
+    document.getElementById("closeTeachersModal").addEventListener("click", closeTeachersModal);
+    document.getElementById("teachersModalOverlay").addEventListener("click", function(e) {
+      if (e.target === this) closeTeachersModal();
+    });
+    document.getElementById("modalAddTeacherBtn").addEventListener("click", addTeacherFromModal);
+  }
+
+  function closeTeachersModal() {
+    const overlay = document.getElementById("teachersModalOverlay");
+    if (overlay) overlay.remove();
+  }
+
+  function renderTeachersListInModal() {
+    const container = document.getElementById("teachersListContainer");
+    if (!container) return;
+    container.innerHTML = "";
+    teachers.forEach(teacher => {
+      const salary = teacher.totalSignedHours * teacher.hourlyRate;
+      const div = document.createElement("div");
+      div.className = "teacher-item";
+      div.style.background = "white";
+      div.style.borderRadius = "1.2rem";
+      div.style.padding = "0.9rem";
+      div.style.borderLeft = "5px solid #3b82f6";
+      div.style.marginBottom = "0.8rem";
+      div.innerHTML = `
+        <div class="teacher-header" style="display:flex; justify-content:space-between; font-weight:700; color:#0f2b5e;">
+          <span><i class="fas fa-chalkboard"></i> ${escapeHtml(teacher.name)}</span>
+          <button class="delete-teacher" data-id="${teacher.id}" title="Supprimer" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="rate-block" style="margin:8px 0 5px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <label style="font-size:0.7rem;">💰 Taux (FCFA/h) :</label>
+          <input type="number" step="50" class="rate-input" data-id="${teacher.id}" value="${teacher.hourlyRate}" style="width:100px; padding:5px 8px; border-radius:40px; border:1px solid #bfdbfe; background:#fafcff; font-weight:600;">
+        </div>
+        <div class="teacher-hours" style="font-size:0.75rem; display:flex; justify-content:space-between; margin-top:6px; background:#eef2ff; padding:6px 10px; border-radius:40px;">
+          <span><i class="fas fa-clock"></i> Heures signées (total) : ${teacher.totalSignedHours}</span>
+          <span class="salary-badge" style="background:#1e40af; color:white; padding:2px 10px; border-radius:30px; font-size:0.75rem;"><i class="fas fa-coins"></i> Salaire : ${salary.toLocaleString()} FCFA</span>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+    // Ajout des événements sur les inputs et boutons de suppression
+    document.querySelectorAll('#teachersListContainer .rate-input').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const id = parseInt(input.dataset.id);
+        const newRate = parseFloat(input.value);
+        if (!isNaN(newRate) && newRate >= 0) {
+          const teacher = teachers.find(t => t.id === id);
+          if (teacher) teacher.hourlyRate = newRate;
+          saveCurrentWeek();
+          renderTeachersListInModal(); // actualisation dans la modale
+        }
+      });
+    });
+    document.querySelectorAll('#teachersListContainer .delete-teacher').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt(btn.dataset.id);
+        if (teachers.length === 1) { alert("Il faut au moins un professeur."); return; }
+        // Supprimer dans toutes les semaines
+        for (let [key, timetableWeek] of weeklyData.entries()) {
+          for (let s = 0; s < SLOTS.length; s++) {
+            for (let d = 0; d < DAYS.length; d++) {
+              if (timetableWeek[s][d].teacherId === id) {
+                timetableWeek[s][d].teacherId = null;
+                timetableWeek[s][d].signed = false;
+                timetableWeek[s][d].lessonTitle = "";
+              }
+            }
+          }
+        }
+        teachers = teachers.filter(t => t.id !== id);
+        loadWeek(currentMonday); // recharge complète
+        closeTeachersModal();
+        openTeachersModal(); // rouvre la modale avec les données à jour
+      });
+    });
+  }
+
+  function addTeacherFromModal() {
+    const nameInput = document.getElementById("modalNewTeacherName");
+    const rateInput = document.getElementById("modalNewTeacherRate");
+    const name = nameInput.value.trim();
+    let rate = parseFloat(rateInput.value);
+    if (!name) { alert("Veuillez entrer un nom"); return; }
+    if (isNaN(rate) || rate <= 0) rate = 2000;
+    const newId = nextTeacherId++;
+    teachers.push({ id: newId, name: name, hourlyRate: rate, totalSignedHours: 0 });
+    nameInput.value = "";
+    rateInput.value = "2000";
+    saveCurrentWeek();
+    renderTeachersListInModal();
+  }
+
+  // Modal de signature (inchangée)
+  function openSignModal(slot, day) {
+    const cell = currentTimetable[slot][day];
+    if (!isCellEditable(day, slot) || cell.signed) return;
+    const modalHtml = `
+      <div id="signModalOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:2000; display:flex; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:2rem; padding:1.8rem; width:350px; max-width:90%; box-shadow:0 25px 40px rgba(0,0,0,0.3);">
+          <h3 style="margin-bottom:0.5rem; color:#1e3a8a;"><i class="fas fa-signature"></i> Signature du cours</h3>
+          <p style="font-size:0.8rem; margin-bottom:1rem; color:#475569;">Matière : <strong>${escapeHtml(cell.subject || "Sans matière")}</strong><br>Professeur : <strong>${escapeHtml(teachers.find(t => t.id === cell.teacherId)?.name || "Non assigné")}</strong></p>
+          <label style="font-weight:600;">📖 Titre de la leçon :</label>
+          <input type="text" id="lessonTitleInput" placeholder="Ex: Les fractions, La conjugaison, ..." style="width:100%; padding:10px; margin:8px 0 16px; border-radius:2rem; border:1px solid #cbd5e1;" autocomplete="off">
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button id="confirmSignBtn" style="background:#22c55e; color:white; border:none; padding:10px; border-radius:2rem; flex:1; font-weight:bold; cursor:pointer;"><i class="fas fa-check"></i> Confirmer la signature</button>
+            <button id="cancelSignBtn" style="background:#e2e8f0; border:none; border-radius:2rem; padding:10px; flex:1; cursor:pointer;">Annuler</button>
+          </div>
+          <p style="font-size:0.65rem; margin-top:12px; color:#dc2626;"><i class="fas fa-exclamation-triangle"></i> La signature est IRRÉVERSIBLE. Le titre sera enregistré.</p>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const overlay = document.getElementById("signModalOverlay");
+    const confirmBtn = document.getElementById("confirmSignBtn");
+    const cancelBtn = document.getElementById("cancelSignBtn");
+    const titleInput = document.getElementById("lessonTitleInput");
+
+    const closeModal = () => overlay.remove();
+
+    confirmBtn.onclick = () => {
+      const lessonTitle = titleInput.value.trim();
+      if (lessonTitle === "") {
+        alert("Veuillez saisir un titre pour la leçon.");
+        return;
+      }
+      currentTimetable[slot][day].signed = true;
+      currentTimetable[slot][day].lessonTitle = lessonTitle;
+      saveCurrentWeek();
+      recalcAllSignedHours();
+      refreshUI();
+      closeModal();
+    };
+    cancelBtn.onclick = closeModal;
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+  }
+
+  function renderTimetable() {
+    const thead = document.getElementById("timetableHead");
+    const tbody = document.getElementById("timetableBody");
+    if (!thead || !tbody || !currentTimetable) return;
+    const weekDates = getDatesOfWeek(currentMonday);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const currentWeekMonday = getMonday(today);
+    const isCurrentWeek = (currentMonday.getTime() === currentWeekMonday.getTime());
+
+    thead.innerHTML = `<tr><th>Horaires / Jours</th>${DAYS.map((day, idx) => {
+      const d = weekDates[idx];
+      const dateStr = d ? d.toLocaleDateString('fr-FR') : '';
+      const isToday = isCurrentWeek && d && (new Date(d).setHours(0,0,0,0) === today.getTime());
+      const highlight = isToday ? ' style="background:#bbf7d0;"' : '';
+      return `<th${highlight}>${day}<br><span style="font-size:0.65rem;">${dateStr}</span></th>`;
+    }).join('')}</tr>`;
+
+    tbody.innerHTML = "";
+    for (let s = 0; s < SLOTS.length; s++) {
+      const row = document.createElement("tr");
+      const slotCell = document.createElement("th");
+      slotCell.textContent = SLOTS[s];
+      slotCell.style.background = "#e2efff";
+      row.appendChild(slotCell);
+      for (let d = 0; d < DAYS.length; d++) {
+        const cell = currentTimetable[s][d];
+        const teacherObj = cell.teacherId ? teachers.find(t => t.id === cell.teacherId) : null;
+        const teacherName = teacherObj ? teacherObj.name : "Non assigné";
+        const td = document.createElement("td");
+        const subjectHtml = cell.subject ? `<span class="subject-badge"><i class="fas fa-book"></i> ${escapeHtml(cell.subject)}</span>` : `<span class="subject-badge" style="background:#e2e8f0;">(aucune matière)</span>`;
+        const teacherHtml = `<div class="teacher-assign"><i class="fas fa-user"></i> ${escapeHtml(teacherName)}</div>`;
+        const lessonHtml = cell.lessonTitle ? `<div class="lesson-title"><i class="fas fa-tag"></i> ${escapeHtml(cell.lessonTitle)}</div>` : "";
+        
+        const editable = isCellEditable(d, s);
+        const isSigned = cell.signed === true;
+        let signBtnHtml = '';
+        let editBtnHtml = '';
+
+        if (editable && !isSigned) {
+          signBtnHtml = `<button class="sign-btn" data-slot="${s}" data-day="${d}"><i class="fas fa-pen-alt"></i> Signer</button>`;
+          editBtnHtml = `<button class="edit-cell-btn" data-slot="${s}" data-day="${d}"><i class="fas fa-pencil-alt"></i> Modifier</button>`;
+        } else if (isSigned) {
+          signBtnHtml = `<button class="sign-btn signed" disabled><i class="fas fa-check-circle"></i> Signé</button>`;
+          editBtnHtml = `<button class="edit-cell-btn disabled-btn" disabled><i class="fas fa-lock"></i> Verrouillé</button>`;
+        } else {
+          signBtnHtml = `<button class="sign-btn disabled-btn" disabled><i class="fas fa-ban"></i> Non modifiable</button>`;
+          editBtnHtml = `<button class="edit-cell-btn disabled-btn" disabled><i class="fas fa-lock"></i> Verrouillé</button>`;
+        }
+
+        td.innerHTML = `
+          <div class="cell-content">
+            ${subjectHtml}
+            ${teacherHtml}
+            ${lessonHtml}
+            <div style="display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap;">
+              ${signBtnHtml}
+              ${editBtnHtml}
+            </div>
+          </div>
+        `;
+        row.appendChild(td);
+      }
+      tbody.appendChild(row);
+    }
+
+    document.querySelectorAll('.sign-btn:not(.signed):not(.disabled-btn)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const slot = parseInt(btn.dataset.slot);
+        const day = parseInt(btn.dataset.day);
+        if (!isNaN(slot) && !isNaN(day) && isCellEditable(day, slot) && !currentTimetable[slot][day].signed) {
+          openSignModal(slot, day);
+        }
+      });
+    });
+
+    document.querySelectorAll('.edit-cell-btn:not(.disabled-btn)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const slot = parseInt(btn.dataset.slot);
+        const day = parseInt(btn.dataset.day);
+        if (isNaN(slot) || isNaN(day)) return;
+        if (!isCellEditable(day, slot)) return;
+        const cell = currentTimetable[slot][day];
+        if (cell.signed) return;
+        const teacherOptions = teachers.map(t => `<option value="${t.id}" ${cell.teacherId === t.id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
+        const dialogHtml = `
+          <div id="editModalOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(3px); z-index:1000; display:flex; align-items:center; justify-content:center;">
+            <div style="background:white; border-radius:2rem; padding:1.5rem; width:320px;">
+              <h3 style="margin-bottom:1rem;">Modifier le cours</h3>
+              <label>Professeur :</label>
+              <select id="editTeacherSelect" style="width:100%; padding:6px; margin:8px 0; border-radius:40px;">${teacherOptions}<option value="null">-- Aucun prof --</option></select>
+              <label>Matière :</label>
+              <input type="text" id="editSubjectInput" value="${escapeHtml(cell.subject)}" style="width:100%; padding:6px; margin:8px 0; border-radius:40px;">
+              <div style="display:flex; gap:10px; margin-top:16px;">
+                <button id="modalConfirmBtn" style="background:#2563eb; color:white; border:none; padding:8px; border-radius:40px; flex:1;">Valider</button>
+                <button id="modalCancelBtn" style="background:#e2e8f0; border:none; border-radius:40px; padding:8px; flex:1;">Annuler</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', dialogHtml);
+        const modalOverlay = document.getElementById("editModalOverlay");
+        const confirmBtn = document.getElementById("modalConfirmBtn");
+        const cancelBtn = document.getElementById("modalCancelBtn");
+        const teacherSelect = document.getElementById("editTeacherSelect");
+        const subjectInput = document.getElementById("editSubjectInput");
+        const closeModal = () => modalOverlay.remove();
+        confirmBtn.onclick = () => {
+          let selectedTeacherIdRaw = teacherSelect.value;
+          let teacherId = null;
+          if (selectedTeacherIdRaw !== "null") teacherId = parseInt(selectedTeacherIdRaw);
+          const newSubject = subjectInput.value.trim();
+          currentTimetable[slot][day].teacherId = teacherId;
+          currentTimetable[slot][day].subject = newSubject;
+          saveCurrentWeek();
+          refreshUI();
+          closeModal();
+        };
+        cancelBtn.onclick = closeModal;
+        modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) closeModal(); });
+      });
+    });
+  }
+
+  function refreshUI() {
+    renderTimetable();
+    updateAlert();
+    const weekDates = getDatesOfWeek(currentMonday);
+    if (weekDates.length > 0) {
+      const start = weekDates[0].toLocaleDateString('fr-FR');
+      const end = weekDates[weekDates.length-1].toLocaleDateString('fr-FR');
+      document.getElementById("weekRangeDisplay").innerHTML = `<i class="fas fa-calendar-week"></i> Semaine du ${start} au ${end}`;
+    }
+    const datePicker = document.getElementById("currentDatePicker");
+    if (datePicker && currentMonday) {
+      const anyDate = new Date(currentMonday);
+      const yyyy = anyDate.getFullYear();
+      const mm = String(anyDate.getMonth() + 1).padStart(2,'0');
+      const dd = String(anyDate.getDate()).padStart(2,'0');
+      datePicker.value = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  function resetFullPlanning() {
+    if (confirm("⚠️ Réinitialiser TOUTES les semaines et TOUTES les signatures ? Cette action est irréversible.")) {
+      weeklyData.clear();
+      const newMonday = getMonday(new Date());
+      loadWeek(newMonday);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  function bootstrap() {
+    const loaded = loadGlobalData();
+    if (!loaded || !currentMonday) {
+      currentMonday = getMonday(new Date());
+      weeklyData.clear();
+      loadWeek(currentMonday);
+    } else {
+      loadWeek(currentMonday);
+    }
+    document.getElementById("prevWeekBtn").addEventListener("click", goPrevWeek);
+    document.getElementById("nextWeekBtn").addEventListener("click", goNextWeek);
+    document.getElementById("currentDatePicker").addEventListener("change", (e) => setCurrentDateFromPicker(e.target.value));
+    document.getElementById("resetPlanningBtn").addEventListener("click", resetFullPlanning);
+    // Gestionnaire pour le bouton Professeurs
+    document.getElementById("showTeachersBtn").addEventListener("click", openTeachersModal);
+  }
+
+  bootstrap();
+</script>
+</body>
+</html>

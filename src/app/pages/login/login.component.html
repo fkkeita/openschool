@@ -1,0 +1,89 @@
+<!-- Conversion de login-screen.tsx vers Angular -->
+<div class="login-container">
+    <div class="login-card">
+        <!-- Logo et titre -->
+        <div class="login-header">
+            <div class="logo">
+                <svg class="building-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                    <path
+                        d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
+                </svg>
+            </div>
+            <h1>ÉCOLE EXCELLENCE</h1>
+            <p class="subtitle">Système de Gestion Scolaire</p>
+        </div>
+
+        <!-- Formulaire de connexion -->
+        <form (ngSubmit)="onSubmit()" class="login-form">
+            <!-- Message d'erreur -->
+            <div *ngIf="errorMessage" class="error-message">
+                {{ errorMessage }}
+            </div>
+
+            <!-- Sélection du rôle -->
+            <div class="form-group">
+                <label for="role">Type d'utilisateur</label>
+                <select id="role" name="role" [(ngModel)]="selectedRole" class="form-control" [disabled]="isLoading">
+                    <option *ngFor="let role of roles" [value]="role.value">
+                        {{ role.label }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="exemple@ecole.fr"
+                    class="form-control" [disabled]="isLoading" required>
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <div class="password-input-wrapper">
+                    <input [type]="showPassword ? 'text' : 'password'" id="password" name="password"
+                        [(ngModel)]="password" placeholder="••••••••" class="form-control" [disabled]="isLoading"
+                        required>
+                    <button type="button" class="password-toggle" (click)="togglePasswordVisibility()"
+                        [disabled]="isLoading">
+                        <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor">
+                            <path
+                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Se souvenir de moi -->
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox">
+                    <span>Se souvenir de moi</span>
+                </label>
+                <a href="#" class="forgot-password">Mot de passe oublié?</a>
+            </div>
+
+            <!-- Bouton de soumission -->
+            <button type="submit" class="btn-submit" [disabled]="isLoading">
+                <span *ngIf="!isLoading">Se connecter</span>
+                <span *ngIf="isLoading" class="loading-text">
+                    <span class="spinner"></span>
+                    Connexion...
+                </span>
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>© 2026 École Excellence. Tous droits réservés.</p>
+        </div>
+    </div>
+</div>

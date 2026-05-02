@@ -1,0 +1,342 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="eleves-main">
+        <div class="container">
+
+            <!-- ══════════════════════════ ACCUEIL (identique) ══════════════════════════ -->
+            <ng-container *ngIf="!selectedClasse">
+                <div class="header">
+                    <div class="header-left">
+                        <h1><i class="fas fa-book-open"></i> Cahier de Texte</h1>
+                        <p class="header-sub">École El Farouk de Bamako – Suivi et signature</p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [(ngModel)]="rechercheAccueil"
+                            (ngModelChange)="onRechercheAccueilChange($event)"
+                            placeholder="Rechercher une année, un cycle...">
+                    </div>
+                </div>
+
+                <div class="main-content">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [class.expanded]="cycleOuvert[cycle.nom]">
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle" type="button">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+
+                                        <div class="year-stats" *ngIf="statsPourAnnee(annee.nom) as stats">
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbEleves }}</div>
+                                                <div class="stat-label">ÉLÈVES</div>
+                                            </div>
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbClasses }}
+                                                    <i class="fas fa-chevron-down" style="font-size:11px"></i>
+                                                </div>
+                                                <div class="stat-label">CLASSES</div>
+                                                <div class="class-dropdown">
+                                                    <div class="class-item" *ngFor="let cl of stats.classes"
+                                                        (click)="selectClasse(cl)">
+                                                        <i class="fas fa-chalkboard"></i>
+                                                        <span class="class-name">{{ cl }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.presence }}%</div>
+                                                <div class="stat-label">PRÉSENCE</div>
+                                            </div>
+                                        </div>
+
+                                        <p class="year-description">{{ annee.description }}</p>
+
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" type="button"
+                                                (click)="selectAnnee(annee)">
+                                                Voir le cahier de texte
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- ══════════════════════════ VUE CAHIER DE TEXTE ══════════════════════════ -->
+            <ng-container *ngIf="selectedClasse">
+                <div id="gestionPage">
+
+                    <div class="gestion-header">
+                        <div>
+                            <h2><i class="fas fa-book-open"></i> Cahier de texte – {{ selectedClasse }}</h2>
+                            <p style="font-size:14px;opacity:0.8;margin-top:4px">Signature hebdomadaire – suivi des
+                                leçons</p>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <button class="btn-retour" (click)="resetSelection()">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </button>
+                            <button class="btn-ajouter" (click)="showTeachersModal = true">
+                                <i class="fas fa-users"></i> Professeurs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation semaine -->
+                    <div class="week-nav">
+                        <button class="action-btn secondary" (click)="changeWeek(-1)">
+                            <i class="fas fa-chevron-left"></i> Semaine précédente
+                        </button>
+                        <span class="week-range">
+                            Semaine du {{ weekDates[0] | date:'dd/MM' }} au {{ weekDates[weekDates.length-1] |
+                            date:'dd/MM/yyyy' }}
+                        </span>
+                        <button class="action-btn secondary" (click)="changeWeek(1)">
+                            Semaine suivante <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <input type="date" class="form-control date-pick" [ngModel]="selectedDateStr"
+                            (change)="onDatePickerChange($event)">
+                    </div>
+
+                    <!-- Alertes -->
+                    <div class="save-bar">
+                        <div *ngIf="unsignedTodayCount > 0" class="alert alert-warning">
+                            <i class="fas fa-bell"></i> {{ unsignedTodayCount }} cours non signés aujourd'hui.
+                        </div>
+                        <div *ngIf="unsignedTodayCount === 0" class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Tous les cours d'aujourd'hui sont signés !
+                        </div>
+                        <button class="action-btn secondary" (click)="resetWeek()" style="margin-left:auto">
+                            <i class="fas fa-sync-alt"></i> Réinitialiser
+                        </button>
+                    </div>
+
+                    <!-- Tableau IDENTIQUE à la vue lecture seule de l'emploi du temps -->
+                    <div class="timetable-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="th-horaire">Horaires</th>
+                                    <th *ngFor="let day of visibleDays; let i = index" class="th-day">
+                                        {{ day }}<br>
+                                        <span class="th-date">{{ weekDates[i] | date:'dd/MM' }}</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <ng-container *ngFor="let slot of customSlots">
+                                    <!-- Pause -->
+                                    <tr *ngIf="slot.isPause" class="pause-row">
+                                        <th class="td-slot pause-slot">
+                                            {{ slot.name }}<br>
+                                            <span style="font-size:11px;font-weight:400">{{ slot.startTime }} – {{
+                                                slot.endTime }}</span>
+                                        </th>
+                                        <td *ngFor="let d of visibleDays" class="td-cell pause-cell">
+                                            <div class="pause-label">{{ slot.name }}</div>
+                                        </td>
+                                    </tr>
+                                    <!-- Créneau cours -->
+                                    <tr *ngIf="!slot.isPause">
+                                        <th class="td-slot">{{ slot.startTime }} – {{ slot.endTime }}</th>
+                                        <td *ngFor="let day of visibleDays; let dIdx = index" class="td-cell">
+                                            <div *ngFor="let sub of getCoursDuCreneau(slot.id, dIdx); let si = index"
+                                                class="cell-readonly" [class.cell-filled]="sub.subject">
+                                                <ng-container *ngIf="sub.subject; else emptyCell">
+                                                    <span class="cell-time">{{ sub.startTime }}–{{ sub.endTime }}</span>
+                                                    <span class="cell-subject">{{ sub.subject }}</span>
+                                                    <span class="cell-teacher" *ngIf="sub.teacherId">
+                                                        <i class="fas fa-user-tie"></i> {{ getTeacherName(sub.teacherId)
+                                                        }}
+                                                    </span>
+                                                    <!-- Boutons Signer/Modifier -->
+                                                    <div class="cell-actions"
+                                                        *ngIf="isCurrentWeek && isToday(dIdx) && !sub.signed && sub.subject">
+                                                        <button class="sign-btn"
+                                                            (click)="openSignModal(dIdx, slot, sub)">
+                                                            <i class="fas fa-pen-nib"></i> Signer
+                                                        </button>
+                                                        <button class="edit-btn"
+                                                            (click)="openEditModal(dIdx, slot, sub)">
+                                                            <i class="fas fa-edit"></i> Modifier
+                                                        </button>
+                                                    </div>
+                                                    <div class="cell-actions"
+                                                        *ngIf="isCurrentWeek && isToday(dIdx) && sub.signed && sub.subject">
+                                                        <span class="sign-btn signed"><i class="fas fa-check"></i>
+                                                            Signé</span>
+                                                    </div>
+                                                    <div class="cell-actions" *ngIf="!isCurrentWeek || !isToday(dIdx)">
+                                                        <button class="sign-btn disabled-btn" disabled>
+                                                            <i class="fas fa-lock"></i> {{ sub.signed ? 'Signé' :
+                                                            'Verrouillé' }}
+                                                        </button>
+                                                    </div>
+                                                </ng-container>
+                                                <ng-template #emptyCell>
+                                                    <span class="cell-empty">—</span>
+                                                </ng-template>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-container>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="info-note">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Règles :</strong> Seul le jour actif est modifiable. Une fois signé, aucune modification
+                        possible.
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </main>
+
+    <!-- ══════════════════════════ MODALE CHOIX CLASSE ══════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showClasseModal" (click)="showClasseModal = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-school"></i> Choisir une classe</h3>
+                <button class="modal-close" (click)="showClasseModal = false">×</button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <p>Année <strong>{{ selectedAnnee?.nom }}</strong></p>
+                <div class="classes-grid-voir centered-grid">
+                    <div class="class-voir-btn" *ngFor="let cl of getClassesForSelectedAnnee()"
+                        (click)="selectClasse(cl)">
+                        <i class="fas fa-users"></i> {{ cl }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════ MODALE PROFESSEURS ══════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showTeachersModal" (click)="showTeachersModal = false">
+        <div class="modal-container config-modal" (click)="$event.stopPropagation()"
+            style="max-width:600px; max-height:85vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> Professeurs</h3>
+                <button class="modal-close" (click)="showTeachersModal = false">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; overflow:hidden; padding:0;">
+                <div class="teacher-list-scroll" style="overflow-y:auto; flex:1; padding:20px 20px 0 20px;">
+                    <div class="teacher-card" *ngFor="let ens of enseignants">
+                        <div class="teacher-top">
+                            <span><i class="fas fa-chalkboard-teacher"></i> {{ ens.prenom }} {{ ens.nom }}</span>
+                            <button class="btn-action supprimer" (click)="deleteTeacher(ens.id)"><i
+                                    class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="teacher-rate">
+                            <label>Taux (FCFA/h) :</label>
+                            <input type="number" [(ngModel)]="ens.hourlyRate" (change)="updateTeacherRate(ens)"
+                                class="form-control">
+                        </div>
+                        <div class="teacher-stats">
+                            <span><i class="fas fa-clock"></i> Heures signées : {{ getSignedHoursForTeacher(ens.id)
+                                }}</span>
+                            <span class="salary-badge"><i class="fas fa-coins"></i> Salaire : {{ getTeacherSalary(ens) |
+                                number }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-teacher-fixed"
+                    style="padding:15px 20px 20px; background:white; border-top:1px solid #e2e8f0;">
+                    <div class="add-teacher">
+                        <input type="text" [(ngModel)]="newTeacherName" placeholder="Nom du professeur"
+                            class="form-control">
+                        <input type="number" [(ngModel)]="newTeacherRate" placeholder="Taux horaire"
+                            class="form-control">
+                        <button class="btn-submit" (click)="addTeacher()"><i class="fas fa-plus"></i> Ajouter</button>
+                    </div>
+                    <div class="info-note" style="margin-top:10px;">
+                        <i class="fas fa-info-circle"></i> Salaire = heures signées × taux horaire.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════ MODALE SIGNATURE ══════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showSignModal" (click)="showSignModal = false">
+        <div class="modal-container" style="max-width:450px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-signature"></i> Signature du cours</h3>
+                <button class="modal-close" (click)="showSignModal = false">×</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Matière :</strong> {{ signContext?.sub?.subject || 'Sans matière' }}<br>
+                    <strong>Professeur :</strong> {{ getTeacherName(signContext?.sub?.teacherId) }}
+                </p>
+                <div class="form-group">
+                    <label>📖 Titre de la leçon</label>
+                    <input type="text" [(ngModel)]="lessonTitleForm" class="form-control"
+                        placeholder="Titre de la leçon">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-prev" (click)="showSignModal = false">Annuler</button>
+                    <button class="btn-submit" (click)="confirmSignature()"><i class="fas fa-check"></i>
+                        Confirmer</button>
+                </div>
+                <p class="recap-info" style="color:#dc2626; margin-top:10px;"><i
+                        class="fas fa-exclamation-triangle"></i> Signature irréversible.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════ MODALE ÉDITION ══════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="showEditModal = false">
+        <div class="modal-container" style="max-width:450px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> {{ editModeTitle }}</h3>
+                <button class="modal-close" (click)="showEditModal = false">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Professeur</label>
+                    <select [(ngModel)]="editTeacherId" class="form-control">
+                        <option [ngValue]="null">-- Choisir --</option>
+                        <option *ngFor="let ens of enseignants" [ngValue]="ens.id">{{ ens.prenom }} {{ ens.nom }}
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Matière</label>
+                    <input type="text" [(ngModel)]="editSubject" class="form-control" placeholder="Matière">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-prev" (click)="showEditModal = false">Annuler</button>
+                    <button class="btn-submit" (click)="confirmEdit()"><i class="fas fa-check"></i> Valider</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

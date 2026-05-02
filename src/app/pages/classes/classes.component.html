@@ -1,0 +1,372 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="eleves-main">
+        <div class="container">
+
+            <!-- =================== PAGE D'ACCUEIL =================== -->
+            <section *ngIf="vue === 'accueil'" id="accueilPage">
+                <div class="header">
+                    <h1><i class="fas fa-chalkboard"></i> Gestion des Classes</h1>
+                    <div class="user-info">
+                        <span>École :</span>
+                        <strong>École Secondaire Modèle</strong>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [ngModel]="rechercheAccueil" (ngModelChange)="rechercheAccueil = $event"
+                            placeholder="Rechercher une année, un cycle...">
+                    </div>
+                    <button class="filter-btn" type="button" (click)="rechercheAccueil = ''">
+                        <i class="fas fa-filter"></i> Réinitialiser
+                    </button>
+                </div>
+
+                <div class="main-content">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [class.expanded]="cycleOuvert[cycle.nom]">
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+
+                                        <div class="year-stats" *ngIf="statsPourAnnee(annee.nom) as stats">
+                                            <!-- CLASSES : dropdown cliquable pour détails -->
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbClasses }} <i class="fas fa-chevron-down"></i>
+                                                </div>
+                                                <div class="stat-label">CLASSES</div>
+                                                <div class="class-dropdown">
+                                                    <div class="dropdown-title">Classes — {{ annee.nom }}</div>
+                                                    <div class="class-item"
+                                                        *ngFor="let classe of classesDeLAnnee(annee.nom)"
+                                                        (click)="ouvrirDetailClasse(classe); $event.stopPropagation()">
+                                                        <span class="class-name">{{ classe.nom }}</span>
+                                                        <span class="class-count">{{ classe.eleves.length }} él.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.nbEleves }}</div>
+                                                <div class="stat-label">ÉLÈVES</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-value">{{ stats.capaciteTotale }}</div>
+                                                <div class="stat-label">CAPACITÉ</div>
+                                            </div>
+                                        </div>
+
+                                        <p class="year-description">{{ annee.description }}</p>
+
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" (click)="ouvrirGestion(annee)">
+                                                <i class="fas fa-cog"></i> Gérer les classes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================== PAGE DE GESTION =================== -->
+            <section *ngIf="vue === 'gestion'" id="gestionPage">
+                <div class="gestion-header">
+                    <h2><i class="fas fa-chalkboard"></i> Classes — {{ selectedAnnee?.nom }}</h2>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn-ajouter" (click)="ouvrirModalAjoutClasse()">
+                            <i class="fas fa-plus"></i> Ajouter une classe
+                        </button>
+                        <button class="btn-retour" (click)="revenirAccueil()">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </button>
+                    </div>
+                </div>
+
+                <div class="classes-grid-gestion">
+                    <div class="classe-card" *ngFor="let classe of classesDeLAnnee(selectedAnnee?.nom || '')">
+                        <div class="classe-card-header">
+                            <h3>{{ classe.nom }}</h3>
+                            <span class="badge">{{ classe.eleves.length }} / {{ classe.capaciteMax }} élèves</span>
+                        </div>
+
+                        <!-- Barre de progression -->
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" [style.width.%]="tauxRemplissage(classe)"
+                                [style.background]="couleurRemplissage(tauxRemplissage(classe))">
+                            </div>
+                            <span class="progress-text">{{ tauxRemplissage(classe) }}%</span>
+                        </div>
+
+                        <div class="classe-card-actions">
+                            <button class="action-btn primary" (click)="ouvrirDetailClasse(classe)">
+                                <i class="fas fa-info-circle"></i> Détails
+                            </button>
+                            <button class="action-btn primary" (click)="ouvrirModalEleves(classe)">
+                                <i class="fas fa-users"></i> Élèves
+                            </button>
+                            <button class="btn-action modifier" (click)="ouvrirModalModification(classe)">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn-action supprimer" (click)="supprimerClasse(classe)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div *ngIf="classesDeLAnnee(selectedAnnee?.nom || '').length === 0" class="no-selection">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Aucune classe trouvée pour cette année.</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ══════════════════════════════ MODALE AJOUT CLASSE ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalAjoutClasse" (click)="showModalAjoutClasse = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Nouvelle classe — {{ formClasse.anneeNom }}</h3>
+                <button class="modal-close" (click)="showModalAjoutClasse = false">×</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:20px; max-height:70vh; overflow-y:auto;">
+                <p style="color:#64748b; margin-bottom:20px;">
+                    <i class="fas fa-info-circle"></i>
+                    Nom proposé : <strong>{{ formClasse.anneeNom }} {{ getProchaineLettre(formClasse.anneeNom)
+                        }}</strong>
+                </p>
+
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Capacité maximale d'élèves</label>
+                    <input type="number" [(ngModel)]="formClasse.capaciteMax" class="form-control" min="1" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-box"></i> Matériel attribué</label>
+                    <div class="materiel-grid">
+                        <div class="materiel-card" *ngFor="let mat of formClasse.materielsList; let i = index">
+                            <label class="materiel-label">
+                                <input type="checkbox" [(ngModel)]="mat.selected">
+                                <i class="fas" [ngClass]="{
+                                    'fa-chair': mat.nom === 'Chaises',
+                                    'fa-table': mat.nom === 'Tables',
+                                    'fa-chalkboard': mat.nom === 'Tableau',
+                                    'fa-pencil-alt': mat.nom === 'Craies / Marqueurs',
+                                    'fa-book': mat.nom === 'Livres',
+                                    'fa-ruler': mat.nom === 'Règles',
+                                    'fa-compass': mat.nom === 'Compas',
+                                    'fa-map': mat.nom === 'Cartes géographiques',
+                                    'fa-laptop': mat.nom === 'Ordinateur',
+                                    'fa-projector': mat.nom === 'Projecteur',
+                                    'fa-fan': mat.nom === 'Ventilateur',
+                                    'fa-trash': mat.nom === 'Poubelle',
+                                    'fa-archive': mat.nom === 'Armoire',
+                                    'fa-user-tie': mat.nom === 'Bureau du professeur',
+                                    'fa-layer-group': mat.nom === 'Étagère',
+                                    'fa-thumbtack': mat.nom === 'Tableau d\'affichage',
+                                    'fa-clock': mat.nom === 'Horloge',
+                                    'fa-water': mat.nom === 'Rideaux'
+                                }" style="color: var(--color-primary); width: 20px;"></i>
+                                {{ mat.nom }}
+                            </label>
+                            <input *ngIf="mat.selected" type="number" [(ngModel)]="mat.quantite" class="form-control"
+                                style="width:80px; margin-left:8px;" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showModalAjoutClasse = false">Annuler</button>
+                <button class="btn-submit" (click)="creerClasse()"><i class="fas fa-check"></i> Créer la classe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════ MODALE MODIFIER CLASSE ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalModifierClasse as classe" (click)="showModalModifierClasse = null">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Modifier {{ classe.nom }}</h3>
+                <button class="modal-close" (click)="showModalModifierClasse = null">×</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:20px; max-height:70vh; overflow-y:auto;">
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Capacité maximale</label>
+                    <input type="number" [(ngModel)]="formClasse.capaciteMax" class="form-control" min="1" max="100">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-box"></i> Matériel</label>
+                    <div class="materiel-grid">
+                        <div class="materiel-card" *ngFor="let mat of formClasse.materielsList">
+                            <label class="materiel-label">
+                                <input type="checkbox" [(ngModel)]="mat.selected">
+                                {{ mat.nom }}
+                            </label>
+                            <input *ngIf="mat.selected" type="number" [(ngModel)]="mat.quantite" class="form-control"
+                                style="width:80px; margin-left:8px;" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showModalModifierClasse = null">Annuler</button>
+                <button class="btn-submit" (click)="sauvegarderModification()"><i class="fas fa-save"></i>
+                    Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════ MODALE DÉTAIL CLASSE ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalDetailClasse as classe" (click)="showModalDetailClasse = null">
+        <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> {{ classe.nom }}</h3>
+                <button class="modal-close" (click)="showModalDetailClasse = null">×</button>
+            </div>
+            <div class="modal-body detail-body">
+                <div class="detail-sections">
+                    <div class="detail-section">
+                        <h4><i class="fas fa-chart-bar"></i> Remplissage</h4>
+                        <p>{{ classe.eleves.length }} / {{ classe.capaciteMax }} élèves</p>
+                        <div class="progress-bar-container" style="margin:10px 0;">
+                            <div class="progress-bar-fill" [style.width.%]="tauxRemplissage(classe)"
+                                [style.background]="couleurRemplissage(tauxRemplissage(classe))">
+                            </div>
+                            <span class="progress-text">{{ tauxRemplissage(classe) }}%</span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h4><i class="fas fa-boxes"></i> Matériel</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li *ngFor="let m of classe.materiels" class="materiel-item-ligne">
+                                <i class="fas fa-check-circle" style="color: var(--color-primary);"></i>
+                                {{ m.nom }} <strong>({{ m.quantite }})</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn-submit" (click)="ouvrirModalModification(classe); showModalDetailClasse = null">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════ MODALE ÉLÈVES ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalEleves as classe" (click)="showModalEleves = null">
+        <div class="modal-container" style="max-width:600px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> Élèves de {{ classe.nom }}</h3>
+                <button class="modal-close" (click)="showModalEleves = null">×</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:20px; max-height:60vh; overflow-y:auto;">
+                <div *ngIf="classe.eleves.length === 0" class="no-selection" style="padding:20px;">
+                    <i class="fas fa-user-slash"></i>
+                    <p>Aucun élève dans cette classe.</p>
+                </div>
+                <table class="eleves-table" *ngIf="classe.eleves.length > 0">
+                    <thead>
+                        <tr>
+                            <th>Prénom</th>
+                            <th>Nom</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let e of classe.eleves">
+                            <td>{{ e.prenom }}</td>
+                            <td>{{ e.nom }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn-ajouter" (click)="ouvrirAjoutEleve(classe)">
+                        <i class="fas fa-user-plus"></i> Ajouter un élève
+                    </button>
+                    <button class="btn-ajouter" (click)="ouvrirModalTransfert(classe)">
+                        <i class="fas fa-exchange-alt"></i> Transférer depuis...
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════ MODALE AJOUT ÉLÈVE ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalAjoutEleve as ctx" (click)="showModalAjoutEleve = null">
+        <div class="modal-container" style="max-width:400px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Ajouter un élève à {{ ctx.classe.nom }}</h3>
+                <button class="modal-close" (click)="showModalAjoutEleve = null">×</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:20px; height:auto;">
+                <div class="form-group"><label>Prénom</label><input type="text" [(ngModel)]="formEleve.prenom"
+                        class="form-control"></div>
+                <div class="form-group"><label>Nom</label><input type="text" [(ngModel)]="formEleve.nom"
+                        class="form-control"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showModalAjoutEleve = null">Annuler</button>
+                <button class="btn-submit" (click)="ajouterEleve()"><i class="fas fa-check"></i> Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════ MODALE TRANSFERT ÉLÈVES ══════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalTransfert as ctx" (click)="showModalTransfert = null">
+        <div class="modal-container" style="max-width:600px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-exchange-alt"></i> Transférer depuis {{ ctx.classeSource.nom }}</h3>
+                <button class="modal-close" (click)="showModalTransfert = null">×</button>
+            </div>
+            <div class="modal-body" style="display:block; padding:20px; max-height:60vh; overflow-y:auto;">
+                <div class="form-group">
+                    <label>Classe de destination</label>
+                    <select [(ngModel)]="classeTransfertDestination" class="form-control">
+                        <option value="">-- Choisir --</option>
+                        <option *ngFor="let c of getClassesTransfertPossibles()" [value]="c.nom">{{ c.nom }}</option>
+                    </select>
+                </div>
+                <p>Sélectionnez les élèves à transférer :</p>
+                <div *ngFor="let e of ctx.classeSource.eleves" class="eleve-transfer-item"
+                    (click)="toggleSelectionEleve(e.id)" [class.selected]="elevesSelectionnes.has(e.id)">
+                    <i class="fas" [class.fa-check-circle]="elevesSelectionnes.has(e.id)"
+                        [class.fa-circle]="!elevesSelectionnes.has(e.id)"></i>
+                    {{ e.prenom }} {{ e.nom }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="showModalTransfert = null">Annuler</button>
+                <button class="btn-submit" (click)="transfererEleves()"
+                    [disabled]="!classeTransfertDestination || elevesSelectionnes.size === 0">
+                    <i class="fas fa-check"></i> Transférer ({{ elevesSelectionnes.size }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Travail - Gestion des Matières</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== STYLES IDENTIQUES À LA VERSION ENSEIGNANTS ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(90deg, #4a6cf7, #6a11cb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .search-bar {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.15);
+        }
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 18px;
+        }
+        .filter-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(74,108,247,0.3);
+            transition: all 0.3s ease;
+        }
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74,108,247,0.4);
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .cycle-section {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+            transition: all 0.4s ease;
+            margin-bottom: 10px;
+        }
+        .cycle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #4a6cf7 0%, #6a11cb 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .cycle-header:hover {
+            background: linear-gradient(135deg, #3a5ce5 0%, #5a0cb0 100%);
+        }
+        .cycle-title {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .cycle-icon {
+            font-size: 22px;
+            background-color: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cycle-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .cycle-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+        .cycle-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+        .cycle-section.expanded .cycle-content {
+            max-height: 2000px;
+        }
+        .year-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 30px;
+        }
+        .year-card {
+            background: linear-gradient(145deg, #f8fafc, #ffffff);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid #4a6cf7;
+            transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .cycle-section.expanded .year-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .year-card:nth-child(1) { transition-delay: 0.1s; border-left-color: #4a6cf7; }
+        .year-card:nth-child(2) { transition-delay: 0.2s; border-left-color: #3a9d9d; }
+        .year-card:nth-child(3) { transition-delay: 0.3s; border-left-color: #ff9a3d; }
+        .year-card:nth-child(4) { transition-delay: 0.4s; border-left-color: #ff6b6b; }
+        .year-card:nth-child(5) { transition-delay: 0.5s; border-left-color: #9d4edd; }
+        .year-card:nth-child(6) { transition-delay: 0.6s; border-left-color: #43aa8b; }
+        .year-card:nth-child(7) { transition-delay: 0.7s; border-left-color: #577590; }
+        .year-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .year-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .year-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .year-badge {
+            background-color: #e0e7ff;
+            color: #4a6cf7;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .year-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eef2f7;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #4a6cf7;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .year-description {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .year-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 14px;
+        }
+        .action-btn.primary {
+            background-color: #4a6cf7;
+            color: white;
+        }
+        .action-btn.primary:hover {
+            background-color: #3a5ce5;
+        }
+        .action-btn.secondary {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+        .action-btn.secondary:hover {
+            background-color: #e2e8f0;
+        }
+        .card-decoration {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(74,108,247,0.1) 0%, rgba(106,17,203,0.05) 100%);
+            top: -40px;
+            right: -40px;
+            z-index: 0;
+        }
+        .year-card-content {
+            position: relative;
+            z-index: 1;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .cycle-section.expanded .cycle-toggle i {
+            transform: rotate(180deg);
+        }
+        /* Dropdown pour les classes (conservé) */
+        .class-stat-trigger {
+            position: relative;
+            cursor: pointer;
+        }
+        .class-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 8px 0;
+            min-width: 200px;
+            z-index: 100;
+            display: none;
+            border: 1px solid #eef2f7;
+            animation: slideDown 0.2s ease;
+        }
+        .class-stat-trigger:hover .class-dropdown {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .class-item {
+            padding: 8px 15px;
+            margin: 2px 0;
+            background: white;
+            transition: background 0.2s;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .class-item:hover {
+            background: #f0f4ff;
+            color: #4a6cf7;
+        }
+        .class-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .class-count {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a6cf7;
+            margin-left: 10px;
+        }
+        .class-stat-trigger .stat-value i {
+            transition: transform 0.3s;
+        }
+        .class-stat-trigger:hover .stat-value i {
+            transform: rotate(180deg);
+        }
+        /* Page de gestion */
+        #gestionPage {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .gestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+            color: white;
+        }
+        .gestion-header h2 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .gestion-header h2 span {
+            font-size: 16px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 30px;
+        }
+        .btn-retour {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-retour:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-5px);
+        }
+        .btn-ajouter {
+            background: white;
+            border: none;
+            color: #4a6cf7;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        .btn-ajouter:hover {
+            background: #f0f4ff;
+            transform: scale(1.05);
+        }
+        .gestion-container {
+            display: flex;
+            height: 600px;
+        }
+        .matieres-panel-left {
+            width: 35%;
+            background: #f9fafc;
+            border-right: 2px solid #e9edf4;
+            display: flex;
+            flex-direction: column;
+        }
+        .matieres-panel-left h3 {
+            padding: 20px 20px 10px;
+            font-size: 18px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .recherche-matiere {
+            padding: 15px 20px;
+            position: relative;
+        }
+        .recherche-matiere input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.3s;
+        }
+        .recherche-matiere input:focus {
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+            outline: none;
+        }
+        .recherche-matiere i {
+            position: absolute;
+            left: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 16px;
+        }
+        .liste-matieres {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px;
+        }
+        .matiere-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .matiere-item:hover {
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(74,108,247,0.1);
+        }
+        .matiere-item.active {
+            border-color: #4a6cf7;
+            background: #edf2ff;
+        }
+        .matiere-nom {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .matiere-code {
+            background: #e2e8f0;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a6cf7;
+        }
+        .details-panel {
+            width: 65%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        .details-panel h3 {
+            padding: 20px 30px 10px;
+            font-size: 18px;
+            color: #2c3e50;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .details-header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .details-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+        }
+        .matiere-detail-card {
+            background: #f9fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #eef2f7;
+        }
+        .detail-ligne {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .detail-ligne i {
+            width: 30px;
+            color: #4a6cf7;
+            font-size: 18px;
+        }
+        .detail-ligne strong {
+            margin-left: 5px;
+            color: #1e293b;
+        }
+        .affectations-list {
+            margin-top: 20px;
+        }
+        .affectation-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #4a6cf7;
+        }
+        .affectation-enseignant {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .affectation-classe {
+            background: #e0e7ff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .no-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #94a3b8;
+            text-align: center;
+            padding: 30px;
+        }
+        .no-selection i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        /* MODAL D'AJOUT (adapté aux matières) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-container {
+            background: white;
+            border-radius: 20px;
+            width: 900px;
+            max-width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: modalAppear 0.3s ease;
+        }
+        @keyframes modalAppear {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .modal-close:hover {
+            background: rgba(255,255,255,0.4);
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            display: flex;
+            height: 500px;
+        }
+        .timeline {
+            width: 30%;
+            background: #f8fafc;
+            border-right: 2px solid #e2e8f0;
+            padding: 30px 0;
+        }
+        .timeline-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .timeline-step.active {
+            background: #e0e7ff;
+            border-left-color: #4a6cf7;
+        }
+        .timeline-step:hover:not(.active) {
+            background: #f1f5f9;
+        }
+        .step-number {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #4a6cf7;
+            border: 2px solid #4a6cf7;
+            font-size: 16px;
+        }
+        .timeline-step.active .step-number {
+            background: #4a6cf7;
+            color: white;
+        }
+        .step-info h4 {
+            font-size: 16px;
+            color: #1e293b;
+            margin-bottom: 3px;
+        }
+        .step-info p {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .form-container {
+            width: 70%;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+        }
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .btn-prev, .btn-next, .btn-submit {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-prev {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .btn-prev:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+        .btn-next {
+            background: #4a6cf7;
+            color: white;
+        }
+        .btn-next:hover {
+            background: #3a5ce5;
+            transform: translateX(5px);
+        }
+        .btn-submit {
+            background: #10b981;
+            color: white;
+        }
+        .btn-submit:hover {
+            background: #059669;
+        }
+        .btn-prev:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* MODAL POUR LISTE DES MATIÈRES PAR ANNÉE */
+        #modalListeMatieres .modal-container {
+            width: 1000px;
+            max-width: 95%;
+        }
+        .liste-matieres-annee {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .matiere-groupe {
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .matiere-titre {
+            background: #f1f5f9;
+            padding: 12px 20px;
+            font-weight: 700;
+            color: #1e293b;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .enseignants-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .enseignants-table th {
+            background: #f8fafc;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        .enseignants-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-header .btn-print {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            margin-left: 20px;
+        }
+        .modal-header .btn-print:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #modalListeMatieres, #modalListeMatieres * { visibility: visible; }
+            #modalListeMatieres {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                box-shadow: none;
+            }
+            .modal-header { background: #4a6cf7 !important; color: white !important; }
+            .btn-print, .modal-close { display: none !important; }
+            .matiere-titre { background: #f1f5f9 !important; }
+        }
+        @media (max-width: 768px) {
+            .gestion-container { flex-direction: column; height: auto; }
+            .matieres-panel-left, .details-panel { width: 100%; }
+            .modal-body { flex-direction: column; }
+            .timeline, .form-container { width: 100%; }
+        }
+        /* petits ajustements */
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-action.modifier {
+            background: #f1f5f9;
+            color: #4a6cf7;
+        }
+        .btn-action.supprimer {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- PAGE D'ACCUEIL -->
+        <div id="accueilPage">
+            <div class="header">
+                <h1><i class="fas fa-book"></i> Plan de Travail - Gestion des Matières</h1>
+                <div class="user-info">
+                    <span>Établissement :</span>
+                    <strong>Lycée International</strong>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Rechercher une matière, une année...">
+                </div>
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Filtre Avancé
+                </button>
+            </div>
+            
+            <div class="main-content" id="cyclesContainer">
+                <!-- Les cycles seront générés ici -->
+            </div>
+            
+            <div class="footer">
+                <p><i class="fas fa-code"></i> Application de Gestion des Matières - Version 1.0 | © 2025</p>
+                <p><i class="fas fa-sync-alt"></i> Cycles : 1er cycle (1-6), 2ème cycle (7-9), Lycée (10-12)</p>
+            </div>
+        </div>
+
+        <!-- PAGE DE GESTION DES MATIÈRES -->
+        <div id="gestionPage">
+            <div class="gestion-header">
+                <h2><i class="fas fa-book"></i> Gestion des matières <span id="contextIndicator"></span></h2>
+                <button class="btn-ajouter" id="btnAjouterMatiere"><i class="fas fa-plus-circle"></i> Ajouter une matière</button>
+                <button class="btn-retour" id="retourAccueil"><i class="fas fa-arrow-left"></i> Retour à l'accueil</button>
+            </div>
+            <div class="gestion-container">
+                <!-- Liste des matières -->
+                <div class="matieres-panel-left">
+                    <h3><i class="fas fa-list"></i> Matières (<span id="totalMatieres">0</span>)</h3>
+                    <div class="recherche-matiere">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="rechercheMatiere" placeholder="Filtrer les matières...">
+                    </div>
+                    <div class="liste-matieres" id="listeMatieresContainer"></div>
+                </div>
+                <!-- Panneau de détails -->
+                <div class="details-panel">
+                    <h3>
+                        <span><i class="fas fa-info-circle"></i> Détails de la matière</span>
+                    </h3>
+                    <div class="details-content" id="detailsMatiereContainer">
+                        <div class="no-selection">
+                            <i class="fas fa-arrow-left"></i>
+                            <p>Sélectionnez une matière pour voir ses informations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL D'AJOUT / MODIFICATION DE MATIÈRE -->
+    <div class="modal-overlay" id="modalMatiere">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-book"></i> <span id="modalTitle">Ajouter une matière</span></h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="timeline">
+                    <div class="timeline-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-info"><h4>Informations générales</h4><p>Nom, code, coefficient...</p></div>
+                    </div>
+                    <div class="timeline-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-info"><h4>Description</h4><p>Objectifs, programme</p></div>
+                    </div>
+                    <div class="timeline-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-info"><h4>Affectations</h4><p>Enseignants et classes</p></div>
+                    </div>
+                    <div class="timeline-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-info"><h4>Récapitulatif</h4><p>Validation</p></div>
+                    </div>
+                </div>
+                <div class="form-container">
+                    <!-- Étape 1 : infos générales -->
+                    <div class="form-step active" id="step1">
+                        <div class="form-group"><label>Nom de la matière *</label><input type="text" id="nomMatiere" class="form-control" placeholder="Ex: Mathématiques"></div>
+                        <div class="form-group"><label>Code *</label><input type="text" id="codeMatiere" class="form-control" placeholder="Ex: MATH"></div>
+                        <div class="form-group"><label>Coefficient par défaut</label><input type="number" id="coefficient" class="form-control" value="1" min="0.5" step="0.5"></div>
+                        <div class="form-group"><label>Couleur (optionnelle)</label><input type="color" id="couleur" class="form-control" value="#4a6cf7"></div>
+                    </div>
+                    <!-- Étape 2 : description -->
+                    <div class="form-step" id="step2">
+                        <div class="form-group"><label>Description / Objectifs</label><textarea id="description" class="form-control" rows="5" placeholder="Décrivez les objectifs de la matière..."></textarea></div>
+                        <div class="form-group"><label>Programme (lien ou texte)</label><input type="text" id="programme" class="form-control" placeholder="URL ou référence"></div>
+                    </div>
+                    <!-- Étape 3 : Affectations (enseignant + classe) -->
+                    <div class="form-step" id="step3">
+                        <div class="form-group"><label>Affectations (enseignant + classe)</label>
+                            <div id="affectationsContainer"></div>
+                            <button type="button" id="ajouterAffectation" class="btn-action modifier" style="margin-top:10px;"><i class="fas fa-plus"></i> Ajouter une affectation</button>
+                        </div>
+                        <p class="text-muted"><i class="fas fa-info-circle"></i> Associez cette matière à un enseignant pour une classe donnée.</p>
+                    </div>
+                    <!-- Étape 4 : Récapitulatif -->
+                    <div class="form-step" id="step4">
+                        <div class="form-group"><label>Récapitulatif</label>
+                            <div id="recapContent" style="background:#f1f5f9; padding:15px; border-radius:8px;">
+                                <!-- Rempli dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" id="prevStep" disabled><i class="fas fa-arrow-left"></i> Précédent</button>
+                <div>
+                    <button class="btn-next" id="nextStep">Suivant <i class="fas fa-arrow-right"></i></button>
+                    <button class="btn-submit" id="submitMatiere" style="display: none;">Enregistrer <i class="fas fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POUR LISTE DES MATIÈRES PAR ANNÉE -->
+    <div class="modal-overlay" id="modalListeMatieres">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-book"></i> Liste des matières - <span id="anneeTitre"></span></h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-print" id="btnPrintListe"><i class="fas fa-print"></i> Imprimer</button>
+                    <button class="modal-close" id="closeListeModal"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="liste-matieres-annee" id="listeMatieresAnneeContainer">
+                <!-- Rempli dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DONNÉES MOCKÉES ====================
+        const schoolData = {
+            cycles: [
+                {
+                    nom: "1er CYCLE",
+                    description: "6 années - Cycle Fondamental (1ère à 6ème)",
+                    icon: "book-open",
+                    annees: [
+                        { nom: "1ère Année", badge: "Fondamental", nbClasses: 3, description: "Première année du cycle fondamental." },
+                        { nom: "2ème Année", badge: "Fondamental", nbClasses: 3, description: "Deuxième année." },
+                        { nom: "3ème Année", badge: "Fondamental", nbClasses: 2, description: "Troisième année." },
+                        { nom: "4ème Année", badge: "Fondamental", nbClasses: 2, description: "Quatrième année." },
+                        { nom: "5ème Année", badge: "Fondamental", nbClasses: 3, description: "Cinquième année." },
+                        { nom: "6ème Année", badge: "Fondamental", nbClasses: 3, description: "Sixième année." }
+                    ]
+                },
+                {
+                    nom: "2ème CYCLE",
+                    description: "3 années - Cycle d'orientation (7ème à 9ème)",
+                    icon: "graduation-cap",
+                    annees: [
+                        { nom: "7ème Année", badge: "Orientation", nbClasses: 3, description: "Première année du cycle d'orientation." },
+                        { nom: "8ème Année", badge: "Orientation", nbClasses: 3, description: "Deuxième année." },
+                        { nom: "9ème Année", badge: "Orientation", nbClasses: 3, description: "Troisième année." }
+                    ]
+                },
+                {
+                    nom: "LYCÉE",
+                    description: "3 années - Lycée (10ème à 12ème)",
+                    icon: "school",
+                    annees: [
+                        { nom: "10ème (Seconde)", badge: "Lycée", nbClasses: 4, description: "Seconde, tronc commun." },
+                        { nom: "11ème (Première)", badge: "Lycée", nbClasses: 3, filieres: ["S", "L", "ES"], description: "Première, spécialités." },
+                        { nom: "12ème (Terminale)", badge: "Lycée", nbClasses: 3, filieres: ["S", "L", "ES"], description: "Terminale, baccalauréat." }
+                    ]
+                }
+            ]
+        };
+
+        // Génération de la liste des classes (identique)
+        function generateClassesList() {
+            const classes = [];
+            schoolData.cycles.forEach(cycle => {
+                cycle.annees.forEach(annee => {
+                    if (cycle.nom === "LYCÉE" && annee.filieres) {
+                        annee.filieres.forEach(filiere => {
+                            classes.push(`${annee.nom.split(' ')[0]} ${filiere}`);
+                        });
+                    } else {
+                        for (let i = 0; i < annee.nbClasses; i++) {
+                            const lettre = String.fromCharCode(65 + i);
+                            classes.push(`${annee.nom} ${lettre}`);
+                        }
+                    }
+                });
+            });
+            return classes;
+        }
+        const classesListe = generateClassesList();
+
+        // Données des enseignants
+        let enseignants = [
+            {
+                id: 1,
+                prenom: "Jean",
+                nom: "Dupont",
+                fullName: "Jean Dupont",
+                dateNaiss: "1975-03-12",
+                lieuNaiss: "Lyon",
+                sexe: "M",
+                nationalite: "Française",
+                email: "jean.dupont@ecole.fr",
+                telephone: "0612345678",
+                telephoneFixe: "0123456789",
+                adresse: "12 rue des Lilas, 69000 Lyon",
+                matierePrincipale: "Mathématiques",
+                grade: "Agrégé",
+                dateEmbauche: "2005-09-01",
+                numSecu: "1 75 03 12 123 456",
+                photo: null,
+                affectations: [
+                    { classe: "10ème (Seconde) A", matiere: "Mathématiques" },
+                    { classe: "11ème (Première) S", matiere: "Mathématiques" }
+                ]
+            },
+            {
+                id: 2,
+                prenom: "Marie",
+                nom: "Martin",
+                fullName: "Marie Martin",
+                dateNaiss: "1980-07-21",
+                lieuNaiss: "Paris",
+                sexe: "F",
+                nationalite: "Française",
+                email: "marie.martin@ecole.fr",
+                telephone: "0678912345",
+                telephoneFixe: "0145678912",
+                adresse: "34 avenue de la République, 75011 Paris",
+                matierePrincipale: "Français",
+                grade: "Certifié",
+                dateEmbauche: "2010-09-01",
+                numSecu: "2 80 07 21 789 012",
+                photo: null,
+                affectations: [
+                    { classe: "5ème Année B", matiere: "Français" },
+                    { classe: "6ème Année A", matiere: "Français" },
+                    { classe: "7ème Année C", matiere: "Français" }
+                ]
+            },
+            {
+                id: 3,
+                prenom: "Pierre",
+                nom: "Durand",
+                fullName: "Pierre Durand",
+                dateNaiss: "1985-11-05",
+                lieuNaiss: "Marseille",
+                sexe: "M",
+                nationalite: "Française",
+                email: "pierre.durand@ecole.fr",
+                telephone: "0611121314",
+                telephoneFixe: "0491121314",
+                adresse: "56 rue Paradis, 13006 Marseille",
+                matierePrincipale: "Anglais",
+                grade: "Certifié",
+                dateEmbauche: "2015-09-01",
+                numSecu: "1 85 11 05 456 789",
+                photo: null,
+                affectations: [
+                    { classe: "10ème (Seconde) B", matiere: "Anglais" },
+                    { classe: "11ème (Première) L", matiere: "Anglais" },
+                    { classe: "12ème (Terminale) ES", matiere: "Anglais" }
+                ]
+            }
+        ];
+
+        // Données des matières
+        let matieres = [
+            { id: 1, nom: "Mathématiques", code: "MATH", coefficient: 1.5, couleur: "#4a6cf7", description: "Logique et calcul", programme: "" },
+            { id: 2, nom: "Français", code: "FR", coefficient: 1, couleur: "#3a9d9d", description: "Littérature et grammaire", programme: "" },
+            { id: 3, nom: "Anglais", code: "ANG", coefficient: 1, couleur: "#ff9a3d", description: "Langue vivante", programme: "" },
+            { id: 4, nom: "Histoire-Géo", code: "HG", coefficient: 1, couleur: "#ff6b6b", description: "", programme: "" },
+            { id: 5, nom: "Physique-Chimie", code: "PC", coefficient: 1.5, couleur: "#9d4edd", description: "", programme: "" },
+            { id: 6, nom: "SVT", code: "SVT", coefficient: 1.5, couleur: "#43aa8b", description: "", programme: "" },
+            { id: 7, nom: "Philosophie", code: "PHILO", coefficient: 1, couleur: "#577590", description: "", programme: "" },
+            { id: 8, nom: "EPS", code: "EPS", coefficient: 0.5, couleur: "#e9c46a", description: "", programme: "" },
+            { id: 9, nom: "Arts plastiques", code: "ART", coefficient: 0.5, couleur: "#f4a261", description: "", programme: "" },
+            { id: 10, nom: "Musique", code: "MUS", coefficient: 0.5, couleur: "#e76f51", description: "", programme: "" }
+        ];
+
+        // ==================== ÉLÉMENTS DOM ====================
+        const accueilPage = document.getElementById('accueilPage');
+        const gestionPage = document.getElementById('gestionPage');
+        const cyclesContainer = document.getElementById('cyclesContainer');
+        const listeMatieresContainer = document.getElementById('listeMatieresContainer');
+        const detailsMatiereContainer = document.getElementById('detailsMatiereContainer');
+        const totalMatieresSpan = document.getElementById('totalMatieres');
+        const rechercheMatiereInput = document.getElementById('rechercheMatiere');
+        const retourAccueilBtn = document.getElementById('retourAccueil');
+        const btnAjouterMatiere = document.getElementById('btnAjouterMatiere');
+        const contextIndicator = document.getElementById('contextIndicator');
+
+        // Modal ajout
+        const modalOverlay = document.getElementById('modalMatiere');
+        const modalClose = document.getElementById('modalClose');
+        const modalTitle = document.getElementById('modalTitle');
+        const prevBtn = document.getElementById('prevStep');
+        const nextBtn = document.getElementById('nextStep');
+        const submitBtn = document.getElementById('submitMatiere');
+        const timelineSteps = document.querySelectorAll('.timeline-step');
+        const formSteps = document.querySelectorAll('.form-step');
+        const affectationsContainer = document.getElementById('affectationsContainer');
+        const btnAjouterAffectation = document.getElementById('ajouterAffectation');
+        const recapContent = document.getElementById('recapContent');
+
+        // Modal liste matières par année
+        const modalListe = document.getElementById('modalListeMatieres');
+        const anneeTitre = document.getElementById('anneeTitre');
+        const listeMatieresAnneeContainer = document.getElementById('listeMatieresAnneeContainer');
+        const closeListeModal = document.getElementById('closeListeModal');
+        const btnPrintListe = document.getElementById('btnPrintListe');
+
+        let currentStep = 1;
+        let editMode = false;
+        let editId = null;
+        let matiereSelectionnee = null;
+
+        // Contexte de cycle (défini quand on vient d'une année)
+        let currentCycleContext = null;  // ex: "1er CYCLE"
+        let currentYearContext = null;   // ex: "1ère Année"
+
+        // ==================== FONCTIONS DE CONTEXTE ====================
+        function getClassesForCycle(cycleNom) {
+            const cycle = schoolData.cycles.find(c => c.nom === cycleNom);
+            if (!cycle) return [];
+            let classes = [];
+            cycle.annees.forEach(annee => {
+                if (cycleNom === "LYCÉE" && annee.filieres) {
+                    annee.filieres.forEach(f => {
+                        const base = annee.nom.split(' ')[0];
+                        classes.push(`${base} ${f}`);
+                    });
+                } else {
+                    for (let i = 0; i < annee.nbClasses; i++) {
+                        const lettre = String.fromCharCode(65 + i);
+                        classes.push(`${annee.nom} ${lettre}`);
+                    }
+                }
+            });
+            return classes;
+        }
+
+        function getTeachersForCycle(cycleNom) {
+            const classesInCycle = getClassesForCycle(cycleNom);
+            const teacherIds = new Set();
+            enseignants.forEach(ens => {
+                ens.affectations.forEach(aff => {
+                    if (classesInCycle.includes(aff.classe)) {
+                        teacherIds.add(ens.id);
+                    }
+                });
+            });
+            return enseignants.filter(ens => teacherIds.has(ens.id));
+        }
+
+        // ==================== RENDU ACCUEIL ====================
+        function renderAccueil() {
+            let html = '';
+            schoolData.cycles.forEach((cycle, idx) => {
+                const expanded = idx === 0 ? 'expanded' : '';
+                html += `
+                    <div class="cycle-section ${expanded}" id="cycle${idx+1}">
+                        <div class="cycle-header">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-${cycle.icon}"></i></div>
+                                    <span>${cycle.nom}</span>
+                                </div>
+                                <div class="cycle-info">${cycle.description}</div>
+                            </div>
+                            <button class="cycle-toggle"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                `;
+                cycle.annees.forEach(annee => {
+                    // Collecter les matières enseignées dans cette année (via les affectations des enseignants)
+                    let matieresSet = new Set();
+                    let enseignantsSet = new Set();
+                    let classesDeAnnee = [];
+                    if (cycle.nom === "LYCÉE" && annee.filieres) {
+                        classesDeAnnee = annee.filieres.map(f => `${annee.nom.split(' ')[0]} ${f}`);
+                    } else {
+                        for (let i = 0; i < annee.nbClasses; i++) {
+                            const lettre = String.fromCharCode(65 + i);
+                            classesDeAnnee.push(`${annee.nom} ${lettre}`);
+                        }
+                    }
+                    
+                    enseignants.forEach(ens => {
+                        ens.affectations.forEach(aff => {
+                            if (classesDeAnnee.includes(aff.classe)) {
+                                matieresSet.add(aff.matiere);
+                                enseignantsSet.add(ens.id);
+                            }
+                        });
+                    });
+                    
+                    const nbMatieres = matieresSet.size;
+                    const nbEnseignants = enseignantsSet.size;
+                    const nbClasses = classesDeAnnee.length;
+
+                    // Préparer le dropdown des classes de l'année
+                    let dropdownHtml = '';
+                    classesDeAnnee.forEach(classe => {
+                        const ensCount = enseignants.filter(ens => ens.affectations.some(aff => aff.classe === classe)).length;
+                        dropdownHtml += `<div class="class-item" data-classe="${classe}"><span class="class-name">${classe}</span><span class="class-count">${ensCount} ens.</span></div>`;
+                    });
+
+                    html += `
+                        <div class="year-card" data-year="${annee.nom}" data-cycle="${cycle.nom}">
+                            <div class="card-decoration"></div>
+                            <div class="year-card-content">
+                                <div class="year-card-header">
+                                    <h3 class="year-title">${annee.nom}</h3>
+                                    <span class="year-badge">${annee.badge}</span>
+                                </div>
+                                <div class="year-stats">
+                                    <div class="stat-item"><div class="stat-value">${nbMatieres}</div><div class="stat-label">MATIÈRES</div></div>
+                                    <div class="stat-item class-stat-trigger">
+                                        <div class="stat-value">${nbClasses} <i class="fas fa-chevron-down"></i></div>
+                                        <div class="stat-label">CLASSES</div>
+                                        <div class="class-dropdown">${dropdownHtml}</div>
+                                    </div>
+                                    <div class="stat-item"><div class="stat-value">${nbEnseignants}</div><div class="stat-label">ENSEIGNANTS</div></div>
+                                </div>
+                                <p class="year-description">${annee.description}</p>
+                                <div class="year-actions">
+                                    <button class="action-btn primary">Voir les matières</button>
+                                    <button class="action-btn secondary gestion-btn">Gérer</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            cyclesContainer.innerHTML = html;
+            attachAccueilEvents();
+        }
+
+        function attachAccueilEvents() {
+            document.querySelectorAll('.cycle-header').forEach(header => {
+                header.addEventListener('click', function(e) {
+                    const cycleSection = this.closest('.cycle-section');
+                    const cycleId = cycleSection.id;
+                    toggleCycle(cycleId);
+                });
+            });
+
+            document.querySelectorAll('.gestion-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.year-card');
+                    currentYearContext = card.dataset.year;
+                    currentCycleContext = card.dataset.cycle;
+                    showGestionPage();
+                });
+            });
+
+            document.querySelectorAll('.action-btn.primary').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const card = this.closest('.year-card');
+                    const year = card.dataset.year;
+                    showListeMatieres(year);
+                });
+            });
+
+            document.querySelectorAll('.class-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const className = this.dataset.classe;
+                    if (className) {
+                        // On ne peut pas déduire le cycle facilement, on ouvre sans contexte
+                        currentCycleContext = null;
+                        currentYearContext = null;
+                        showGestionPage();
+                        setTimeout(() => {
+                            rechercheMatiereInput.value = className;
+                            filterMatieresList();
+                        }, 100);
+                    }
+                });
+            });
+        }
+
+        function toggleCycle(cycleId) {
+            const cycleElement = document.getElementById(cycleId);
+            const allCycles = document.querySelectorAll('.cycle-section');
+            if (cycleElement.classList.contains('expanded')) {
+                cycleElement.classList.remove('expanded');
+            } else {
+                allCycles.forEach(cycle => cycle.classList.remove('expanded'));
+                cycleElement.classList.add('expanded');
+            }
+        }
+
+        // ==================== AFFICHER LISTE MATIÈRES PAR ANNÉE ====================
+        function showListeMatieres(year) {
+            anneeTitre.textContent = year;
+
+            // Trouver toutes les classes de cette année
+            let classesDeAnnee = [];
+            for (let cycle of schoolData.cycles) {
+                for (let annee of cycle.annees) {
+                    if (annee.nom === year) {
+                        if (cycle.nom === "LYCÉE" && annee.filieres) {
+                            classesDeAnnee = annee.filieres.map(f => `${annee.nom.split(' ')[0]} ${f}`);
+                        } else {
+                            for (let i = 0; i < annee.nbClasses; i++) {
+                                const lettre = String.fromCharCode(65 + i);
+                                classesDeAnnee.push(`${annee.nom} ${lettre}`);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Grouper les matières par nom (on veut une ligne par matière avec les enseignants)
+            let matieresMap = new Map(); // clé = nom matière, valeur = { matiere, enseignants: [] }
+            enseignants.forEach(ens => {
+                ens.affectations.forEach(aff => {
+                    if (classesDeAnnee.includes(aff.classe)) {
+                        if (!matieresMap.has(aff.matiere)) {
+                            const matiere = matieres.find(m => m.nom === aff.matiere) || { nom: aff.matiere, code: aff.matiere.substring(0,3).toUpperCase(), coefficient: 1 };
+                            matieresMap.set(aff.matiere, { ...matiere, enseignants: [] });
+                        }
+                        const entry = matieresMap.get(aff.matiere);
+                        if (!entry.enseignants.some(e => e.id === ens.id)) {
+                            entry.enseignants.push({ id: ens.id, nom: ens.nom, prenom: ens.prenom, classes: [] });
+                        }
+                        const ensEntry = entry.enseignants.find(e => e.id === ens.id);
+                        ensEntry.classes.push(aff.classe);
+                    }
+                });
+            });
+
+            let html = '';
+            for (let [matiereNom, data] of matieresMap.entries()) {
+                html += `<div class="matiere-groupe"><div class="matiere-titre">${matiereNom} (coeff. ${data.coefficient}) - ${data.enseignants.length} enseignant(s)</div>`;
+                html += `<table class="enseignants-table"><thead><tr><th>Enseignant</th><th>Classes</th></tr></thead><tbody>`;
+                data.enseignants.forEach(ens => {
+                    html += `<tr><td>${ens.prenom} ${ens.nom}</td><td>${ens.classes.join(', ')}</td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+
+            if (matieresMap.size === 0) {
+                html = '<p style="padding:20px; text-align:center;">Aucune matière enseignée cette année.</p>';
+            }
+
+            listeMatieresAnneeContainer.innerHTML = html;
+            modalListe.style.display = 'flex';
+        }
+
+        closeListeModal.addEventListener('click', () => modalListe.style.display = 'none');
+        modalListe.addEventListener('click', (e) => { if (e.target === modalListe) modalListe.style.display = 'none'; });
+        btnPrintListe.addEventListener('click', () => window.print());
+
+        // ==================== PAGE DE GESTION ====================
+        function showGestionPage() {
+            accueilPage.style.display = 'none';
+            gestionPage.style.display = 'block';
+            // Mettre à jour l'indicateur de contexte
+            if (currentCycleContext && currentYearContext) {
+                contextIndicator.textContent = `${currentCycleContext} - ${currentYearContext}`;
+            } else {
+                contextIndicator.textContent = '';
+            }
+            renderMatieresList(matieres);
+            if (matieres.length > 0) {
+                selectMatiere(matieres[0].id);
+            }
+        }
+
+        function hideGestionPage() {
+            accueilPage.style.display = 'block';
+            gestionPage.style.display = 'none';
+            // Optionnel : reset du contexte
+            // currentCycleContext = null;
+            // currentYearContext = null;
+        }
+
+        function renderMatieresList(list) {
+            totalMatieresSpan.textContent = list.length;
+            if (list.length === 0) {
+                listeMatieresContainer.innerHTML = '<div class="no-selection" style="padding:20px"><i class="fas fa-exclamation-triangle"></i><p>Aucune matière trouvée</p></div>';
+                return;
+            }
+            let html = '';
+            list.forEach(mat => {
+                const activeClass = (matiereSelectionnee === mat.id) ? 'active' : '';
+                html += `
+                    <div class="matiere-item ${activeClass}" data-id="${mat.id}">
+                        <span class="matiere-nom">${mat.nom}</span>
+                        <span class="matiere-code">${mat.code}</span>
+                    </div>
+                `;
+            });
+            listeMatieresContainer.innerHTML = html;
+
+            document.querySelectorAll('.matiere-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = parseInt(item.dataset.id);
+                    selectMatiere(id);
+                });
+            });
+        }
+
+        function selectMatiere(id) {
+            matiereSelectionnee = id;
+            document.querySelectorAll('.matiere-item').forEach(item => {
+                item.classList.toggle('active', parseInt(item.dataset.id) === id);
+            });
+            const matiere = matieres.find(m => m.id === id);
+            if (matiere) {
+                afficherDetailsMatiere(matiere);
+            }
+        }
+
+        // Fonction modifiée pour regrouper les enseignants
+        function afficherDetailsMatiere(mat) {
+            // Regrouper les affectations par enseignant
+            const enseignantMap = new Map(); // clé = id enseignant, valeur = { nom: ..., classes: [] }
+            enseignants.forEach(ens => {
+                const classesPourMatiere = ens.affectations
+                    .filter(aff => aff.matiere === mat.nom)
+                    .map(aff => aff.classe);
+                if (classesPourMatiere.length > 0) {
+                    enseignantMap.set(ens.id, {
+                        nom: ens.prenom + ' ' + ens.nom,
+                        classes: classesPourMatiere
+                    });
+                }
+            });
+
+            const affectationsHtml = Array.from(enseignantMap.entries()).map(([id, data]) => `
+                <div class="affectation-item">
+                    <span class="affectation-enseignant">${data.nom}</span>
+                    <span class="affectation-classe">${data.classes.join(', ')}</span>
+                </div>
+            `).join('');
+
+            const html = `
+                <div class="matiere-detail-card">
+                    <div class="detail-ligne"><i class="fas fa-tag"></i><span><strong>${mat.nom}</strong> (Code: ${mat.code})</span></div>
+                    <div class="detail-ligne"><i class="fas fa-calculator"></i><span>Coefficient : ${mat.coefficient}</span></div>
+                    <div class="detail-ligne"><i class="fas fa-paint-brush"></i><span>Couleur : <span style="display:inline-block; width:20px; height:20px; background:${mat.couleur}; border-radius:4px;"></span> ${mat.couleur}</span></div>
+                    <div class="detail-ligne"><i class="fas fa-align-left"></i><span>Description : ${mat.description || 'non renseignée'}</span></div>
+                    <div class="detail-ligne"><i class="fas fa-link"></i><span>Programme : ${mat.programme || 'non renseigné'}</span></div>
+                    <div class="affectations-list">
+                        <h4><i class="fas fa-chalkboard-teacher"></i> Enseignants affectés (${enseignantMap.size})</h4>
+                        ${affectationsHtml || '<p>Aucun enseignant pour cette matière.</p>'}
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn-action modifier" data-id="${mat.id}"><i class="fas fa-edit"></i> Modifier</button>
+                        <button class="btn-action supprimer" data-id="${mat.id}"><i class="fas fa-trash"></i> Supprimer</button>
+                    </div>
+                </div>
+            `;
+            detailsMatiereContainer.innerHTML = html;
+
+            document.querySelector('.btn-action.modifier').addEventListener('click', () => openModalForEdit(mat));
+            document.querySelector('.btn-action.supprimer').addEventListener('click', () => supprimerMatiere(mat.id));
+        }
+
+        function supprimerMatiere(id) {
+            if (confirm('Supprimer cette matière ? Cela n\'effacera pas les affectations des enseignants, mais la matière ne sera plus disponible.')) {
+                matieres = matieres.filter(m => m.id !== id);
+                if (matiereSelectionnee === id) {
+                    matiereSelectionnee = matieres.length > 0 ? matieres[0].id : null;
+                }
+                renderMatieresList(matieres);
+                if (matiereSelectionnee) {
+                    selectMatiere(matiereSelectionnee);
+                } else {
+                    detailsMatiereContainer.innerHTML = '<div class="no-selection"><i class="fas fa-arrow-left"></i><p>Sélectionnez une matière pour voir ses informations</p></div>';
+                }
+                renderAccueil(); // Met à jour l'accueil
+            }
+        }
+
+        // ==================== FILTRES ====================
+        rechercheMatiereInput.addEventListener('input', filterMatieresList);
+
+        function filterMatieresList() {
+            const search = rechercheMatiereInput.value.toLowerCase();
+            const filtered = matieres.filter(m => 
+                m.nom.toLowerCase().includes(search) ||
+                m.code.toLowerCase().includes(search) ||
+                (m.description && m.description.toLowerCase().includes(search))
+            );
+            renderMatieresList(filtered);
+            if (filtered.length > 0 && matiereSelectionnee && filtered.some(m => m.id === matiereSelectionnee)) {
+                // garder la sélection
+            } else if (filtered.length > 0) {
+                selectMatiere(filtered[0].id);
+            } else {
+                matiereSelectionnee = null;
+                detailsMatiereContainer.innerHTML = '<div class="no-selection"><i class="fas fa-exclamation-triangle"></i><p>Aucune matière correspondante</p></div>';
+            }
+        }
+
+        // ==================== MODAL AJOUT / MODIFICATION ====================
+        function resetModal() {
+            document.querySelectorAll('#modalMatiere .form-control').forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('coefficient').value = '1';
+            document.getElementById('couleur').value = '#4a6cf7';
+            affectationsContainer.innerHTML = '';
+            goToStep(1);
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            timelineSteps.forEach(s => s.classList.remove('active'));
+            document.querySelector(`.timeline-step[data-step="${step}"]`).classList.add('active');
+            formSteps.forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            prevBtn.disabled = (step === 1);
+            if (step === 4) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+                // Remplir le récapitulatif
+                const nom = document.getElementById('nomMatiere').value;
+                const code = document.getElementById('codeMatiere').value;
+                const coeff = document.getElementById('coefficient').value;
+                const affectations = collecterAffectations();
+                // Pour le récap, on veut afficher les enseignants et classes (mais on a seulement les ids)
+                // On va chercher les noms
+                const affectationsAvecNoms = affectations.map(aff => {
+                    const ens = enseignants.find(e => e.id === aff.enseignantId);
+                    return { enseignant: ens ? ens.prenom + ' ' + ens.nom : '?', classe: aff.classe };
+                });
+                recapContent.innerHTML = `
+                    <p><strong>${nom || '??'}</strong> (${code || '??'}) - Coeff. ${coeff}</p>
+                    <p>Affectations : ${affectations.length} entrée(s)</p>
+                    <ul style="max-height:150px; overflow-y:auto;">${affectationsAvecNoms.map(a => `<li>${a.enseignant} - ${a.classe}</li>`).join('')}</ul>
+                `;
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        timelineSteps.forEach(step => {
+            step.addEventListener('click', () => {
+                const stepNum = parseInt(step.dataset.step);
+                if (stepNum <= currentStep || editMode) goToStep(stepNum);
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < 4) goToStep(currentStep + 1);
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) goToStep(currentStep - 1);
+        });
+
+        btnAjouterMatiere.addEventListener('click', () => {
+            editMode = false;
+            editId = null;
+            modalTitle.innerText = 'Ajouter une matière';
+            resetModal();
+            ajouterLigneAffectation(); // une ligne par défaut
+            modalOverlay.style.display = 'flex';
+        });
+
+        function openModalForEdit(mat) {
+            editMode = true;
+            editId = mat.id;
+            modalTitle.innerText = 'Modifier une matière';
+            document.getElementById('nomMatiere').value = mat.nom;
+            document.getElementById('codeMatiere').value = mat.code;
+            document.getElementById('coefficient').value = mat.coefficient;
+            document.getElementById('couleur').value = mat.couleur;
+            document.getElementById('description').value = mat.description || '';
+            document.getElementById('programme').value = mat.programme || '';
+
+            // Affectations : on doit lister les enseignants+classes pour cette matière
+            // et filtrer par le contexte de cycle si présent
+            affectationsContainer.innerHTML = '';
+            let affectationsExistantes = [];
+            enseignants.forEach(ens => {
+                ens.affectations.forEach(aff => {
+                    if (aff.matiere === mat.nom) {
+                        affectationsExistantes.push({ enseignantId: ens.id, enseignantNom: ens.prenom + ' ' + ens.nom, classe: aff.classe });
+                    }
+                });
+            });
+            // Filtrer par cycle si contexte
+            if (currentCycleContext) {
+                const classesInCycle = getClassesForCycle(currentCycleContext);
+                affectationsExistantes = affectationsExistantes.filter(aff => classesInCycle.includes(aff.classe));
+            }
+            if (affectationsExistantes.length === 0) {
+                ajouterLigneAffectation();
+            } else {
+                affectationsExistantes.forEach(aff => ajouterLigneAffectation(aff.enseignantId, aff.classe));
+            }
+
+            goToStep(1);
+            modalOverlay.style.display = 'flex';
+        }
+
+        function ajouterLigneAffectation(enseignantId = '', classe = '') {
+            const div = document.createElement('div');
+            div.className = 'affectation-ligne';
+            div.style.display = 'flex';
+            div.style.gap = '10px';
+            div.style.marginBottom = '10px';
+            div.style.alignItems = 'center';
+
+            // Déterminer la liste des enseignants selon le contexte
+            let teachersList = enseignants;
+            if (currentCycleContext) {
+                teachersList = getTeachersForCycle(currentCycleContext);
+                // Si l'enseignantId pré-sélectionné n'est pas dans la liste filtrée, on l'ajoute quand même
+                if (enseignantId && !teachersList.some(e => e.id === enseignantId)) {
+                    const teacher = enseignants.find(e => e.id === enseignantId);
+                    if (teacher) teachersList = [...teachersList, teacher];
+                }
+            }
+            let teacherOptions = '<option value="">-- Choisir enseignant --</option>';
+            teachersList.forEach(ens => {
+                const selected = (ens.id === enseignantId) ? 'selected' : '';
+                teacherOptions += `<option value="${ens.id}" ${selected}>${ens.prenom} ${ens.nom}</option>`;
+            });
+
+            // Déterminer la liste des classes selon le contexte
+            let classesList = classesListe;
+            if (currentCycleContext) {
+                classesList = getClassesForCycle(currentCycleContext);
+                // Si la classe pré-sélectionnée n'est pas dans la liste filtrée, on l'ajoute
+                if (classe && !classesList.includes(classe)) {
+                    classesList = [...classesList, classe];
+                }
+            }
+            let classOptions = '<option value="">-- Choisir classe --</option>';
+            classesList.forEach(c => {
+                const selected = (c === classe) ? 'selected' : '';
+                classOptions += `<option value="${c}" ${selected}>${c}</option>`;
+            });
+
+            div.innerHTML = `
+                <select class="form-control enseignant-select" style="flex:2;">
+                    ${teacherOptions}
+                </select>
+                <select class="form-control classe-select" style="flex:2;">
+                    ${classOptions}
+                </select>
+                <button type="button" class="btn-action supprimer-affectation" style="padding:8px 12px;"><i class="fas fa-trash"></i></button>
+            `;
+            affectationsContainer.appendChild(div);
+            div.querySelector('.supprimer-affectation').addEventListener('click', () => {
+                div.remove();
+            });
+        }
+
+        btnAjouterAffectation.addEventListener('click', () => ajouterLigneAffectation());
+
+        function collecterAffectations() {
+            const lignes = document.querySelectorAll('#affectationsContainer .affectation-ligne');
+            const affectations = [];
+            lignes.forEach(ligne => {
+                const enseignantId = ligne.querySelector('.enseignant-select').value;
+                const classe = ligne.querySelector('.classe-select').value;
+                if (enseignantId && classe) {
+                    affectations.push({ enseignantId: parseInt(enseignantId), classe });
+                }
+            });
+            return affectations;
+        }
+
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+        }
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        submitBtn.addEventListener('click', () => {
+            const nom = document.getElementById('nomMatiere').value.trim();
+            const code = document.getElementById('codeMatiere').value.trim();
+            const coefficient = parseFloat(document.getElementById('coefficient').value) || 1;
+            const couleur = document.getElementById('couleur').value;
+            const description = document.getElementById('description').value.trim();
+            const programme = document.getElementById('programme').value.trim();
+
+            if (!nom || !code) {
+                alert('Nom et code sont obligatoires');
+                return;
+            }
+
+            const affectations = collecterAffectations(); // array of { enseignantId, classe }
+
+            if (editMode) {
+                const oldMat = matieres.find(m => m.id === editId);
+                const oldName = oldMat.nom;
+                // Mettre à jour la matière
+                Object.assign(oldMat, { nom, code, coefficient, couleur, description, programme });
+
+                // Si le nom a changé, mettre à jour toutes les affectations de cette matière (global)
+                if (oldName !== nom) {
+                    enseignants.forEach(ens => {
+                        ens.affectations.forEach(aff => {
+                            if (aff.matiere === oldName) {
+                                aff.matiere = nom;
+                            }
+                        });
+                    });
+                }
+
+                // Gérer les affectations pour le cycle courant (ou global si pas de contexte)
+                if (currentCycleContext) {
+                    const classesInCycle = getClassesForCycle(currentCycleContext);
+                    // Supprimer les anciennes affectations DANS CE CYCLE pour cette matière
+                    enseignants.forEach(ens => {
+                        ens.affectations = ens.affectations.filter(aff => !(aff.matiere === nom && classesInCycle.includes(aff.classe)));
+                    });
+                    // Ajouter les nouvelles affectations (elles sont dans le cycle car dropdowns filtrés)
+                    affectations.forEach(aff => {
+                        const enseignant = enseignants.find(e => e.id === aff.enseignantId);
+                        if (enseignant) {
+                            enseignant.affectations.push({ classe: aff.classe, matiere: nom });
+                        }
+                    });
+                } else {
+                    // Pas de contexte : remplacer toutes les affectations de cette matière
+                    enseignants.forEach(ens => {
+                        ens.affectations = ens.affectations.filter(aff => aff.matiere !== nom);
+                    });
+                    affectations.forEach(aff => {
+                        const enseignant = enseignants.find(e => e.id === aff.enseignantId);
+                        if (enseignant) {
+                            enseignant.affectations.push({ classe: aff.classe, matiere: nom });
+                        }
+                    });
+                }
+            } else {
+                // Nouvelle matière
+                const newId = Date.now() + Math.random();
+                matieres.push({ id: newId, nom, code, coefficient, couleur, description, programme });
+                // Ajouter les affectations (avec ou sans contexte)
+                affectations.forEach(aff => {
+                    const enseignant = enseignants.find(e => e.id === aff.enseignantId);
+                    if (enseignant) {
+                        enseignant.affectations.push({ classe: aff.classe, matiere: nom });
+                    }
+                });
+            }
+
+            // Mise à jour de l'UI
+            renderMatieresList(matieres);
+            if (editMode) {
+                selectMatiere(editId);
+            } else {
+                const newMat = matieres.find(m => m.nom === nom && m.code === code);
+                if (newMat) selectMatiere(newMat.id);
+            }
+            renderAccueil(); // met à jour les compteurs sur l'accueil
+
+            closeModal();
+        });
+
+        // ==================== RECHERCHE SUR L'ACCUEIL ====================
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const yearCards = document.querySelectorAll('.year-card');
+            
+            if (searchTerm.length > 0) {
+                yearCards.forEach(card => {
+                    const title = card.querySelector('.year-title').textContent.toLowerCase();
+                    const description = card.querySelector('.year-description').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        highlightText(card, searchTerm);
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                document.querySelectorAll('.cycle-section').forEach(cycle => cycle.classList.add('expanded'));
+            } else {
+                yearCards.forEach(card => {
+                    card.style.display = 'block';
+                    removeHighlights(card);
+                });
+                document.querySelectorAll('.cycle-section').forEach(cycle => cycle.classList.remove('expanded'));
+                document.getElementById('cycle1').classList.add('expanded');
+            }
+        });
+
+        function highlightText(element, searchTerm) {
+            const text = element.innerHTML;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            element.innerHTML = text.replace(regex, '<span style="background-color: #ffeb3b; padding: 2px; border-radius: 3px;">$1</span>');
+        }
+
+        function removeHighlights(element) {
+            const text = element.innerHTML;
+            element.innerHTML = text.replace(/<span style="background-color: #ffeb3b; padding: 2px; border-radius: 3px;">(.*?)<\/span>/gi, '$1');
+        }
+
+        // ==================== INITIALISATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAccueil();
+            retourAccueilBtn.addEventListener('click', hideGestionPage);
+            const filterBtn = document.querySelector('.filter-btn');
+            filterBtn.addEventListener('click', function() {
+                alert('Fonctionnalité de filtre avancé - À implémenter dans la version back-end');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription scolaire · XYZ · formulaire moderne</title>
+    <!-- Google Font & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f5fa 0%, #e9eff5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .form-wizard {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.6);
+            display: flex;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* SIDEBAR (étapes verticales) */
+        .steps-sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(8px);
+            padding: 2rem 1.2rem;
+            border-right: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.2rem;
+            border-radius: 1.8rem;
+            background: transparent;
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            cursor: pointer;
+            color: #1a2e3f;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .step-item i {
+            font-size: 1.3rem;
+            width: 2rem;
+            color: #2c4b66;
+            transition: inherit;
+        }
+
+        .step-item span {
+            font-size: 1rem;
+            letter-spacing: 0.01em;
+        }
+
+        .step-item.active {
+            background: white;
+            border-color: rgba(44, 75, 102, 0.2);
+            box-shadow: 0 12px 20px -12px rgba(0,32,64,0.2);
+            font-weight: 600;
+            color: #0c1f2e;
+        }
+
+        .step-item.active i {
+            color: #0066b3;
+        }
+
+        .step-item:hover:not(.active) {
+            background: rgba(255,255,255,0.7);
+            border-color: rgba(0,0,0,0.05);
+        }
+
+        /* CONTENU PRINCIPAL */
+        .form-content {
+            flex: 1;
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
+            background: rgba(255,255,255,0.3);
+            min-height: 700px;
+            position: relative;
+        }
+
+        .steps-container {
+            position: relative;
+            height: 650px;
+            width: 100%;
+        }
+
+        .step-pane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateX(12px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            pointer-events: none;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            scrollbar-width: thin;
+        }
+
+        .step-pane.active-pane {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem 2rem;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .field-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: #2b4b6e;
+            opacity: 0.8;
+            margin-left: 0.5rem;
+        }
+
+        input, select, textarea {
+            background: rgba(255,255,255,0.8);
+            border: 1.5px solid rgba(0,0,0,0.06);
+            border-radius: 1.4rem;
+            padding: 0.9rem 1.2rem;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.2s;
+            color: #0b1e2c;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #2f7bb5;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,80,160,0.15);
+        }
+
+        input[type="file"] {
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .photo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            background: #cfdeed;
+        }
+
+        /* CARTE SCOLAIRE – MODÈLE EXACT */
+        .card-exact {
+            background: white;
+            border-radius: 2rem;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 20px 35px -10px rgba(0,40,70,0.25);
+            border: 1px solid rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        .card-exact .header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+        }
+
+        .card-exact .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #003057;
+            letter-spacing: -0.02em;
+        }
+
+        .card-exact .header .sub {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1f4a6e;
+            border-bottom: 2px dashed #bacddc;
+            padding-bottom: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .card-exact .row {
+            display: flex;
+            margin-bottom: 0.75rem;
+            align-items: baseline;
+        }
+
+        .card-exact .label {
+            font-weight: 600;
+            color: #1f4868;
+            width: 200px;  /* pour aligner */
+            flex-shrink: 0;
+        }
+
+        .card-exact .value {
+            font-weight: 500;
+            color: #021c2c;
+            border-bottom: 1px dotted #a0b8cc;
+            padding-bottom: 0.2rem;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        /* navigation des boutons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .btn-primary {
+            background: #0f3147;
+            color: white;
+            border: none;
+            box-shadow: 0 8px 18px -6px #0f314770;
+        }
+
+        .btn-primary:hover {
+            background: #1a435e;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .readonly-field {
+            background: #eef4f9;
+            color: #1c3d54;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="form-wizard">
+    <!-- Sidebar -->
+    <div class="steps-sidebar">
+        <div class="step-item active" data-step="1"><i class="fas fa-user-circle"></i> <span>Infos personnelles</span></div>
+        <div class="step-item" data-step="2"><i class="fas fa-users"></i> <span>Tuteur</span></div>
+        <div class="step-item" data-step="3"><i class="fas fa-graduation-cap"></i> <span>Scolarité</span></div>
+        <div class="step-item" data-step="4"><i class="fas fa-credit-card"></i> <span>Paiement</span></div>
+        <div class="step-item" data-step="5"><i class="fas fa-id-card"></i> <span>Carte scolaire</span></div>
+    </div>
+
+    <!-- Contenu des étapes -->
+    <div class="form-content">
+        <div class="steps-container">
+            <!-- ÉTAPE 1 : PERSONNELLE -->
+            <div class="step-pane active-pane" id="step1">
+                <h2 style="margin-bottom: 2rem; font-weight: 600;">📋 Renseignements personnels</h2>
+                <div class="form-grid">
+                    <div class="field-group"><label>N° matricule</label><input type="text" id="matricule" placeholder="e.g. 2025-001"></div>
+                    <div class="field-group"><label>Nom</label><input type="text" id="nom" placeholder="Nom"></div>
+                    <div class="field-group"><label>Prénom</label><input type="text" id="prenom" placeholder="Prénom"></div>
+                    <div class="field-group"><label>Sexe</label>
+                        <select id="sexe"><option value="M">Masculin</option><option value="F">Féminin</option><option value="autre">Autre</option></select>
+                    </div>
+                    <div class="field-group"><label>Date de naissance</label><input type="date" id="dateNaissance"></div>
+                    <div class="field-group"><label>Lieu de naissance</label><input type="text" id="lieuNaissance" placeholder="Ville, pays"></div>
+                    <div class="field-group"><label>Nom du père</label><input type="text" id="nomPere" placeholder="Nom du père"></div>
+                    <div class="field-group"><label>Nom de la mère</label><input type="text" id="nomMere" placeholder="Nom de la mère"></div>
+                    <div class="field-group full-width"><label>Adresse complète</label><input type="text" id="adresse" placeholder="Rue, code postal, ville" value="Green"></div>
+                    <div class="field-group"><label>Groupe sanguin</label><input type="text" id="groupeSangin" placeholder="ex: A+"></div>
+                    <div class="field-group"><label>Photo</label><input type="file" id="photoInput" accept="image/*"></div>
+                    <div class="field-group"><img id="photoPreview" class="photo-preview" src="https://via.placeholder.com/80" alt="aperçu"></div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 : TUTEUR -->
+            <div class="step-pane" id="step2">
+                <h2 style="margin-bottom: 2rem;">👥 Informations tuteur</h2>
+                <div class="form-grid">
+                    <div class="field-group full-width"><label>Nom & prénom du tuteur (si différent)</label><input type="text" id="tuteurNom" placeholder="Nom complet"></div>
+                    <div class="field-group"><label>Profession</label><input type="text" id="tuteurProfession" placeholder="Profession"></div>
+                    <div class="field-group"><label>Téléphone</label><input type="tel" id="tuteurTel" placeholder="+221 77 123 45 67"></div>
+                    <div class="field-group"><label>Email</label><input type="email" id="tuteurEmail" placeholder="tuteur@exemple.com"></div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3 : SCOLARITÉ -->
+            <div class="step-pane" id="step3">
+                <h2 style="margin-bottom: 2rem;">📚 Scolarité</h2>
+                <div class="form-grid">
+                    <div class="field-group"><label>Année scolaire</label><input type="text" id="anneeScolaire" value="2025-2026" placeholder="2025-2026"></div>
+                    <div class="field-group"><label>Cycle</label>
+                        <select id="cycle">
+                            <option value="1er">1er cycle (1ère - 6ème)</option>
+                            <option value="2eme">2ème cycle (7ème - 9ème)</option>
+                            <option value="lycee">Lycée (10ème - 12ème)</option>
+                        </select>
+                    </div>
+                    <div class="field-group"><label>Classe</label>
+                        <select id="classe"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4 : PAIEMENT -->
+            <div class="step-pane" id="step4">
+                <h2 style="margin-bottom: 2rem;">💰 Paiement & frais</h2>
+                <div class="form-grid">
+                    <div class="field-group"><label>Frais d'inscription (FCFA)</label><input type="number" id="fraisInscription" value="25000"></div>
+                    <div class="field-group"><label>Frais de scolarité (FCFA)</label><input type="number" id="fraisScolarite" value="150000"></div>
+                    <div class="field-group"><label>Mode de paiement</label>
+                        <select id="modePaiement"><option value="comptant">Comptant</option><option value="tranche">En tranche</option></select>
+                    </div>
+                    <div class="field-group"><label>Montant payé (FCFA)</label><input type="number" id="montantPaye" value="0"></div>
+                    <div class="field-group"><label>Reste à payer</label><input type="text" id="resteAPayer" class="readonly-field" readonly value="150000 FCFA"></div>
+                    <div class="field-group"><label>Statut</label><input type="text" id="statutPaiement" class="readonly-field" readonly value="Non payé"></div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 5 : CARTE GÉNÉRÉE (MODÈLE EXACT) -->
+            <div class="step-pane" id="step5">
+                <h2 style="margin-bottom: 1.5rem;">🪪 Carte scolaire – modèle fourni</h2>
+                <div class="card-exact" id="carteExact">
+                    <div class="header">
+                        <h1>ÉCOLE PRIVÉE XYZ</h1>
+                        <div class="sub" id="carteAnnee">Carte scolaire année de l'année académique : 2025-2026</div>
+                    </div>
+                    <div class="row"><span class="label">Nom :</span><span class="value" id="carteNom"></span></div>
+                    <div class="row"><span class="label">Prénom :</span><span class="value" id="cartePrenom"></span></div>
+                    <div class="row"><span class="label">Date et lieu de naissance :</span><span class="value" id="carteNaissance"></span></div>
+                    <div class="row"><span class="label">Nom du père :</span><span class="value" id="cartePere"></span></div>
+                    <div class="row"><span class="label">Nom de la mère :</span><span class="value" id="carteMere"></span></div>
+                    <div class="row"><span class="label">Address :</span><span class="value" id="carteAdresse"></span></div>
+                    <div class="row"><span class="label">N° matricule :</span><span class="value" id="carteMatricule"></span></div>
+                    <div class="row"><span class="label">groupe sangin :</span><span class="value" id="carteSangin"></span></div>
+                    <div class="row"><span class="label">Classe :</span><span class="value" id="carteClasse"></span></div>
+                </div>
+                <p style="margin-top: 1.5rem; font-style: italic; color: #306489;">✓ La carte est automatiquement remplie avec vos données. Le champ "Address" est pré-rempli avec "Green" comme dans l'exemple, mais vous pouvez le modifier.</p>
+            </div>
+        </div>
+
+        <!-- Boutons navigation -->
+        <div class="nav-buttons">
+            <button class="btn" id="prevBtn" disabled><i class="fas fa-arrow-left"></i> Précédent</button>
+            <button class="btn btn-primary" id="nextBtn">Suivant <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Éléments DOM
+        const stepPanes = document.querySelectorAll('.step-pane');
+        const stepItems = document.querySelectorAll('.step-item');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentStep = 1;
+
+        // Champs de saisie
+        const matricule = document.getElementById('matricule');
+        const nom = document.getElementById('nom');
+        const prenom = document.getElementById('prenom');
+        const dateNaissance = document.getElementById('dateNaissance');
+        const lieuNaissance = document.getElementById('lieuNaissance');
+        const nomPere = document.getElementById('nomPere');
+        const nomMere = document.getElementById('nomMere');
+        const adresse = document.getElementById('adresse');
+        const groupeSangin = document.getElementById('groupeSangin');
+        const photoInput = document.getElementById('photoInput');
+        const photoPreview = document.getElementById('photoPreview');
+        const anneeScolaire = document.getElementById('anneeScolaire');
+        const cycleSelect = document.getElementById('cycle');
+        const classeSelect = document.getElementById('classe');
+        const fraisScolarite = document.getElementById('fraisScolarite');
+        const montantPaye = document.getElementById('montantPaye');
+        const resteAPayer = document.getElementById('resteAPayer');
+        const statutPaiement = document.getElementById('statutPaiement');
+
+        // Éléments de la carte exacte
+        const carteNom = document.getElementById('carteNom');
+        const cartePrenom = document.getElementById('cartePrenom');
+        const carteNaissance = document.getElementById('carteNaissance');
+        const cartePere = document.getElementById('cartePere');
+        const carteMere = document.getElementById('carteMere');
+        const carteAdresse = document.getElementById('carteAdresse');
+        const carteMatricule = document.getElementById('carteMatricule');
+        const carteSangin = document.getElementById('carteSangin');
+        const carteClasse = document.getElementById('carteClasse');
+        const carteAnnee = document.getElementById('carteAnnee');
+
+        // Peupler les classes selon le cycle
+        function populateClasses() {
+            const cycle = cycleSelect.value;
+            let options = [];
+            if (cycle === '1er') options = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+            else if (cycle === '2eme') options = ['7ème', '8ème', '9ème'];
+            else if (cycle === 'lycee') options = ['10ème', '11ème', '12ème'];
+            classeSelect.innerHTML = options.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+        populateClasses();
+        cycleSelect.addEventListener('change', populateClasses);
+
+        // Mise à jour paiement
+        function updatePaiement() {
+            const scolarite = parseFloat(fraisScolarite.value) || 0;
+            const paye = parseFloat(montantPaye.value) || 0;
+            const reste = Math.max(0, scolarite - paye);
+            resteAPayer.value = reste.toFixed(0) + ' FCFA';
+            let statut = '';
+            if (scolarite <= 0) statut = 'Non défini';
+            else if (paye <= 0) statut = 'Non payé';
+            else if (paye >= scolarite) statut = 'Payé';
+            else statut = 'Partiellement payé';
+            statutPaiement.value = statut;
+        }
+        fraisScolarite.addEventListener('input', updatePaiement);
+        montantPaye.addEventListener('input', updatePaiement);
+        updatePaiement();
+
+        // Mise à jour de la carte (étape 5)
+        function updateCard() {
+            carteNom.textContent = nom.value || '—';
+            cartePrenom.textContent = prenom.value || '—';
+            const date = dateNaissance.value ? dateNaissance.value.split('-').reverse().join('/') : '';
+            const lieu = lieuNaissance.value || '';
+            carteNaissance.textContent = (date && lieu) ? `${date} à ${lieu}` : (date || lieu || '—');
+            cartePere.textContent = nomPere.value || '—';
+            carteMere.textContent = nomMere.value || '—';
+            carteAdresse.textContent = adresse.value || '—';
+            carteMatricule.textContent = matricule.value || '—';
+            carteSangin.textContent = groupeSangin.value || '—';
+            carteClasse.textContent = classeSelect.value || '—';
+            carteAnnee.textContent = `Carte scolaire année de l'année académique : ${anneeScolaire.value || '2025-2026'}`;
+        }
+
+        // Prévisualisation photo
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    photoPreview.src = ev.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Écouteurs pour mise à jour dynamique de la carte
+        const inputsToWatch = [matricule, nom, prenom, dateNaissance, lieuNaissance, nomPere, nomMere, adresse, groupeSangin, anneeScolaire, classeSelect];
+        inputsToWatch.forEach(input => input.addEventListener('input', updateCard));
+        classeSelect.addEventListener('change', updateCard);
+        anneeScolaire.addEventListener('input', updateCard);
+
+        // Navigation
+        function setStep(step) {
+            stepPanes.forEach(pane => pane.classList.remove('active-pane'));
+            document.getElementById(`step${step}`).classList.add('active-pane');
+            stepItems.forEach((item, idx) => {
+                if (idx+1 === step) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+            currentStep = step;
+            prevBtn.disabled = (step === 1);
+            nextBtn.innerHTML = (step === 5) ? 'Terminé <i class="fas fa-check"></i>' : 'Suivant <i class="fas fa-arrow-right"></i>';
+            if (step === 5) updateCard();
+        }
+
+        stepItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const step = parseInt(item.dataset.step);
+                setStep(step);
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < 5) setStep(currentStep + 1);
+            else alert('🎉 Inscription terminée ! La carte scolaire est prête.');
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) setStep(currentStep - 1);
+        });
+
+        // Initialisation
+        updateCard();
+    })();
+</script>
+</body>
+</html>

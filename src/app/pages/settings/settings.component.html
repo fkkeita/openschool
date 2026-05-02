@@ -1,0 +1,211 @@
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <header class="page-header">
+            <div>
+                <h1>Paramètres</h1>
+                <p class="subtitle">Configuration de l'application</p>
+            </div>
+            <button class="btn btn-primary" (click)="saveSettings()">
+                <span class="material-icons">save</span>
+                Enregistrer
+            </button>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <button [class.active]="selectedTab === 'general'" (click)="selectedTab = 'general'" class="tab-button">
+                <span class="material-icons">settings</span>
+                Général
+            </button>
+            <button [class.active]="selectedTab === 'users'" (click)="selectedTab = 'users'" class="tab-button">
+                <span class="material-icons">people</span>
+                Utilisateurs
+            </button>
+            <button [class.active]="selectedTab === 'security'" (click)="selectedTab = 'security'" class="tab-button">
+                <span class="material-icons">security</span>
+                Sécurité
+            </button>
+            <button [class.active]="selectedTab === 'notifications'" (click)="selectedTab = 'notifications'"
+                class="tab-button">
+                <span class="material-icons">notifications</span>
+                Notifications
+            </button>
+        </div>
+
+        <!-- General Tab -->
+        <div *ngIf="selectedTab === 'general'" class="settings-card">
+            <h2>Informations de l'École</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nom de l'école</label>
+                    <input type="text" [(ngModel)]="schoolSettings.name" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Année académique</label>
+                    <input type="text" [(ngModel)]="schoolSettings.academicYear" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Adresse</label>
+                    <input type="text" [(ngModel)]="schoolSettings.address" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Ville</label>
+                    <input type="text" [(ngModel)]="schoolSettings.city" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Code postal</label>
+                    <input type="text" [(ngModel)]="schoolSettings.zipCode" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" [(ngModel)]="schoolSettings.phone" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="schoolSettings.email" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Site web</label>
+                    <input type="url" [(ngModel)]="schoolSettings.website" class="form-input">
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div *ngIf="selectedTab === 'users'" class="settings-card">
+            <div class="card-header">
+                <h2>Gestion des Utilisateurs</h2>
+                <button class="btn btn-primary">
+                    <span class="material-icons">add</span>
+                    Nouvel Utilisateur
+                </button>
+            </div>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let user of users">
+                        <td class="user-name">{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><span class="role-badge">{{ user.role }}</span></td>
+                        <td>
+                            <span [class]="'badge badge-' + (user.status === 'ACTIVE' ? 'success' : 'secondary')">
+                                {{ user.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="icon-btn"><span class="material-icons">edit</span></button>
+                                <button class="icon-btn"><span class="material-icons">delete</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Security Tab -->
+        <div *ngIf="selectedTab === 'security'" class="settings-card">
+            <h2>Paramètres de Sécurité</h2>
+            <div class="security-options">
+                <div class="option-item">
+                    <div>
+                        <h3>Authentification à deux facteurs</h3>
+                        <p>Ajouter une couche de sécurité supplémentaire</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="option-item">
+                    <div>
+                        <h3>Expiration de session</h3>
+                        <p>Durée avant déconnexion automatique</p>
+                    </div>
+                    <select class="form-select">
+                        <option>30 minutes</option>
+                        <option selected>1 heure</option>
+                        <option>2 heures</option>
+                    </select>
+                </div>
+                <div class="option-item">
+                    <div>
+                        <h3>Historique de connexion</h3>
+                        <p>Conserver l'historique des connexions</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div *ngIf="selectedTab === 'notifications'" class="settings-card">
+            <h2>Préférences de Notifications</h2>
+            <div class="notification-options">
+                <div class="notification-item">
+                    <div>
+                        <h3>Alertes par Email</h3>
+                        <p>Recevoir des notifications par email</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="notificationSettings.emailAlerts">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div>
+                        <h3>Alertes par SMS</h3>
+                        <p>Recevoir des notifications par SMS</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="notificationSettings.smsAlerts">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div>
+                        <h3>Notifications d'Absence</h3>
+                        <p>Alertes pour les absences d'élèves</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="notificationSettings.absenceNotifications">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div>
+                        <h3>Notifications de Notes</h3>
+                        <p>Alertes lors de la saisie de nouvelles notes</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="notificationSettings.gradeNotifications">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div>
+                        <h3>Rappels de Paiement</h3>
+                        <p>Rappels automatiques pour les paiements</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="notificationSettings.paymentReminders">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

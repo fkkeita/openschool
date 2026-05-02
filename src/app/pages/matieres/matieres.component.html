@@ -1,0 +1,669 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="eleves-main">
+        <div class="container">
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 PAGE D'ACCUEIL : accordéon des cycles + cartes par année
+                 Visible uniquement quand vue === 'accueil'
+            ═══════════════════════════════════════════════════════════════ -->
+            <section *ngIf="vue === 'accueil'" id="accueilPage">
+
+                <!-- ── En-tête ── -->
+                <div class="header">
+                    <h1><i class="fas fa-book"></i> Plan de Travail - Gestion des Matières</h1>
+                    <div class="user-info">
+                        <span>Établissement :</span>
+                        <strong>École Secondaire Modèle</strong>
+                    </div>
+                </div>
+
+                <!-- ── Barre de recherche + bouton Ajouter ── -->
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [ngModel]="rechercheAccueil"
+                            (ngModelChange)="onRechercheAccueilChange($event)"
+                            placeholder="Rechercher une matière, une année, un cycle...">
+                    </div>
+                    <!-- Bouton "Ajouter une matière" : même style que "Ajouter un élève" -->
+                    <button class="btn-ajouter-accueil" type="button" (click)="ouvrirModalAjout()">
+                        <i class="fas fa-plus"></i> Ajouter une matière
+                    </button>
+                </div>
+
+                <!-- ── Accordéon des cycles ── -->
+                <div class="main-content" id="cyclesContainer">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [id]="cycle.nom"
+                        [class.expanded]="cycleOuvert[cycle.nom]">
+
+                        <!-- En-tête du cycle (cliquer = ouvrir/fermer) -->
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle" type="button">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <!-- Contenu du cycle : grille de cartes par année -->
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)"
+                                    [attr.data-year]="annee.nom">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+
+                                        <!-- Titre + badge de l'année -->
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+
+                                        <!-- ── STATS avec dropdowns au survol ──
+                                             class-stat-trigger = conteneur du dropdown
+                                             class-dropdown     = menu qui apparaît au survol
+                                        -->
+                                        <div class="year-stats" *ngIf="getStatsPourAnnee(annee.nom) as stats">
+
+                                            <!-- MATIÈRES : liste déroulante des matières de l'année -->
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbMatieres }}
+                                                    <i class="fas fa-chevron-down"></i>
+                                                </div>
+                                                <div class="stat-label">MATIÈRES</div>
+                                                <div class="class-dropdown">
+                                                    <div class="dropdown-title">Matières — {{ annee.nom }}</div>
+                                                    <div class="class-item"
+                                                        *ngFor="let m of getMatieresPourAnnee(annee.nom)"
+                                                        (click)="ouvrirDetailMatiere(m); $event.stopPropagation()">
+                                                        <span class="class-name">{{ m.nom }}</span>
+                                                        <span class="class-count" [style.background]="m.couleur"
+                                                            style="color:white">{{ m.code }}</span>
+                                                    </div>
+                                                    <div *ngIf="getMatieresPourAnnee(annee.nom).length === 0"
+                                                        class="empty-dropdown">
+                                                        Aucune matière configurée
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- CLASSES : liste déroulante des classes de l'année -->
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbClasses }}
+                                                    <i class="fas fa-chevron-down"></i>
+                                                </div>
+                                                <div class="stat-label">CLASSES</div>
+                                                <div class="class-dropdown">
+                                                    <div class="dropdown-title">Classes — {{ annee.nom }}</div>
+                                                    <div class="class-item"
+                                                        *ngFor="let cl of getClassesDeLAnnee(annee.nom)"
+                                                        (click)="ouvrirPopupClasse(cl, annee.nom); $event.stopPropagation()">
+                                                        <i class="fas fa-chalkboard"></i>
+                                                        <span class="class-name">{{ cl }}</span>
+                                                    </div>
+                                                    <div *ngIf="getClassesDeLAnnee(annee.nom).length === 0"
+                                                        class="empty-dropdown">
+                                                        Aucune classe trouvée
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- ENSEIGNANTS : liste déroulante des profs de l'année -->
+                                            <div class="stat-item class-stat-trigger">
+                                                <div class="stat-value">
+                                                    {{ stats.nbEnseignants }}
+                                                    <i class="fas fa-chevron-down"></i>
+                                                </div>
+                                                <div class="stat-label">ENSEIGNANTS</div>
+                                                <div class="class-dropdown">
+                                                    <div class="dropdown-title">Enseignants — {{ annee.nom }}</div>
+                                                    <div class="class-item"
+                                                        *ngFor="let e of getEnseignantsPourAnnee(annee.nom)"
+                                                        (click)="ouvrirDetailEnseignant(e); $event.stopPropagation()">
+                                                        <span class="class-name">{{ e.prenom }} {{ e.nom }}</span>
+                                                        <span class="class-count">{{ e.matierePrincipale }}</span>
+                                                    </div>
+                                                    <div *ngIf="getEnseignantsPourAnnee(annee.nom).length === 0"
+                                                        class="empty-dropdown">
+                                                        Aucun enseignant
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div><!-- /year-stats -->
+
+                                        <p class="year-description">{{ annee.description }}</p>
+
+                                        <!-- ── Boutons d'action ──
+                                             Même style que Élèves :
+                                             - "Voir les matières" = bouton primaire sombre
+                                             - "Gérer"             = bouton secondaire clair
+                                        -->
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" type="button"
+                                                (click)="ouvrirModalListe(annee.nom); $event.stopPropagation()">
+                                                Voir les matières
+                                            </button>
+                                            <button class="action-btn secondary gestion-btn" type="button"
+                                                (click)="selectAnnee(annee); $event.stopPropagation()">
+                                                Gérer
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p><i class="fas fa-code"></i> Application de Gestion Scolaire — Matières</p>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 PAGE DE GESTION (identique à la vue Gestion des Élèves)
+                 Gauche : liste des classes | Droite : matières de la classe
+                 Visible quand vue === 'gestion'
+            ═══════════════════════════════════════════════════════════════ -->
+            <section *ngIf="vue === 'gestion'" id="gestionPage">
+
+                <!-- En-tête de la gestion (fond bleu primaire) -->
+                <div class="gestion-header">
+                    <h2><i class="fas fa-book-open"></i> Gestion des matières — {{ selectedAnnee?.nom }}</h2>
+                    <div style="display:flex; gap:12px; align-items:center">
+                        <button class="btn-ajouter" type="button" (click)="ouvrirModalAjout()">
+                            <i class="fas fa-plus"></i> Ajouter une matière
+                        </button>
+                        <button class="btn-retour" type="button" (click)="revenirAccueil()">
+                            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panneau double colonne -->
+                <div class="gestion-container">
+
+                    <!-- ── Colonne GAUCHE : liste des classes ── -->
+                    <div class="classes-panel">
+                        <h3>
+                            <i class="fas fa-chalkboard"></i>
+                            Classes (<span>{{ classesFiltrees.length }}</span>)
+                        </h3>
+                        <div class="recherche-classe">
+                            <i class="fas fa-search"></i>
+                            <input type="text" [(ngModel)]="rechercheClasse" placeholder="Filtrer les classes...">
+                        </div>
+                        <div class="liste-classes">
+                            <div class="classe-item" *ngFor="let classe of classesFiltrees"
+                                [class.active]="classeActive === classe" (click)="selectionnerClasse(classe)">
+                                <span class="classe-nom">{{ classe }}</span>
+                                <span class="classe-effectif">{{ nbMatieresClasse(classe) }} matière(s)</span>
+                            </div>
+                            <div *ngIf="classesFiltrees.length === 0" class="no-selection" style="padding:20px">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Aucune classe trouvée</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Colonne DROITE : matières de la classe sélectionnée ── -->
+                    <div class="matieres-right-panel">
+                        <h3>
+                            <span>
+                                <i class="fas fa-book"></i>
+                                Matières de
+                                <span class="classe-titre">{{ classeActive || 'aucune classe' }}</span>
+                            </span>
+                            <span class="matieres-header-right">
+                                <span class="recherche-matiere-panel" *ngIf="classeActive">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" [(ngModel)]="rechercheMatiere"
+                                        placeholder="Rechercher une matière...">
+                                </span>
+                            </span>
+                        </h3>
+
+                        <!-- Liste des matières quand une classe est sélectionnée -->
+                        <div class="liste-matieres" *ngIf="classeActive; else inviteSelection">
+                            <div *ngIf="matieresFiltreesGestion.length === 0" class="no-selection">
+                                <i class="fas fa-book-open"></i>
+                                <p>Aucune matière trouvée</p>
+                            </div>
+
+                            <!-- Carte accordéon pour chaque matière -->
+                            <div class="matiere-card" *ngFor="let m of matieresFiltreesGestion">
+                                <!-- Barre de couleur de la matière -->
+                                <div class="matiere-color-bar" [style.background]="m.couleur || '#4a6cf7'"></div>
+                                <div class="matiere-card-body">
+                                    <div class="matiere-info-principale">
+                                        <!-- Avatar = code de la matière coloré -->
+                                        <div class="matiere-avatar" [style.background]="m.couleur || '#4a6cf7'">
+                                            {{ m.code }}
+                                        </div>
+                                        <div>
+                                            <div class="matiere-nom">{{ m.nom }}</div>
+                                            <div class="matiere-detail">
+                                                <i class="fas fa-weight-hanging"></i> Coeff. {{ m.coefficient }}
+                                                &nbsp;·&nbsp;
+                                                <i class="fas fa-user-tie"></i> {{ getProfPourMatiere(m) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="matiere-actions">
+                                        <button class="btn-action modifier" type="button"
+                                            (click)="ouvrirModalEdition(m)">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </button>
+                                        <button class="btn-action supprimer" type="button"
+                                            (click)="supprimerMatiere(m.id)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message quand aucune classe n'est sélectionnée -->
+                        <ng-template #inviteSelection>
+                            <div class="liste-matieres">
+                                <div class="no-selection">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <p>Sélectionnez une classe à gauche pour voir ses matières</p>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODALE AJOUT / ÉDITION D'UNE MATIÈRE
+     Formulaire en 4 étapes avec timeline (comme le formulaire Élève)
+     Étape 1 : Informations générales (nom, code, coeff, couleur)
+     Étape 2 : Description / programme
+     Étape 3 : Affectations (quel prof enseigne dans quelle classe)
+     Étape 4 : Récapitulatif
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModalMatiere" (click)="showModalMatiere = false">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+        <!-- En-tête de la modale -->
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-book"></i>
+                {{ editMode ? 'Modifier la matière' : 'Ajouter une matière' }}
+            </h3>
+            <button class="modal-close" type="button" (click)="showModalMatiere = false">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <!-- ── Timeline (barre d'étapes) ── -->
+            <div class="timeline">
+                <div class="timeline-step" [class.active]="currentStep === 1" (click)="goToStep(1)">
+                    <div class="step-number">1</div>
+                    <div class="step-info">
+                        <h4>Général</h4>
+                        <p>Nom, code, couleur</p>
+                    </div>
+                </div>
+                <div class="timeline-step" [class.active]="currentStep === 2" (click)="goToStep(2)">
+                    <div class="step-number">2</div>
+                    <div class="step-info">
+                        <h4>Détails</h4>
+                        <p>Description, programme</p>
+                    </div>
+                </div>
+                <div class="timeline-step" [class.active]="currentStep === 3" (click)="goToStep(3)">
+                    <div class="step-number">3</div>
+                    <div class="step-info">
+                        <h4>Affectations</h4>
+                        <p>Prof + Classe</p>
+                    </div>
+                </div>
+                <div class="timeline-step" [class.active]="currentStep === 4" (click)="goToStep(4)">
+                    <div class="step-number">4</div>
+                    <div class="step-info">
+                        <h4>Récapitulatif</h4>
+                        <p>Vérification</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Contenu des étapes ── -->
+            <div class="form-container">
+
+                <!-- ÉTAPE 1 : Informations générales -->
+                <div class="form-step" [class.active]="currentStep === 1">
+                    <div class="form-group">
+                        <label>Nom de la matière *</label>
+                        <input type="text" [(ngModel)]="formData.nom" class="form-control"
+                            placeholder="Ex: Mathématiques">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Code *</label>
+                            <input type="text" [(ngModel)]="formData.code" class="form-control" placeholder="Ex: MAT"
+                                maxlength="5">
+                        </div>
+                        <div class="form-group half">
+                            <label>Coefficient</label>
+                            <input type="number" [(ngModel)]="formData.coefficient" class="form-control" min="1"
+                                max="10">
+                        </div>
+                    </div>
+
+                    <!-- ── Sélecteur de couleur ──
+                         Permet de choisir la couleur de la pastille de la matière.
+                         Cette couleur est utilisée dans les cartes, le panneau de gestion
+                         et la modale "Voir les matières".
+                    -->
+                    <div class="form-group">
+                        <label>Couleur de la matière</label>
+                        <div class="color-picker-group">
+                            <!-- Input color natif du navigateur -->
+                            <input type="color" [(ngModel)]="formData.couleur" class="color-input" id="couleurMatiere">
+                            <!-- Aperçu du badge avec la couleur choisie -->
+                            <div class="color-preview">
+                                <div class="color-swatch" [style.background]="formData.couleur"></div>
+                                <span class="color-code">{{ formData.couleur }}</span>
+                                <label class="color-label" for="couleurMatiere">
+                                    <i class="fas fa-palette"></i> Choisir une couleur
+                                </label>
+                            </div>
+                            <!-- Pastille d'aperçu du badge -->
+                            <div class="badge-preview" [style.background]="formData.couleur">
+                                {{ formData.code || 'CODE' }}
+                            </div>
+                        </div>
+                        <!-- Palette de couleurs prédéfinies -->
+                        <div class="color-presets">
+                            <span class="preset-label">Couleurs suggérées :</span>
+                            <div class="preset-colors">
+                                <div *ngFor="let c of ['#4a6cf7','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899']"
+                                    class="preset-dot" [style.background]="c" [class.selected]="formData.couleur === c"
+                                    (click)="formData.couleur = c" title="{{ c }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 2 : Description et programme -->
+                <div class="form-step" [class.active]="currentStep === 2">
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="formData.description" class="form-control" rows="4"
+                            placeholder="Décrivez brièvement cette matière..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Programme / Objectifs</label>
+                        <textarea [(ngModel)]="formData.programme" class="form-control" rows="4"
+                            placeholder="Les objectifs pédagogiques de l'année..."></textarea>
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 3 : Affectations (quel prof enseigne dans quelle classe) -->
+                <div class="form-step" [class.active]="currentStep === 3">
+                    <p class="step-intro">
+                        <i class="fas fa-info-circle"></i>
+                        Associez un professeur à chaque classe pour cette matière.
+                    </p>
+                    <div class="affectations-builder">
+                        <div *ngFor="let aff of formData.affectations; let i = index" class="aff-row">
+                            <!-- Sélection du professeur -->
+                            <select [(ngModel)]="aff.teacherId" class="form-control">
+                                <option [ngValue]="null">— Sélectionner un prof —</option>
+                                <option *ngFor="let ens of enseignants" [ngValue]="ens.id">
+                                    {{ ens.prenom }} {{ ens.nom }} ({{ ens.matierePrincipale }})
+                                </option>
+                            </select>
+                            <!-- Sélection de la classe -->
+                            <select [(ngModel)]="aff.classe" class="form-control">
+                                <option value="">— Sélectionner une classe —</option>
+                                <option *ngFor="let cl of getClassesDuCycle(currentCycleContext)" [value]="cl">
+                                    {{ cl }}
+                                </option>
+                            </select>
+                            <!-- Bouton supprimer la ligne -->
+                            <button type="button" class="btn-remove-aff" (click)="removeAffectationRow(i)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn-add-aff" (click)="addAffectationRow()">
+                            <i class="fas fa-plus"></i> Ajouter une affectation
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 4 : Récapitulatif -->
+                <div class="form-step" [class.active]="currentStep === 4">
+                    <div class="recap-container">
+                        <div class="recap-header" [style.background]="formData.couleur">
+                            <div class="recap-code">{{ formData.code || '---' }}</div>
+                            <div>
+                                <div class="recap-nom">{{ formData.nom || 'Sans nom' }}</div>
+                                <div class="recap-sub">Coefficient : {{ formData.coefficient }}</div>
+                            </div>
+                        </div>
+                        <div class="recap-body">
+                            <div class="recap-item" *ngIf="formData.description">
+                                <i class="fas fa-align-left"></i>
+                                <span>{{ formData.description }}</span>
+                            </div>
+                            <div class="recap-item" *ngIf="formData.affectations?.length > 0">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>{{ formData.affectations.length }} affectation(s) configurée(s)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="recap-info">
+                        <i class="fas fa-check-circle" style="color: #10b981"></i>
+                        Tout est prêt ! Cliquez sur <strong>Enregistrer</strong> pour sauvegarder.
+                    </p>
+                </div>
+
+            </div><!-- /form-container -->
+        </div><!-- /modal-body -->
+
+        <!-- Pied de la modale avec navigation entre étapes -->
+        <div class="modal-footer">
+            <button class="btn-prev" type="button" [disabled]="currentStep === 1" (click)="goToStep(currentStep - 1)">
+                <i class="fas fa-arrow-left"></i> Précédent
+            </button>
+            <div>
+                <button class="btn-next" type="button" *ngIf="currentStep < 4" (click)="goToStep(currentStep + 1)">
+                    Suivant <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="btn-submit" type="button" *ngIf="currentStep === 4" (click)="saveMatiere()">
+                    Enregistrer <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODALE "VOIR LES MATIÈRES"
+     Affiche la liste des matières de l'année par classe.
+     S'ouvre en cliquant "Voir les matières" sur une carte.
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModalListe" (click)="showModalListe = false">
+    <div class="modal-container modal-liste" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+            <h3><i class="fas fa-book-open"></i> Matières — {{ modalAnneeTitre }}</h3>
+            <div style="display:flex; gap:10px;">
+                <button class="modal-close" type="button" (click)="showModalListe = false">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Liste des matières par classe -->
+        <div class="liste-eleves-annee">
+            <div class="classe-groupe" *ngFor="let classe of getClassesDeLAnnee(modalAnneeTitre)">
+                <div class="classe-titre-modal">
+                    {{ classe }}
+                    <span>{{ getMatieresParClasse(modalAnneeTitre, classe).length }} matière(s)</span>
+                </div>
+                <!-- Grille des matières -->
+                <div class="matieres-modal-grid">
+                    <div class="matiere-modal-card" *ngFor="let mat of getMatieresParClasse(modalAnneeTitre, classe)">
+                        <div class="mat-color-strip" [style.background]="mat.couleur || '#4a6cf7'"></div>
+                        <div class="mat-modal-content">
+                            <div class="mat-modal-badge" [style.background]="mat.couleur || '#4a6cf7'">{{ mat.code }}
+                            </div>
+                            <div class="mat-modal-nom">{{ mat.nom }}</div>
+                            <div class="mat-modal-meta">Coeff. {{ mat.coefficient }}</div>
+                        </div>
+                    </div>
+                    <div *ngIf="getMatieresParClasse(modalAnneeTitre, classe).length === 0" class="empty-modal-mat">
+                        <i class="fas fa-info-circle"></i> Aucune matière affectée
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="matieresAnnee.length === 0" class="no-selection" style="padding:40px">
+                <i class="fas fa-folder-open"></i>
+                <p>Aucune matière configurée pour cette année.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NOUVELLE MODALE : Matières d'une classe (depuis dropdown)
+     Ouvre quand on clique sur une classe dans le dropdown "CLASSES"
+═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModalClasseMatieres" (click)="showModalClasseMatieres = false">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-chalkboard"></i> Matières de {{ selectedClassePourPopup }}</h3>
+            <button class="modal-close" (click)="showModalClasseMatieres = false">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px; height:auto; display:block;">
+            <div *ngIf="matieresDeLaClasse.length === 0" class="no-selection" style="padding:20px">
+                <i class="fas fa-info-circle"></i>
+                <p>Aucune matière enregistrée pour cette classe.</p>
+            </div>
+            <div class="matieres-modal-grid">
+                <div class="matiere-modal-card" *ngFor="let mat of matieresDeLaClasse">
+                    <div class="mat-color-strip" [style.background]="mat.couleur"></div>
+                    <div class="mat-modal-content">
+                        <div class="mat-modal-badge" [style.background]="mat.couleur">{{ mat.code }}</div>
+                        <div class="mat-modal-nom">{{ mat.nom }}</div>
+                        <div class="mat-modal-meta">Coeff. {{ mat.coefficient }}</div>
+                        <button class="btn-action modifier" style="margin-top:8px;"
+                            (click)="ouvrirDetailMatiere(mat); showModalClasseMatieres = false">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NOUVELLE MODALE : Détail d'une matière (depuis dropdown)
+     Ouvre quand on clique sur une matière dans le dropdown "MATIÈRES"
+═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModalMatiereDetail" (click)="showModalMatiereDetail = false">
+    <div class="modal-container" style="max-width:500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-book"></i> Détail de la matière</h3>
+            <button class="modal-close" (click)="showModalMatiereDetail = false">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px; display:block; height:auto;">
+            <div *ngIf="selectedMatiereDetail as m" style="display:flex; flex-direction:column; gap:15px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div class="recap-code" [style.background]="m.couleur" style="width:60px; height:60px; border-radius:12px;
+                                display:flex; align-items:center; justify-content:center;
+                                color:white; font-weight:800; font-size:18px;">
+                        {{ m.code }}
+                    </div>
+                    <div>
+                        <div style="font-size:22px; font-weight:700;">{{ m.nom }}</div>
+                        <div style="color:#64748b;">Coefficient : {{ m.coefficient }}</div>
+                    </div>
+                </div>
+                <div style="background:#f8fafc; border-radius:10px; padding:12px;">
+                    <p *ngIf="m.description">
+                        <i class="fas fa-align-left" style="color:var(--color-primary)"></i> {{ m.description }}
+                    </p>
+                    <p *ngIf="m.programme">
+                        <i class="fas fa-list" style="color:var(--color-primary)"></i> {{ m.programme }}
+                    </p>
+                </div>
+                <button class="btn-submit" style="align-self:flex-end;" (click)="editerMatiereDepuisDetail()">
+                    <i class="fas fa-edit"></i> Modifier cette matière
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NOUVELLE MODALE : Détail d'un enseignant (depuis dropdown)
+     Ouvre quand on clique sur un enseignant dans le dropdown "ENSEIGNANTS"
+═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModalEnseignantDetail" (click)="showModalEnseignantDetail = false">
+    <div class="modal-container" style="max-width:500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-tie"></i> Détail de l'enseignant</h3>
+            <button class="modal-close" (click)="showModalEnseignantDetail = false">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px; display:block; height:auto;">
+            <div *ngIf="selectedEnseignantDetail as ens" style="display:flex; flex-direction:column; gap:15px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:var(--color-primary);
+                                display:flex; align-items:center; justify-content:center;
+                                color:white; font-weight:800; font-size:22px;">
+                        {{ ens.prenom.charAt(0) }}{{ ens.nom.charAt(0) }}
+                    </div>
+                    <div>
+                        <div style="font-size:22px; font-weight:700;">{{ ens.prenom }} {{ ens.nom }}</div>
+                        <div style="color:#64748b;">{{ ens.matierePrincipale }}</div>
+                    </div>
+                </div>
+                <div style="background:#f8fafc; border-radius:10px; padding:12px;">
+                    <p><i class="fas fa-envelope" style="color:var(--color-primary)"></i> {{ ens.email }}</p>
+                    <p><i class="fas fa-phone" style="color:var(--color-primary)"></i> {{ ens.telephone }}</p>
+                    <p><i class="fas fa-star" style="color:var(--color-primary)"></i> Grade : {{ ens.grade }}</p>
+                    <p><i class="fas fa-calendar" style="color:var(--color-primary)"></i> Embauché le {{
+                        ens.dateEmbauche }}</p>
+                    <p *ngIf="ens.hourlyRate">
+                        <i class="fas fa-coins" style="color:var(--color-primary)"></i> Taux horaire : {{ ens.hourlyRate
+                        }} FCFA
+                    </p>
+                </div>
+                <div>
+                    <strong>Classes :</strong>
+                    <ul>
+                        <li *ngFor="let cl of classesDeLEnseignant">{{ cl }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

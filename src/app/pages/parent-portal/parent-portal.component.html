@@ -1,0 +1,135 @@
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <header class="page-header">
+            <div>
+                <h1>Portail Parents</h1>
+                <p class="subtitle">Suivez la scolarité de vos enfants</p>
+            </div>
+        </header>
+
+        <!-- Children Selector -->
+        <div *ngIf="children.length > 1" class="children-selector">
+            <button *ngFor="let child of children" (click)="selectChild(child)"
+                [class.active]="selectedChild?.id === child.id" class="child-button">
+                <div class="child-avatar">
+                    <span class="material-icons">person</span>
+                </div>
+                <div>
+                    <p class="child-name">{{ child.name }}</p>
+                    <p class="child-class">{{ child.className }}</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- Child Overview -->
+        <div *ngIf="selectedChild" class="child-overview">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="material-icons stat-icon success">school</span>
+                    <div>
+                        <p class="stat-label">Moyenne Générale</p>
+                        <p class="stat-value">{{ selectedChild.stats.averageGrade }}/20</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <span class="material-icons stat-icon info">event_available</span>
+                    <div>
+                        <p class="stat-label">Taux de Présence</p>
+                        <p class="stat-value">{{ selectedChild.stats.attendanceRate }}%</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <span
+                        [class]="'material-icons stat-icon ' + (selectedChild.stats.pendingPayments > 0 ? 'warning' : 'success')">payment</span>
+                    <div>
+                        <p class="stat-label">Paiements en attente</p>
+                        <p class="stat-value">{{ selectedChild.stats.pendingPayments }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Recent Grades -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">grade</span>
+                            Notes Récentes
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div *ngFor="let grade of selectedChild.recentGrades" class="grade-item">
+                            <div>
+                                <p class="grade-subject">{{ grade.subject }}</p>
+                                <p class="grade-date">{{ grade.date | date: 'dd/MM/yyyy' }}</p>
+                            </div>
+                            <span class="grade-value">{{ grade.value }}/20</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Absences -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">event_busy</span>
+                            Absences Récentes
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div *ngFor="let absence of selectedChild.recentAbsences" class="absence-item">
+                            <div>
+                                <p class="absence-date">{{ absence.date | date: 'dd/MM/yyyy' }}</p>
+                                <p class="absence-reason">{{ absence.reason }}</p>
+                            </div>
+                            <span [class]="'badge badge-' + (absence.justified ? 'success' : 'warning')">
+                                {{ absence.justified ? 'Justifiée' : 'Non justifiée' }}
+                            </span>
+                        </div>
+                        <p *ngIf="selectedChild.recentAbsences.length === 0" class="empty-message">
+                            Aucune absence récente
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">calendar_today</span>
+                            Emploi du Temps
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="info-message">
+                            <span class="material-icons">info</span>
+                            L'emploi du temps sera disponible prochainement
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">mail</span>
+                            Messages
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="info-message">
+                            <span class="material-icons">inbox</span>
+                            Aucun nouveau message
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

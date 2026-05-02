@@ -1,0 +1,41 @@
+@use '../students/students.component.scss' as *;
+
+.stat-icon {
+    font-size: 36px;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+
+    &.success {
+        color: var(--color-success);
+        background-color: #d1fae5;
+    }
+
+    &.warning {
+        color: var(--color-warning);
+        background-color: #fef3c7;
+    }
+
+    &.info {
+        color: var(--color-info);
+        background-color: #dbeafe;
+    }
+}
+
+.amount {
+    font-weight: 700;
+    color: var(--color-success);
+    font-size: var(--font-size-lg);
+}
+
+.method-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--color-bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+}
+
+.payments-table {
+    @extend .students-table;
+}

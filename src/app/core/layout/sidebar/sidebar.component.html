@@ -1,0 +1,47 @@
+<!-- Conversion de sidebar.tsx vers Angular -->
+<aside class="sidebar">
+    <!-- Logo de l'école -->
+    <div class="sidebar-header">
+        <div class="logo-wrapper">
+            <div class="logo-icon">
+                <span class="material-icons">school</span>
+            </div>
+            <div class="logo-text">
+                <h2>ÉCOLE</h2>
+                <p>EXCELLENCE</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu de navigation -->
+    <nav class="sidebar-nav">
+        <ul class="menu-list">
+            <li *ngFor="let item of filteredMenuItems" class="menu-item">
+                <a [routerLink]="item.route" routerLinkActive="active" class="menu-link">
+                    <span class="material-icons menu-icon">{{ item.icon }}</span>
+                    <span class="menu-label">{{ item.label }}</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Informations utilisateur et déconnexion -->
+    <div class="sidebar-footer" *ngIf="currentUser">
+        <!-- Info utilisateur -->
+        <div class="user-info">
+            <div class="user-avatar">
+                <span>{{ getUserInitials() }}</span>
+            </div>
+            <div class="user-details">
+                <p class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+                <p class="user-email">{{ currentUser.email }}</p>
+            </div>
+        </div>
+
+        <!-- Bouton de déconnexion -->
+        <button class="logout-btn" (click)="logout()">
+            <span class="material-icons">logout</span>
+            <span>Déconnexion</span>
+        </button>
+    </div>
+</aside>

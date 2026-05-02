@@ -1,0 +1,236 @@
+/**
+ * Styles du composant Login
+ * Conversion des classes Tailwind React vers SCSS pur
+ */
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    background: var(--color-primary);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 450px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-2xl);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+
+    .logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        background-color: var(--color-primary);
+        border-radius: 50%;
+        margin-bottom: var(--spacing-md);
+
+        .building-icon {
+            color: white;
+        }
+    }
+
+    h1 {
+        font-size: var(--font-size-2xl);
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .subtitle {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-base);
+    }
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.error-message {
+    padding: var(--spacing-md);
+    background-color: #fee2e2;
+    border: 1px solid var(--color-error);
+    border-radius: var(--radius-md);
+    color: #b91c1c;
+    font-size: var(--font-size-sm);
+    text-align: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    label {
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+        color: var(--color-text-primary);
+    }
+
+    .form-control {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-base);
+        transition: all var(--transition-fast);
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.1);
+        }
+
+        &:disabled {
+            background-color: var(--color-bg-tertiary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    }
+}
+
+.password-input-wrapper {
+    position: relative;
+
+    .form-control {
+        padding-right: 3rem;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition-fast);
+
+        &:hover {
+            color: var(--color-text-primary);
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    }
+}
+
+.form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        cursor: pointer;
+
+        input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+    }
+
+    .forgot-password {
+        font-size: var(--font-size-sm);
+        color: var(--color-primary);
+        transition: color var(--transition-fast);
+
+        &:hover {
+            color: var(--color-primary-dark);
+            text-decoration: underline;
+        }
+    }
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+
+    &:hover:not(:disabled) {
+        background-color: var(--color-primary-dark);
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .loading-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+}
+
+.login-footer {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+
+    p {
+        font-size: var(--font-size-xs);
+        color: var(--color-text-secondary);
+        margin: 0;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

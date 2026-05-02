@@ -1,0 +1,582 @@
+<div class="eleves-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="eleves-main">
+        <div class="container">
+
+            <!-- =================== PAGE D'ACCUEIL =================== -->
+            <section *ngIf="vue === 'accueil'" id="accueilPage">
+                <div class="header">
+                    <h1><i class="fas fa-chalkboard-teacher"></i> Plan de Travail - Gestion des Enseignants</h1>
+                    <div class="user-info">
+                        <span>École :</span>
+                        <strong>École Secondaire Modèle</strong>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" [ngModel]="rechercheAccueil"
+                            (ngModelChange)="onRechercheAccueilChange($event)"
+                            placeholder="Rechercher un enseignant, une classe, une matière...">
+                    </div>
+                    <button type="button" (click)="ouvrirModalAjout(true)"
+                        style="background: white; color: var(--color-primary); border: 2px solid var(--color-primary); padding: 10px 22px; border-radius: 30px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                        <i class="fas fa-user-plus"></i> Ajouter un enseignant
+                    </button>
+                    <button class="filter-btn" type="button" (click)="rechercheAccueil = ''">
+                        <i class="fas fa-filter"></i> Réinitialiser
+                    </button>
+                </div>
+
+                <div class="main-content" id="cyclesContainer">
+                    <div class="cycle-section" *ngFor="let cycle of cycles" [id]="cycle.nom"
+                        [class.expanded]="cycleOuvert[cycle.nom]">
+
+                        <div class="cycle-header" (click)="basculerCycle(cycle.nom)">
+                            <div>
+                                <div class="cycle-title">
+                                    <div class="cycle-icon"><i class="fas fa-{{cycle.icon}}"></i></div>
+                                    <span>{{ cycle.nom }}</span>
+                                </div>
+                                <div class="cycle-info">{{ cycle.description }}</div>
+                            </div>
+                            <button class="cycle-toggle" type="button">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+
+                        <div class="cycle-content">
+                            <div class="year-cards">
+                                <div class="year-card" *ngFor="let annee of anneesVisibles(cycle)"
+                                    [attr.data-year]="annee.nom">
+                                    <div class="card-decoration"></div>
+                                    <div class="year-card-content">
+                                        <div class="year-card-header">
+                                            <h3 class="year-title">{{ annee.nom }}</h3>
+                                            <span class="year-badge">{{ annee.badge }}</span>
+                                        </div>
+
+                                        <!-- STATISTIQUES : 3 blocs, plus de duplication -->
+                                        <div class="year-stats">
+                                            <ng-container *ngIf="calculerStatsAnnee(annee.nom) as stats">
+
+                                                <!-- CLASSES (avec dropdown) -->
+                                                <div class="stat-item class-stat-trigger">
+                                                    <div class="stat-value">
+                                                        {{ stats.nbClasses }} <i class="fas fa-chevron-down"></i>
+                                                    </div>
+                                                    <div class="stat-label">CLASSES</div>
+                                                    <div class="class-dropdown">
+                                                        <div class="class-item"
+                                                            *ngFor="let classe of recupererClassesParAnnee(annee.nom)"
+                                                            (click)="ouvrirModalClasse(classe); $event.stopPropagation();">
+                                                            <span class="class-name">{{ classe }}</span>
+                                                            <span class="class-count">{{ effectifClasse(classe)
+                                                                }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- ENSEIGNANTS (avec dropdown regroupé par classe) -->
+                                                <div class="stat-item class-stat-trigger">
+                                                    <div class="stat-value">
+                                                        {{ stats.totalEnseignants }} <i class="fas fa-chevron-down"></i>
+                                                    </div>
+                                                    <div class="stat-label">ENSEIGNANTS</div>
+                                                    <div class="class-dropdown" style="min-width:280px;">
+                                                        <div class="dropdown-title">Enseignants — {{ annee.nom }}</div>
+                                                        <ng-container
+                                                            *ngFor="let classe of recupererClassesParAnnee(annee.nom)">
+                                                            <div class="dropdown-subtitle">{{ classe }}</div>
+                                                            <div class="class-item"
+                                                                *ngFor="let ens of getEnseignantsDeClasse(classe)"
+                                                                (click)="ouvrirDetailEnseignant(ens); $event.stopPropagation()">
+                                                                <span class="class-name">{{ ens.prenom }} {{ ens.nom
+                                                                    }}</span>
+                                                                <span class="class-count">{{ ens.matierePrincipale
+                                                                    }}</span>
+                                                            </div>
+                                                            <div *ngIf="getEnseignantsDeClasse(classe).length === 0"
+                                                                class="empty-dropdown">Aucun enseignant</div>
+                                                        </ng-container>
+                                                    </div>
+                                                </div>
+
+                                                <!-- MATIÈRES -->
+                                                <div class="stat-item">
+                                                    <div class="stat-value">{{ stats.nbMatieres }}</div>
+                                                    <div class="stat-label">MATIÈRES</div>
+                                                </div>
+
+                                            </ng-container>
+                                        </div>
+
+                                        <p class="year-description">{{ annee.description }}</p>
+
+                                        <div class="year-actions">
+                                            <button class="action-btn primary" type="button"
+                                                (click)="ouvrirModalAnnee(annee.nom); $event.stopPropagation();">
+                                                Voir les enseignants
+                                            </button>
+                                            <button class="action-btn secondary gestion-btn" type="button"
+                                                (click)="ouvrirGestion(annee.nom); $event.stopPropagation();">
+                                                Gérer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p><i class="fas fa-code"></i> Application de Gestion Scolaire - Version 3.0 | © 2025</p>
+                </div>
+            </section>
+
+            <!-- =================== PAGE DE GESTION =================== -->
+            <section *ngIf="vue === 'gestion'" id="gestionPage">
+                <div class="gestion-header">
+                    <h2><i class="fas fa-users-cog"></i> Gestion des classes et enseignants</h2>
+                    <button class="btn-ajouter" type="button" (click)="ouvrirModalAjout()">
+                        <i class="fas fa-user-plus"></i> Ajouter un enseignant
+                    </button>
+                    <button class="btn-retour" type="button" (click)="revenirAccueil()">
+                        <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                    </button>
+                </div>
+
+                <div class="gestion-container">
+                    <!-- Colonne gauche : liste des classes -->
+                    <div class="classes-panel">
+                        <h3><i class="fas fa-chalkboard"></i> Classes (<span>{{ classesFiltrees.length }}</span>)</h3>
+                        <div class="recherche-classe">
+                            <i class="fas fa-search"></i>
+                            <input type="text" [(ngModel)]="rechercheClasse" placeholder="Filtrer les classes...">
+                        </div>
+                        <div class="liste-classes">
+                            <div class="classe-item" *ngFor="let classe of classesFiltrees"
+                                [class.active]="classeActive === classe" (click)="selectionnerClasse(classe)">
+                                <span class="classe-nom">{{ classe }}</span>
+                                <span class="classe-effectif">{{ effectifClasse(classe) }} ens.</span>
+                            </div>
+                            <div *ngIf="classesFiltrees.length === 0" class="no-selection" style="padding:20px">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Aucune classe trouvée</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colonne droite : enseignants de la classe sélectionnée -->
+                    <div class="eleves-panel">
+                        <h3>
+                            <span><i class="fas fa-chalkboard-teacher"></i> Enseignants de <span class="classe-titre">{{
+                                    classeActive || 'aucune classe' }}</span></span>
+                            <span class="eleves-header-right">
+                                <span class="recherche-eleve">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" [(ngModel)]="rechercheEnseignant"
+                                        placeholder="Rechercher un enseignant...">
+                                </span>
+                            </span>
+                        </h3>
+
+                        <div class="liste-eleves" *ngIf="classeActive; else inviteSelection">
+                            <div *ngIf="enseignantsFiltres.length === 0" class="no-selection">
+                                <i class="fas fa-user-slash"></i>
+                                <p>Aucun enseignant trouvé</p>
+                            </div>
+
+                            <div class="eleve-card" *ngFor="let ens of enseignantsFiltres; trackBy: trackByEnsId">
+                                <div class="eleve-header">
+                                    <div class="eleve-info-principale">
+                                        <div class="eleve-avatar">{{ ens.prenom[0] }}{{ ens.nom[0] }}</div>
+                                        <div>
+                                            <div class="eleve-nom">{{ ens.prenom }} {{ ens.nom }}</div>
+                                            <div class="eleve-detail">
+                                                <i class="fas fa-book"></i> {{ ens.matierePrincipale }} &bull;
+                                                <i class="fas fa-award"></i> {{ ens.grade }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="eleve-actions" style="display:flex; gap:8px; align-items:center;">
+                                        <button class="btn-action modifier" type="button"
+                                            (click)="ouvrirModalEdition(ens, classeActive!); $event.stopPropagation();">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </button>
+                                        <button class="btn-action supprimer" type="button"
+                                            (click)="supprimerEnseignant(ens.id); $event.stopPropagation();">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="eleve-details" style="max-height: 200px;">
+                                    <div class="details-content">
+                                        <div class="detail-item"><i class="fas fa-envelope"></i><span>Email: <strong>{{
+                                                    ens.email }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-phone"></i><span>Tél: <strong>{{
+                                                    ens.telephone }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-calendar"></i><span>Embauche:
+                                                <strong>{{ ens.dateEmbauche }}</strong></span></div>
+                                        <div class="detail-item"><i class="fas fa-chalkboard"></i>
+                                            <span>Classes affectées:
+                                                <strong *ngFor="let aff of ens.affectations" style="margin-right:6px;">
+                                                    {{ aff.classe }}
+                                                </strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ng-template #inviteSelection>
+                            <div class="liste-eleves">
+                                <div class="no-selection">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <p>Sélectionnez une classe à gauche pour voir ses enseignants</p>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- =================== MODALE AJOUT / ÉDITION =================== -->
+    <div class="modal-overlay" *ngIf="afficherModalEnseignant" (click)="afficherModalEnseignant = false">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chalkboard-teacher"></i> {{ modeEdition ? 'Modifier un enseignant' : 'Ajouter
+                    un enseignant' }}</h3>
+                <button class="modal-close" type="button" (click)="afficherModalEnseignant = false">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="timeline">
+                    <div class="timeline-step" [class.active]="etapeCourante === 1" (click)="allerEtape(1)">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <h4>Informations personnelles</h4>
+                            <p>Nom, prénom, contact...</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" [class.active]="etapeCourante === 2" (click)="allerEtape(2)">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <h4>Carrière</h4>
+                            <p>Matière, grade, diplôme...</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" [class.active]="etapeCourante === 3" (click)="allerEtape(3)">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <h4>Affectation</h4>
+                            <p>Classe(s) assignée(s)</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step" [class.active]="etapeCourante === 4" (click)="allerEtape(4)">
+                        <div class="step-number">4</div>
+                        <div class="step-info">
+                            <h4>Récapitulatif</h4>
+                            <p>Vérification finale</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <!-- Étape 1 : Infos personnelles -->
+                    <div class="form-step" [class.active]="etapeCourante === 1">
+                        <div class="form-group"><label>Prénom *</label><input type="text" [(ngModel)]="formData.prenom"
+                                class="form-control" placeholder="Prénom"></div>
+                        <div class="form-group"><label>Nom *</label><input type="text" [(ngModel)]="formData.nom"
+                                class="form-control" placeholder="Nom"></div>
+                        <div class="form-group"><label>Date de naissance</label><input type="date"
+                                [(ngModel)]="formData.dateNaiss" class="form-control"></div>
+                        <div class="form-group"><label>Lieu de naissance</label><input type="text"
+                                [(ngModel)]="formData.lieuNaiss" class="form-control" placeholder="Ville"></div>
+                        <div class="form-group"><label>Sexe</label><select [(ngModel)]="formData.sexe"
+                                class="form-control">
+                                <option value="M">Masculin</option>
+                                <option value="F">Féminin</option>
+                            </select></div>
+                        <div class="form-group"><label>Email</label><input type="email" [(ngModel)]="formData.email"
+                                class="form-control" placeholder="email@ecole.ml"></div>
+                        <div class="form-group"><label>Téléphone</label><input type="tel"
+                                [(ngModel)]="formData.telephone" class="form-control" placeholder="+223 00000000">
+                        </div>
+                        <div class="form-group"><label>Adresse</label><textarea [(ngModel)]="formData.adresse"
+                                class="form-control" rows="2" placeholder="Adresse complète"></textarea></div>
+                    </div>
+
+                    <!-- Étape 2 : Carrière -->
+                    <div class="form-step" [class.active]="etapeCourante === 2">
+                        <div class="form-group">
+                            <label>Matière principale *</label>
+                            <select [(ngModel)]="formData.matierePrincipale" class="form-control">
+                                <option value="">-- Choisir --</option>
+                                <option
+                                    *ngFor="let m of ['Mathématiques','Français','Anglais','Histoire-Géo','Sciences','Physique-Chimie','SVT','Philosophie','EPS','Arts plastiques']"
+                                    [value]="m">{{ m }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Matière secondaire</label>
+                            <select [(ngModel)]="formData.matiereSecondaire" class="form-control">
+                                <option value="">-- Optionnel --</option>
+                                <option
+                                    *ngFor="let m of ['Mathématiques','Français','Anglais','Histoire-Géo','Sciences','Physique-Chimie','SVT','Philosophie','EPS','Arts plastiques']"
+                                    [value]="m">{{ m }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Grade</label>
+                            <select [(ngModel)]="formData.grade" class="form-control">
+                                <option value="Titulaire">Titulaire</option>
+                                <option value="Contractuel">Contractuel</option>
+                                <option value="Agrégé">Agrégé</option>
+                                <option value="Certifié">Certifié</option>
+                                <option value="Vacataire">Vacataire</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Date d'embauche</label><input type="date"
+                                [(ngModel)]="formData.dateEmbauche" class="form-control"></div>
+                        <div class="form-group"><label>Diplôme</label><input type="text" [(ngModel)]="formData.diplome"
+                                class="form-control" placeholder="Ex: Master 2 Mathématiques"></div>
+                    </div>
+
+                    <!-- Étape 3 : Affectation -->
+                    <div class="form-step" [class.active]="etapeCourante === 3">
+                        <div *ngIf="!ajoutGlobal && cycleContexte"
+                            style="background:#eff6ff; color:#1e40af; padding:12px 16px; border-radius:10px; margin-bottom:20px; font-size:14px; display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Affectation restreinte au cycle <strong>{{ cycleContexte }}</strong>. Un
+                                enseignant peut être affecté dans plusieurs classes de ce cycle.</span>
+                        </div>
+
+                        <div *ngFor="let aff of formData.affectations; let i = index"
+                            style="display:flex; gap:10px; align-items:flex-end; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0;">
+                            <div class="form-group" style="flex:1; margin-bottom:0;">
+                                <label>Classe</label>
+                                <select [(ngModel)]="aff.classe" class="form-control">
+                                    <option value="">-- Choisir une classe --</option>
+                                    <option *ngFor="let c of classesDisponiblesForm" [value]="c">{{ c }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex:1; margin-bottom:0;">
+                                <label>Matière enseignée</label>
+                                <input type="text" [(ngModel)]="aff.matiere" class="form-control"
+                                    placeholder="Ex: Mathématiques">
+                            </div>
+                            <button *ngIf="formData.affectations.length > 1" (click)="supprimerAffectationForm(i)"
+                                style="background:#fee2e2; color:#b91c1c; border:none; width:40px; height:40px; border-radius:8px; cursor:pointer; flex-shrink:0; margin-bottom:0;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <button (click)="ajouterAffectationForm()"
+                            style="width:100%; padding:12px; border:2px dashed #cbd5e1; border-radius:10px; background:#f8fafc; color:var(--color-primary); font-weight:600; cursor:pointer;">
+                            <i class="fas fa-plus"></i> Ajouter une autre classe
+                        </button>
+
+                        <small style="color:#64748b; font-size:12px; margin-top:8px; display:block;">
+                            <i class="fas fa-info-circle"></i>
+                            <span *ngIf="!ajoutGlobal && cycleContexte">Seules les classes du cycle <strong>{{
+                                    cycleContexte }}</strong> sont disponibles.</span>
+                            <span *ngIf="ajoutGlobal || !cycleContexte">Toutes les classes sont disponibles.</span>
+                        </small>
+                    </div>
+
+                    <!-- Étape 4 : Récapitulatif -->
+                    <div class="form-step" [class.active]="etapeCourante === 4">
+                        <div style="background:#f8fafc; border-radius:16px; padding:25px;">
+                            <h4 style="margin-bottom:20px; color:#1e293b;"><i class="fas fa-check-circle"
+                                    style="color:#10b981;"></i> Récapitulatif</h4>
+                            <div class="detail-item"><i class="fas fa-user"></i><span>Nom complet : <strong>{{
+                                        formData.prenom }} {{ formData.nom }}</strong></span></div>
+                            <div class="detail-item"><i class="fas fa-envelope"></i><span>Email : <strong>{{
+                                        formData.email || 'Non renseigné' }}</strong></span></div>
+                            <div class="detail-item"><i class="fas fa-book"></i><span>Matière : <strong>{{
+                                        formData.matierePrincipale || 'Non renseignée' }}</strong></span></div>
+                            <div class="detail-item"><i class="fas fa-award"></i><span>Grade : <strong>{{
+                                        formData.grade }}</strong></span></div>
+                            <div class="detail-item"><i class="fas fa-chalkboard"></i>
+                                <span>Classes affectées :
+                                    <strong *ngFor="let aff of formData.affectations"
+                                        style="margin-right:8px; background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:12px;">{{
+                                        aff.classe }}{{ aff.matiere ? ' (' + aff.matiere + ')' : '' }}</strong>
+                                </span>
+                            </div>
+                        </div>
+                        <p style="color:#64748b; margin-top:20px; font-size:13px;"><i class="fas fa-info-circle"></i>
+                            Vérifiez les informations puis cliquez sur
+                            Enregistrer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-prev" type="button" [disabled]="etapeCourante === 1"
+                    (click)="allerEtape(etapeCourante - 1)">
+                    <i class="fas fa-arrow-left"></i> Précédent
+                </button>
+                <div>
+                    <button class="btn-next" type="button" *ngIf="etapeCourante < 4"
+                        (click)="allerEtape(etapeCourante + 1)">
+                        Suivant <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn-submit" type="button" *ngIf="etapeCourante === 4"
+                        (click)="enregistrerEnseignant()">
+                        Enregistrer <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODALE LISTE ENSEIGNANTS PAR ANNÉE =================== -->
+    <div class="modal-overlay" *ngIf="afficherModalAnnee" (click)="fermerToutesModales()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chalkboard-teacher"></i> Liste des enseignants - <span>{{ modalAnnee?.annee
+                        }}</span></h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-print" type="button" (click)="imprimer()"><i class="fas fa-print"></i>
+                        Imprimer</button>
+                    <button class="modal-close" type="button" (click)="fermerToutesModales()"><i
+                            class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="liste-eleves-annee">
+                <div class="classe-groupe" *ngFor="let bloc of modalAnnee?.classes">
+                    <div class="classe-titre-modal">
+                        {{ bloc.nom }}
+                        <span>{{ bloc.enseignants.length }} enseignant(s)</span>
+                    </div>
+                    <table class="eleves-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Matière</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let e of bloc.enseignants">
+                                <td>{{ e.nom }}</td>
+                                <td>{{ e.prenom }}</td>
+                                <td>{{ e.email }}</td>
+                                <td>{{ e.telephone }}</td>
+                                <td>{{ e.matierePrincipale }}</td>
+                                <td><span class="badge present">{{ e.grade }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MODALE LISTE ENSEIGNANTS D'UNE CLASSE =================== -->
+    <div class="modal-overlay" *ngIf="afficherModalClasse" (click)="fermerToutesModales()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chalkboard-teacher"></i> Enseignants - <span>{{ modalClasse?.classe }}</span>
+                </h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-print" type="button" (click)="imprimer()"><i class="fas fa-print"></i>
+                        Imprimer</button>
+                    <button class="modal-close" type="button" (click)="fermerToutesModales()"><i
+                            class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="liste-eleves-annee">
+                <div class="classe-groupe">
+                    <div class="classe-titre-modal">
+                        {{ modalClasse?.classe }}
+                        <span>{{ modalClasse?.enseignants?.length ?? 0 }} enseignant(s)</span>
+                    </div>
+                    <table class="eleves-table">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Matière</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let e of modalClasse?.enseignants; let i = index">
+                                <td>{{ i + 1 }}</td>
+                                <td>{{ e.nom }}</td>
+                                <td>{{ e.prenom }}</td>
+                                <td>{{ e.email }}</td>
+                                <td>{{ e.telephone }}</td>
+                                <td>{{ e.matierePrincipale }}</td>
+                                <td><span class="badge present">{{ e.grade }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         NOUVELLE MODALE : Détail d'un enseignant (depuis dropdown)
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" *ngIf="showModalEnseignantDetail" (click)="showModalEnseignantDetail = false">
+        <div class="modal-container" style="max-width:500px" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-tie"></i> Détail de l'enseignant</h3>
+                <button class="modal-close" (click)="showModalEnseignantDetail = false">×</button>
+            </div>
+            <div class="modal-body" style="padding:20px; display:block; height:auto;">
+                <div *ngIf="selectedEnseignantDetail as ens" style="display:flex; flex-direction:column; gap:15px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--color-primary);
+                                    display:flex; align-items:center; justify-content:center;
+                                    color:white; font-weight:800; font-size:22px;">
+                            {{ ens.prenom.charAt(0) }}{{ ens.nom.charAt(0) }}
+                        </div>
+                        <div>
+                            <div style="font-size:22px; font-weight:700;">{{ ens.prenom }} {{ ens.nom }}</div>
+                            <div style="color:#64748b;">{{ ens.matierePrincipale }}</div>
+                        </div>
+                    </div>
+                    <div style="background:#f8fafc; border-radius:10px; padding:12px;">
+                        <p><i class="fas fa-envelope" style="color:var(--color-primary)"></i> {{ ens.email }}</p>
+                        <p><i class="fas fa-phone" style="color:var(--color-primary)"></i> {{ ens.telephone }}</p>
+                        <p><i class="fas fa-star" style="color:var(--color-primary)"></i> Grade : {{ ens.grade }}</p>
+                        <p><i class="fas fa-calendar" style="color:var(--color-primary)"></i> Embauché le {{
+                            ens.dateEmbauche }}</p>
+                    </div>
+                    <div>
+                        <strong>Classes :</strong>
+                        <ul>
+                            <li *ngFor="let aff of ens.affectations">{{ aff.classe }} ({{ aff.matiere }})</li>
+                        </ul>
+                    </div>
+                    <button class="btn-submit" style="align-self:flex-end;" (click)="editerEnseignantDepuisDetail()">
+                        <i class="fas fa-edit"></i> Modifier cet enseignant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

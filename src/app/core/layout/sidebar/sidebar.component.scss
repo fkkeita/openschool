@@ -1,0 +1,204 @@
+/**
+ * Styles de la Sidebar
+ * Conversion depuis le design React original
+ */
+
+.sidebar {
+    width: 256px;
+    height: 100vh;
+    background-color: var(--color-primary);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-primary-dark);
+
+    .logo-wrapper {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        background-color: white;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .material-icons {
+            color: var(--color-primary);
+            font-size: 24px;
+        }
+    }
+
+    .logo-text {
+        h2 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+
+        p {
+            font-size: var(--font-size-xs);
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+        }
+    }
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: var(--spacing-md);
+    overflow-y: auto;
+
+    /* Custom scrollbar pour la sidebar */
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--color-primary-dark);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+}
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.menu-item {
+    .menu-link {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        color: white;
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+
+        .menu-icon {
+            font-size: 20px;
+        }
+
+        /* État normal */
+        &:hover {
+            background-color: var(--color-primary-dark);
+        }
+
+        /* État actif (route active) */
+        &.active {
+            background-color: white;
+            color: var(--color-primary);
+        }
+    }
+}
+
+.sidebar-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--color-primary-dark);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background-color: var(--color-primary-dark);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-size-sm);
+        font-weight: 700;
+        color: white;
+    }
+
+    .user-details {
+        flex: 1;
+        overflow: hidden;
+
+        .user-name {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            margin: 0;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-email {
+            font-size: var(--font-size-xs);
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+
+    &:hover {
+        background-color: var(--color-primary-dark);
+    }
+
+    .material-icons {
+        font-size: 20px;
+    }
+}
+
+/* Responsive: cacher sur mobile (optionnel) */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform var(--transition-base);
+
+        &.open {
+            transform: translateX(0);
+        }
+    }
+}

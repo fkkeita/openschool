@@ -1,0 +1,157 @@
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <!-- Header -->
+        <header class="page-header">
+            <div>
+                <h1>Gestion des Classes & Matières</h1>
+                <p class="subtitle">{{ selectedTab === 'classes' ? filteredClasses.length : filteredSubjects.length }}
+                    {{ selectedTab === 'classes' ? 'classes' : 'matières' }}</p>
+            </div>
+            <button class="btn btn-primary">
+                <span class="material-icons">add</span>
+                {{ selectedTab === 'classes' ? 'Nouvelle Classe' : 'Nouvelle Matière' }}
+            </button>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <button [class.active]="selectedTab === 'classes'" (click)="selectedTab = 'classes'" class="tab-button">
+                <span class="material-icons">school</span>
+                Classes
+            </button>
+            <button [class.active]="selectedTab === 'subjects'" (click)="selectedTab = 'subjects'" class="tab-button">
+                <span class="material-icons">menu_book</span>
+                Matières
+            </button>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-card">
+            <div class="filters-grid">
+                <div class="search-input">
+                    <span class="material-icons">search</span>
+                    <input type="text" [(ngModel)]="searchTerm"
+                        [placeholder]="selectedTab === 'classes' ? 'Rechercher une classe...' : 'Rechercher une matière...'">
+                </div>
+
+                <select *ngIf="selectedTab === 'classes'" [(ngModel)]="selectedCycle" class="form-select">
+                    <option value="all">Tous les cycles</option>
+                    <option value="Lycée">Lycée</option>
+                    <option value="Collège">Collège</option>
+                    <option value="Primaire">Primaire</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Classes Tab -->
+        <div *ngIf="selectedTab === 'classes'" class="classes-grid">
+            <div *ngFor="let class of filteredClasses" class="class-card">
+                <div class="class-header">
+                    <div class="class-info">
+                        <h3>{{ class.name }}</h3>
+                        <p class="class-level">{{ class.level }} - {{ class.cycle }}</p>
+                    </div>
+                    <div class="class-actions">
+                        <button class="icon-btn" title="Voir">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                        <button class="icon-btn" title="Modifier">
+                            <span class="material-icons">edit</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="class-body">
+                    <!-- Enseignant principal -->
+                    <div class="class-detail">
+                        <span class="material-icons">person</span>
+                        <span>{{ class.mainTeacherName || 'Non assigné' }}</span>
+                    </div>
+
+                    <!-- Capacité -->
+                    <div class="class-detail">
+                        <span class="material-icons">people</span>
+                        <span>{{ class.currentStudents || 0 }} / {{ class.capacity }} élèves</span>
+                    </div>
+
+                    <!-- Année académique -->
+                    <div class="class-detail">
+                        <span class="material-icons">calendar_today</span>
+                        <span>{{ class.academicYear || '2025-2026' }}</span>
+                    </div>
+
+                    <!-- Taux de remplissage -->
+                    <div class="fill-rate">
+                        <div class="fill-rate-label">
+                            <span>Taux de remplissage</span>
+                            <span class="fill-rate-value">{{ calculateFillRate(class) }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" [class]="'bg-' + getFillRateColor(calculateFillRate(class))"
+                                [style.width.%]="calculateFillRate(class)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="class-footer">
+                    <span [class]="'badge badge-' + (class.status === 'ACTIVE' ? 'success' : 'secondary')">
+                        {{ class.status === 'ACTIVE' ? 'Active' : 'Archivée' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subjects Tab -->
+        <div *ngIf="selectedTab === 'subjects'" class="table-card">
+            <div class="table-wrapper">
+                <table class="subjects-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Matière</th>
+                            <th>Coefficient</th>
+                            <th>Cycle</th>
+                            <th>Statut</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let subject of filteredSubjects">
+                            <td><span class="subject-code">{{ subject.code }}</span></td>
+                            <td class="subject-name">{{ subject.name }}</td>
+                            <td>
+                                <span class="coefficient-badge">{{ subject.coefficient }}</span>
+                            </td>
+                            <td>{{ subject.cycle }}</td>
+                            <td>
+                                <span
+                                    [class]="'badge badge-' + (subject.status === 'ACTIVE' ? 'success' : 'secondary')">
+                                    {{ subject.status === 'ACTIVE' ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="icon-btn" title="Modifier">
+                                        <span class="material-icons">edit</span>
+                                    </button>
+                                    <button class="icon-btn" title="Supprimer">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Chargement...</p>
+        </div>
+    </main>
+</div>
