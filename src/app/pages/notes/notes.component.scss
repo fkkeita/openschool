@@ -971,3 +971,229 @@
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   STYLES POUR CRÉATION TRIMESTRE (NOUVEAU!)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Corps du popup de création de trimestre */
+.trimestre-creation-body {
+    padding: 25px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Section des matières */
+.matiere-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.matiere-section-title {
+    color: var(--color-primary);
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.matiere-count {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    margin-left: auto;
+}
+
+.matiere-hint {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+/* Grille de sélection des matières */
+.matiere-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+.matiere-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.matiere-checkbox:hover {
+    background: #e0e7ff;
+    border-color: var(--color-primary);
+}
+
+.matiere-checkbox.checked {
+    background: #e0e7ff;
+    border-color: var(--color-primary);
+}
+
+.checkbox-icon {
+    font-size: 18px;
+    color: #94a3b8;
+    transition: all 0.2s;
+}
+
+.matiere-checkbox.checked .checkbox-icon {
+    color: var(--color-primary);
+}
+
+.matiere-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #334155;
+}
+
+.matiere-checkbox.checked .matiere-name {
+    color: var(--color-primary);
+}
+
+.no-matiere-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    color: #92400e;
+    font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   STYLES POUR ATTRIBUTION DES NOTES DE TRIMESTRE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.trimestre-saisie-body {
+    padding: 25px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Barre de progression */
+.saisie-progress {
+    margin-bottom: 25px;
+    padding: 15px 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.progress-name {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Liste des matières à saisir */
+.saisie-matieres {
+    margin-top: 20px;
+}
+
+.saisie-hint {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.saisie-ligne {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.ligne-matiere {
+    background: var(--color-primary);
+    color: white;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.ligne-champs {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+.champ {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.champ label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.champ .form-control {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.champ.coef-calc {
+    justify-content: flex-end;
+}
+
+.calc-result {
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-align: center;
+}
+
+/* Responsive pour les formulaires de saisie */
+@media (max-width: 1024px) {
+    .ligne-champs {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .ligne-champs {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

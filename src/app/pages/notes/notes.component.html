@@ -216,124 +216,237 @@
         </div>
     </div>
 
-    <!-- ═══════════ MODALE CRÉATION DEVOIR/INTERRO ═══════════ -->
+<!-- ═══════════ MODALE CRÉATION DEVOIR/INTERRO ═══════════ -->
     <div class="modal-overlay" *ngIf="showCreateDevoirModal" (click)="showCreateDevoirModal = false">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fas fa-pencil-alt"></i> Nouveau {{ formDevoir.type === 'devoir' ? 'Devoir' :
-                    'Interrogation' }}</h3>
+                <h3>
+                    <i class="fas fa-pencil-alt"></i> 
+                    Nouveau {{ formDevoir.type === 'devoir' ? 'Devoir' : 'Interrogation' }}
+                </h3>
                 <button class="modal-close" (click)="showCreateDevoirModal = false">×</button>
             </div>
             <div class="modal-body form-modal-body">
+                <!-- Type d'évaluation -->
                 <div class="form-group">
-                    <label>Type</label>
+                    <label>Type d'évaluation</label>
                     <select class="form-control" [(ngModel)]="formDevoir.type">
                         <option value="devoir">Devoir</option>
                         <option value="interrogation">Interrogation</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Titre</label><input class="form-control" [(ngModel)]="formDevoir.titre">
+                
+                <!-- Titre du devoir -->
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input class="form-control" 
+                           [(ngModel)]="formDevoir.titre" 
+                           placeholder="Ex: Devoir de Mathématiques">
                 </div>
-                <div class="form-group"><label>Matière</label>
+                
+                <!-- Matière (depuis le service partagé!) -->
+                <div class="form-group" *ngIf="selectedClasse">
+                    <label>Matière</label>
                     <select class="form-control" [(ngModel)]="formDevoir.matiere">
-                        <option *ngFor="let m of getMatieresClasse()" [value]="m">{{ m }}</option>
+                        <option value="">-- Sélectionner une matière --</option>
+                        <option *ngFor="let m of getMatieresClasse(selectedClasse)" [value]="m">{{ m }}</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Date</label><input type="date" class="form-control"
-                        [(ngModel)]="formDevoir.date"></div>
+                
+                <!-- Date -->
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" class="form-control" [(ngModel)]="formDevoir.date">
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-prev" (click)="showCreateDevoirModal = false">Annuler</button>
-                <button class="btn-submit" (click)="creerDevoir()">Créer et attribuer les notes</button>
+                <button class="btn-prev" (click)="showCreateDevoirModal = false">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-submit" (click)="creerDevoir()" [disabled]="!formDevoir.titre || !formDevoir.matiere">
+                    <i class="fas fa-check"></i> Créer et attribuer les notes
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════ MODALE CRÉATION ÉVÉNEMENT COLLECTIF ═══════════ -->
+    <!-- ═══════════ MODALE CRÉATION TRIMESTRE (NOUVEAU!) ═══════════ -->
     <div class="modal-overlay" *ngIf="showCreateEvenementModal" (click)="showCreateEvenementModal = false">
         <div class="modal-container modal-large" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fas fa-calendar-alt"></i> Nouvel événement</h3>
+                <h3>
+                    <i class="fas fa-calendar-alt"></i> 
+                    Créer {{ formTrimestre.type === 'trimestre' ? 'un Trimestre' : 
+                           formTrimestre.type === 'composition' ? 'une Composition' : 'un Examen' }}
+                </h3>
                 <button class="modal-close" (click)="showCreateEvenementModal = false">×</button>
             </div>
-            <div class="modal-body evenement-modal-body">
+            <div class="modal-body trimestre-creation-body">
+                <!-- Titre et Type -->
                 <div class="form-row">
-                    <div class="form-group half"><label>Type</label><select class="form-control"
-                            [(ngModel)]="formEvenement.type">
+                    <div class="form-group half">
+                        <label>Type d'évaluation</label>
+                        <select class="form-control" [(ngModel)]="formTrimestre.type">
                             <option value="trimestre">Trimestre</option>
                             <option value="composition">Composition</option>
                             <option value="examen">Examen</option>
-                        </select></div>
-                    <div class="form-group half"><label>Titre</label><input class="form-control"
-                            [(ngModel)]="formEvenement.titre"></div>
-                </div>
-                <div class="form-group"><label>Date</label><input type="date" class="form-control"
-                        [(ngModel)]="formEvenement.date"></div>
-
-                <h4 class="evenement-subtitle">Ajouter une matière</h4>
-                <div class="form-row">
-                    <div class="form-group half"><label>Nom</label><input class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.nom"></div>
-                    <div class="form-group half"><label>Moyenne classe/20</label><input type="number"
-                            class="form-control" [(ngModel)]="formEvenement.nouvelleMatiere.moyenneClasse" step="0.01">
+                        </select>
+                    </div>
+                    <div class="form-group half">
+                        <label>Titre</label>
+                        <input class="form-control" 
+                               [(ngModel)]="formTrimestre.titre" 
+                               placeholder="Ex: 1er Trimestre">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group half"><label>Note max</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.noteMax"></div>
-                    <div class="form-group half"><label>Moyenne/20</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.moyenne" step="0.01"></div>
+                
+                <!-- Date -->
+                <div class="form-group">
+                    <label>Date de l'évaluation</label>
+                    <input type="date" class="form-control" [(ngModel)]="formTrimestre.date">
                 </div>
-                <div class="form-row">
-                    <div class="form-group half"><label>Coefficient</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.coefficient" step="1"></div>
-                    <div class="form-group half"><label>Appréciation</label><input class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.appreciation"></div>
-                </div>
-                <button class="btn-ajouter" (click)="ajouterMatiereEvenement()"><i class="fas fa-plus"></i>
-                    Ajouter</button>
-
-                <table *ngIf="formEvenement.matieres.length > 0" class="eleves-table">
-                    <thead>
-                        <tr>
-                            <th>Matière</th>
-                            <th>Moy.classe</th>
-                            <th>Note max</th>
-                            <th>Moy/20</th>
-                            <th>Coef</th>
-                            <th>Moy coef</th>
-                            <th>Appr.</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let m of formEvenement.matieres; let i = index">
-                            <td>{{ m.nom }}</td>
-                            <td>{{ m.moyenneClasse }}</td>
-                            <td>{{ m.noteMax }}</td>
-                            <td>{{ m.moyenne }}</td>
-                            <td>{{ m.coefficient }}</td>
-                            <td>{{ m.moyenneCoefficientee | number:'1.2-2' }}</td>
-                            <td>{{ m.appreciation }}</td>
-                            <td><button class="btn-action supprimer" (click)="supprimerMatiereEvenement(i)"><i
-                                        class="fas fa-trash"></i></button></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="evenement-totaux" *ngIf="formEvenement.matieres.length > 0">
-                    <span>Total coefficient : {{ formEvenement.totalCoefficient }}</span>
-                    <span>Total moy coef : {{ formEvenement.totalMoyenneCoefficientee | number:'1.2-2' }}</span>
-                    <span>Moyenne générale : {{ formEvenement.moyenneGenerale | number:'1.2-2' }}</span>
+                
+                <!-- MATIÈRES (NOUVEAU: on coche!) -->
+                <div class="matiere-section">
+                    <h4 class="matiere-section-title">
+                        <i class="fas fa-check-square"></i> 
+                        Matières évaluées
+                        <span class="matiere-count">({{ formTrimestre.matieres.length }} cochée(s))</span>
+                    </h4>
+                    <p class="matiere-hint">
+                        Cochez les matières sur lesquelles les élèves seront évalués.
+                        Les notes détaillées seront saisies par élève ensuite.
+                    </p>
+                    
+                    <div class="matiere-grid" *ngIf="selectedClasse">
+                        <label class="matiere-checkbox" 
+                               *ngFor="let matiere of getMatieresClasse(selectedClasse)"
+                               [class.checked]="isMatiereSelected(matiere)">
+                            <input type="checkbox" 
+                                   [checked]="isMatiereSelected(matiere)"
+                                   (change)="toggleMatiereTrimestre(matiere)"
+                                   style="display: none;">
+                            <span class="checkbox-icon">
+                                <i class="fas" [class.fa-check-square]="isMatiereSelected(matiere)" 
+                                   [class.fa-square]="!isMatiereSelected(matiere)"></i>
+                            </span>
+                            <span class="matiere-name">{{ matiere }}</span>
+                        </label>
+                    </div>
+                    
+                    <div class="no-matiere-warning" *ngIf="!selectedClasse">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Veuillez sélectionner une classe d'abord.
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-prev" (click)="showCreateEvenementModal = false">Annuler</button>
-                <button class="btn-submit" (click)="enregistrerEvenement()">Enregistrer</button>
+                <button class="btn-prev" (click)="showCreateEvenementModal = false">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-submit" 
+                        (click)="enregistrerEvenement()"
+                        [disabled]="!formTrimestre.titre || formTrimestre.matieres.length === 0">
+                    <i class="fas fa-check"></i> Créer et saisir les notes
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════ MODALE ATTRIBUTION NOTES ═══════════ -->
+    <!-- ═══════════ MODALE ATTRIBUTION NOTES DE TRIMESTRE (NOUVEAU!) ═══════════ -->
+    <div class="modal-overlay" *ngIf="showAttribuerTrimestreModal" (click)="fermerAttribuerTrimestreModal()">
+        <div class="modal-container modal-large" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-user-graduate"></i> 
+                    Saisie des notes - {{ currentTrimestreState?.eleves[currentTrimestreState?.eleveIndex || 0]?.prenom }}
+                    {{ currentTrimestreState?.eleves[currentTrimestreState?.eleveIndex || 0]?.nom }}
+                </h3>
+                <button class="modal-close" (click)="fermerAttribuerTrimestreModal()">×</button>
+            </div>
+            <div class="modal-body trimestre-saisie-body">
+                <!-- Progress bar -->
+                <div class="saisie-progress">
+                    <div class="progress-info">
+                        <span>Élève {{ (currentTrimestreState?.eleveIndex || 0) + 1 }} / {{ currentTrimestreState?.eleves?.length || 0 }}</span>
+                        <span class="progress-name">
+                            {{ currentTrimestreState?.eleves[currentTrimestreState?.eleveIndex || 0]?.prenom }} 
+                            {{ currentTrimestreState?.eleves[currentTrimestreState?.eleveIndex || 0]?.nom }}
+                        </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" 
+                             [style.width.%]="((currentTrimestreState?.eleveIndex || 0) + 1) / (currentTrimestreState?.eleves?.length || 1) * 100">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulaire de saisie par matière -->
+                <div class="saisie-matieres">
+                    <p class="saisie-hint">
+                        Saisissez les notes pour chaque matière cochée lors de la création du trimestre:
+                    </p>
+                    
+                    <div class="saisie-ligne" *ngFor="let ligne of formAttribuerTrimestre; let i = index">
+                        <div class="ligne-matiere">{{ ligne.matiere }}</div>
+                        
+                        <div class="ligne-champs">
+                            <div class="champ">
+                                <label>Moy. Classe/20</label>
+                                <input type="number" [(ngModel)]="ligne.moyenneClasse" 
+                                       step="0.01" min="0" max="20" class="form-control">
+                            </div>
+                            <div class="champ">
+                                <label>Note/40</label>
+                                <input type="number" [(ngModel)]="ligne.noteCompo" 
+                                       step="0.01" min="0" max="40" class="form-control">
+                            </div>
+                            <div class="champ">
+                                <label>Moy/20</label>
+                                <input type="number" [(ngModel)]="ligne.moyenne" 
+                                       step="0.01" min="0" max="20" class="form-control">
+                            </div>
+                            <div class="champ">
+                                <label>Coef</label>
+                                <input type="number" [(ngModel)]="ligne.coefficient" 
+                                       step="1" min="1" class="form-control">
+                            </div>
+                            <div class="champ coef-calc">
+                                <label>Moy coef</label>
+                                <span class="calc-result" 
+                                      (blur)="calculerMoyenneCoefficientee(i)">
+                                    {{ ligne.moyenne * ligne.coefficient | number:'1.2-2' }}
+                                </span>
+                            </div>
+                            <div class="champ">
+                                <label>Appréciation</label>
+                                <select [(ngModel)]="ligne.appreciation" class="form-control">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="Excellent">Excellent</option>
+                                    <option value="Très Bien">Très Bien</option>
+                                    <option value="Bien">Bien</option>
+                                    <option value="Assez Bien">Assez Bien</option>
+                                    <option value="Passable">Passable</option>
+                                    <option value="Insuffisant">Insuffisant</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-prev" (click)="fermerAttribuerTrimestreModal()">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-submit" (click)="siguienteEleveTrimestre()">
+                    <i class="fas fa-arrow-right"></i> 
+                    {{ (currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0) ? 'Terminer' : 'Élève suivant' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODALE ATTRIBUTION NOTES SIMPLES ═══════════ -->
     <div class="modal-overlay" *ngIf="showAttribuerNotesModal as ctx" (click)="showAttribuerNotesModal = null">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <div class="modal-header">
