@@ -135,7 +135,7 @@ export class NotesComponent implements OnInit {
     // ─────────────────────────────────────────────────────────────────────────────
     // INJECTION DU SERVICE Partagé
     // ─────────────────────────────────────────────────────────────────────────────
-    
+
     /** 
      * Injection du service SchoolDataService qui contient les données communes
      * (cycles, années, classes, matières, enseignants).
@@ -165,7 +165,7 @@ export class NotesComponent implements OnInit {
     public showCreateDevoirModal = false;
     public showCreateEvenementModal = false;
     public showAttribuerNotesModal: { type: string; titre: string; evenementId?: number } | null = null;
-    
+
     // NOUVEAUX POPUPS pour le trimestre
     public showAttribuerTrimestreModal = false;
 
@@ -179,7 +179,7 @@ export class NotesComponent implements OnInit {
     public formDevoir: FormDevoir = this.creerFormDevoirVide();
     public formTrimestre: FormTrimestre = this.creerFormTrimestreVide();
     public formAttribuer: { eleveId: number; note: number }[] = [];
-    
+
     // NOUVEAU: formulaire pour les notes de trimestre (par élève)
     public formAttribuerTrimestre: LigneAttributionTrimestre[] = [];
 
@@ -188,8 +188,8 @@ export class NotesComponent implements OnInit {
     // ═══════════════════════════════════════════════════════════════════════════════
 
     /** Retourne la liste des cycles pour l'affichage */
-    get cycles(): Cycle[] { 
-        return this.schoolData.cycles; 
+    get cycles(): Cycle[] {
+        return this.schoolData.cycles;
     }
 
     /** 
@@ -207,7 +207,7 @@ export class NotesComponent implements OnInit {
     ngOnInit(): void {
         // Ouvrir le premier cycle par défaut
         this.cycles.forEach((c, i) => this.cycleOuvert[c.nom] = i === 0);
-        
+
         // Générer des élèves simulés pour la démo
         // NOTE: Dans une vraie application, ces données viendraient du backend
         this.genererElevesSimules();
@@ -222,20 +222,20 @@ export class NotesComponent implements OnInit {
             // Générer entre 15 et 25 élèves par classe
             const effectif = Math.floor(Math.random() * 10) + 15;
             const eleves: Eleve[] = [];
-            
+
             for (let i = 1; i <= effectif; i++) {
                 const id = Date.now() + i;
-                eleves.push({ 
-                    id, 
-                    prenom: `Élève${i}`, 
-                    nom: classe.replace(' ', '_'), 
-                    classe 
+                eleves.push({
+                    id,
+                    prenom: `Élève${i}`,
+                    nom: classe.replace(' ', '_'),
+                    classe
                 });
                 // Initialiser une liste vide de notes pour chaque élève
                 this.notesStore.set(id, []);
                 this.notesTrimestreStore.set(id, []);
             }
-            
+
             this.elevesParClasse.set(classe, eleves);
         });
     }
@@ -273,8 +273,8 @@ export class NotesComponent implements OnInit {
     /**
      * Bascule l'état ouvert/fermé d'un cycle (accordeon).
      */
-    basculerCycle(nom: string): void { 
-        this.cycleOuvert[nom] = !this.cycleOuvert[nom]; 
+    basculerCycle(nom: string): void {
+        this.cycleOuvert[nom] = !this.cycleOuvert[nom];
     }
 
     /**
@@ -445,7 +445,7 @@ export class NotesComponent implements OnInit {
      */
     enregistrerEvenement(): void {
         if (!this.formTrimestre.titre || !this.selectedClasse || this.formTrimestre.matieres.length === 0) return;
-        
+
         const evenement: EvenementCollectif = {
             id: Date.now(),
             classe: this.selectedClasse,
@@ -454,10 +454,10 @@ export class NotesComponent implements OnInit {
             date: this.formTrimestre.date,
             matieres: [...this.formTrimestre.matieres]  // Copie des matières cochées
         };
-        
+
         this.evenements.push(evenement);
         this.showCreateEvenementModal = false;
-        
+
         // Ouvrir le popup d'attribution des notes de trimestre
         this.ouvrirAttribuerTrimestre(evenement);
     }
@@ -475,22 +475,15 @@ export class NotesComponent implements OnInit {
 
     /**
      * Enregistre les notes d'un devoir simple.
-     * NOTE: Une seule matiere, une seule note par élève.
+     * NOTE: Une seule matière, une seule note par élève.
      */
     enregistrerAttribution(): void {
         if (!this.showAttribuerNotesModal) return;
-        
-        const { type, titre, evenementId } = this.showAttribuerNotesModal;
-        
-        // Déterminer la matière (selon le type d'évaluation)
-        const matiere = evenementId 
-            ? this.getMatiereEvenement(evenementId) 
-            : this.formDevoir.matiere;
+        const { type, titre } = this.showAttribuerNotesModal;
+        const matiere = this.formDevoir.matiere;
 
-        // Enregistrer la note de chaque élève
         this.formAttribuer.forEach(att => {
             if (att.note < 0) return;
-            
             const note: NoteEntry = {
                 id: Date.now() + Math.random(),
                 eleveId: att.eleveId,
@@ -499,14 +492,11 @@ export class NotesComponent implements OnInit {
                 titre,
                 note: att.note,
                 date: new Date().toISOString().split('T')[0],
-                coefficient: evenementId ? this.getCoefficientEvenement(evenementId, matiere) : undefined
             };
-            
             const notesEleve = this.notesStore.get(att.eleveId) || [];
             notesEleve.push(note);
             this.notesStore.set(att.eleveId, notesEleve);
         });
-        
         this.showAttribuerNotesModal = null;
     }
 
@@ -522,11 +512,11 @@ export class NotesComponent implements OnInit {
      */
     ouvrirAttribuerTrimestre(evenement: EvenementCollectif): void {
         if (!this.selectedClasse) return;
-        
+
         const eleves = this.elevesParClasse.get(this.selectedClasse) || [];
-        
+
         if (eleves.length === 0) return;
-        
+
         // Initialiser les données du popup
         this.currentTrimestreState = {
             opened: true,
@@ -534,10 +524,10 @@ export class NotesComponent implements OnInit {
             eleveIndex: 0,
             eleves: eleves
         };
-        
+
         // Préparer le formulaire pour le premier élève
         this.preparerFormulaireTrimestre(evenement);
-        
+
         this.showAttribuerTrimestreModal = true;
     }
 
@@ -552,7 +542,7 @@ export class NotesComponent implements OnInit {
      */
     private preparerFormulaireTrimestre(evenement: EvenementCollectif): void {
         // Créer une ligne par matière
-        this.formAttribuerTrimestre = evenement.matiere.map(matiere => ({
+        this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
             matiere: matiere,
             moyenneClasse: 0,
             noteCompo: 0,
@@ -569,21 +559,21 @@ export class NotesComponent implements OnInit {
      */
     siguienteEleveTrimestre(): void {
         if (!this.currentTrimestreState) return;
-        
+
         // Enregistrer les notes de l'élève actuel
         this.enregistrerNotesTrimestreEleve();
-        
+
         // Passer à l'élève suivant
         this.currentTrimestreState.eleveIndex++;
-        
+
         // Si on a fini tous les élèves
         if (this.currentTrimestreState.eleveIndex >= this.currentTrimestreState.eleves.length) {
             this.fermerAttribuerTrimestreModal();
             return;
         }
-        
+
         // Préparer le formulaire pour l'élève suivant
-        const trimestre = this.evenements.find(e => 
+        const trimestre = this.evenements.find(e =>
             e.id === this.currentTrimestreState!.trimestreId);
         if (trimestre) {
             this.preparerFormulaireTrimestre(trimestre);
@@ -596,13 +586,13 @@ export class NotesComponent implements OnInit {
      */
     private enregistrerNotesTrimestreEleve(): void {
         if (!this.currentTrimestreState) return;
-        
+
         const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
         if (!eleve) return;
-        
+
         // Récupérer ou créer le tableau de notes
         let notesTrimestre = this.notesTrimestreStore.get(eleve.id) || [];
-        
+
         // Enregistrer chaque matière
         this.formAttribuerTrimestre.forEach(ligne => {
             const noteTrimestre: NoteTrimestre = {
@@ -620,7 +610,7 @@ export class NotesComponent implements OnInit {
             };
             notesTrimestre.push(noteTrimestre);
         });
-        
+
         this.notesTrimestreStore.set(eleve.id, notesTrimestre);
     }
 
@@ -642,345 +632,7 @@ export class NotesComponent implements OnInit {
         ligne.moyenneCoefficientee = ligne.moyenne * ligne.coefficient;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // MÉTHODES UTILITAIRES
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    private getMatiereEvenement(evenementId: number): string {
-        const ev = this.evenements.find(e => e.id === evenementId);
-        return ev?.matieres[0] || '';
-    }
-
-    private getCoefficientEvenement(evenementId: number, matiere: string): number {
-        const ev = this.evenements.find(e => e.id === evenementId);
-        const mat = ev?.matieres.find(m => m === matiere);
-        return mat ? 1 : 1;  // TODO: récupérer le coef depuis le service
-    }
-
     /** Retourne à l'accueil et réinitialise tout */
-    retourAccueil(): void {
-        this.mode = 'home';
-        this.selectedClasse = null;
-        this.selectedAnnee = null;
-        this.showVoirModal = false;
-        this.showElevesModal = null;
-        this.selectedEleve = null;
-        this.showGererClasseModal = null;
-    }
-}
-
-interface NoteEntry {
-    id: number;
-    eleveId: number;
-    matiere: string;
-    type: 'devoir' | 'interrogation' | 'trimestre' | 'composition' | 'examen';
-    titre: string;
-    note: number;
-    coefficient?: number;
-    date: string;
-}
-
-interface EvenementCollectif {
-    id: number;
-    classe: string;
-    type: 'trimestre' | 'composition' | 'examen';
-    titre: string;
-    date: string;
-    matieres: {
-        nom: string;
-        moyenneClasse: number;
-        noteMax: number;
-        moyenne: number;
-        coefficient: number;
-        moyenneCoefficientee: number;
-        appreciation: string;
-    }[];
-    totalCoefficient: number;
-    totalMoyenneCoefficientee: number;
-    moyenneGenerale: number;
-}
-
-@Component({
-    selector: 'app-notes',
-    standalone: true,
-    imports: [CommonModule, FormsModule, SidebarComponent],
-    templateUrl: './notes.component.html',
-    styleUrl: './notes.component.scss'
-})
-export class NotesComponent implements OnInit {
-
-    private schoolData = inject(SchoolDataService);
-
-    // ── Navigation accueil ────────────────────────────────────────────────────
-    public rechercheAccueil = '';
-    public cycleOuvert: Record<string, boolean> = {};
-
-    // ── Mode d'affichage ──────────────────────────────────────────────────────
-    public mode: 'home' | 'gerer' | 'voir' | 'gerer-picker' = 'home';
-    public selectedAnnee: Annee | null = null;
-    public selectedClasse: string | null = null;
-
-    // ── Popups ────────────────────────────────────────────────────────────────
-    public showVoirModal = false;
-    public voirAnnee: Annee | null = null;
-    public showElevesModal: Eleve[] | null = null;
-    public selectedEleve: Eleve | null = null;
-    public showGererClasseModal: string | null = null;
-    public showCreateDevoirModal = false;
-    public showCreateEvenementModal = false;
-    public showAttribuerNotesModal: { type: string; titre: string; evenementId?: number } | null = null;
-
-    // ── Données ───────────────────────────────────────────────────────────────
-    public elevesParClasse: Map<string, Eleve[]> = new Map();
-    public notesStore: Map<number, NoteEntry[]> = new Map();
-    public evenements: EvenementCollectif[] = [];
-
-    // Formulaire devoir/interro
-    public formDevoir: any = { titre: '', matiere: '', date: '', type: 'devoir' };
-
-    // Formulaire événement collectif
-    public formEvenement: any = {
-        titre: '', type: 'trimestre', date: '',
-        matieres: [] as any[],
-        totalCoefficient: 0,
-        totalMoyenneCoefficientee: 0,
-        moyenneGenerale: 0,
-        nouvelleMatiere: { nom: '', moyenneClasse: 0, noteMax: 20, moyenne: 0, coefficient: 1, appreciation: '' }
-    };
-
-    // Formulaire attribution notes
-    public formAttribuer: { eleveId: number; note: number }[] = [];
-
-    get cycles(): Cycle[] { return this.schoolData.cycles; }
-
-    // ═══════════════════════ INITIALISATION ═══════════════════════
-    ngOnInit(): void {
-        this.cycles.forEach((c, i) => this.cycleOuvert[c.nom] = i === 0);
-        this.genererEleves();
-    }
-
-    private genererEleves(): void {
-        this.classesListe.forEach(classe => {
-            const effectif = Math.floor(Math.random() * 10) + 15;
-            const eleves: Eleve[] = [];
-            for (let i = 1; i <= effectif; i++) {
-                const id = Date.now() + i;
-                eleves.push({ id, prenom: `Élève${i}`, nom: classe.replace(' ', '_'), classe });
-                this.notesStore.set(id, []);
-            }
-            this.elevesParClasse.set(classe, eleves);
-        });
-    }
-
-    get classesListe(): string[] {
-        let classes: string[] = [];
-        this.cycles.forEach(cycle => {
-            cycle.annees.forEach(annee => {
-                const noms = this.schoolData.classesPourAnnee(annee.nom);
-                classes = classes.concat(noms);
-            });
-        });
-        return classes;
-    }
-
-    // ═══════════════════════ ACCUEIL ═══════════════════════
-    basculerCycle(nom: string): void { this.cycleOuvert[nom] = !this.cycleOuvert[nom]; }
-
-    anneesVisibles(cycle: Cycle): Annee[] {
-        if (!this.rechercheAccueil) return cycle.annees;
-        const t = this.rechercheAccueil.toLowerCase();
-        return cycle.annees.filter(a =>
-            a.nom.toLowerCase().includes(t) || a.description.toLowerCase().includes(t));
-    }
-
-    statsPourAnnee(anneeNom: string): any {
-        const classes = this.schoolData.classesPourAnnee(anneeNom);
-        return {
-            nbClasses: classes.length,
-            nbEleves: classes.reduce((sum, c) => sum + (this.elevesParClasse.get(c)?.length || 0), 0),
-            classes
-        };
-    }
-
-    getClassesAnnee(annee: Annee | null): string[] {
-        if (!annee) return [];
-        return this.schoolData.classesPourAnnee(annee.nom);
-    }
-
-    // ═══════════════════════ VOIR LES NOTES ═══════════════════════
-    ouvrirVoir(annee: Annee): void {
-        this.voirAnnee = annee;
-        this.showVoirModal = true;
-    }
-
-    selectClasseVoir(classe: string): void {
-        this.showVoirModal = false;
-        this.selectedClasse = classe;
-        const eleves = this.elevesParClasse.get(classe) || [];
-        this.showElevesModal = eleves;
-    }
-
-    fermerElevesModal(): void {
-        this.showElevesModal = null;
-        this.selectedClasse = null;
-    }
-
-    selectEleve(eleve: Eleve): void {
-        this.selectedEleve = eleve;
-        this.showElevesModal = null;
-    }
-
-    fermerNotesEleve(): void {
-        this.selectedEleve = null;
-    }
-
-    getNotesEleve(eleveId: number): NoteEntry[] {
-        return this.notesStore.get(eleveId) || [];
-    }
-
-    // ═══════════════════════ GÉRER ═══════════════════════
-    ouvrirGerer(annee: Annee): void {
-        this.selectedAnnee = annee;
-        this.mode = 'gerer-picker';
-    }
-
-    selectClasseGerer(classe: string): void {
-        this.selectedClasse = classe;
-        this.showGererClasseModal = classe;
-    }
-
-    fermerGererClasseModal(): void {
-        this.showGererClasseModal = null;
-        this.selectedClasse = null;
-    }
-
-    // ═══════════════════════ CRÉATION DEVOIR / INTERRO ═══════════════════════
-    ouvrirCreationDevoir(): void {
-        this.formDevoir = { titre: '', matiere: '', date: new Date().toISOString().split('T')[0], type: 'devoir' };
-        this.showCreateDevoirModal = true;
-    }
-
-    creerDevoir(): void {
-        if (!this.formDevoir.titre || !this.formDevoir.matiere) return;
-        this.showCreateDevoirModal = false;
-        this.ouvrirAttribuerNotes(this.formDevoir.type, this.formDevoir.titre);
-    }
-
-    // ═══════════════════════ CRÉATION TRIMESTRE / COMPO / EXAMEN ═══════════════════════
-    ouvrirCreationEvenement(): void {
-        this.formEvenement = {
-            titre: '', type: 'trimestre', date: new Date().toISOString().split('T')[0],
-            matieres: [],
-            totalCoefficient: 0, totalMoyenneCoefficientee: 0, moyenneGenerale: 0,
-            nouvelleMatiere: { nom: '', moyenneClasse: 0, noteMax: 20, moyenne: 0, coefficient: 1, appreciation: '' }
-        };
-        this.showCreateEvenementModal = true;
-    }
-
-    ajouterMatiereEvenement(): void {
-        const m = this.formEvenement.nouvelleMatiere;
-        if (!m.nom) return;
-        const moyCoef = m.moyenne * m.coefficient;
-        this.formEvenement.matieres.push({ ...m, moyenneCoefficientee: moyCoef });
-        this.formEvenement.nouvelleMatiere = { nom: '', moyenneClasse: 0, noteMax: 20, moyenne: 0, coefficient: 1, appreciation: '' };
-        this.recalculerTotauxEvenement();
-    }
-
-    supprimerMatiereEvenement(index: number): void {
-        this.formEvenement.matieres.splice(index, 1);
-        this.recalculerTotauxEvenement();
-    }
-
-    recalculerTotauxEvenement(): void {
-        let totalCoef = 0, totalMoyCoef = 0;
-        this.formEvenement.matieres.forEach((m: any) => {
-            totalCoef += m.coefficient;
-            totalMoyCoef += m.moyenne * m.coefficient;
-        });
-        this.formEvenement.totalCoefficient = totalCoef;
-        this.formEvenement.totalMoyenneCoefficientee = totalMoyCoef;
-        this.formEvenement.moyenneGenerale = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
-    }
-
-    enregistrerEvenement(): void {
-        if (!this.formEvenement.titre || !this.selectedClasse) return;
-        const evenement: EvenementCollectif = {
-            id: Date.now(),
-            classe: this.selectedClasse!,
-            type: this.formEvenement.type,
-            titre: this.formEvenement.titre,
-            date: this.formEvenement.date,
-            matieres: this.formEvenement.matieres.map((m: any) => ({ ...m })),
-            totalCoefficient: this.formEvenement.totalCoefficient,
-            totalMoyenneCoefficientee: this.formEvenement.totalMoyenneCoefficientee,
-            moyenneGenerale: this.formEvenement.moyenneGenerale
-        };
-        this.evenements.push(evenement);
-        this.showCreateEvenementModal = false;
-        this.ouvrirAttribuerNotes(evenement.type, evenement.titre, evenement.id);
-    }
-
-    // ═══════════════════════ ATTRIBUTION NOTES ═══════════════════════
-    ouvrirAttribuerNotes(type: string, titre: string, evenementId?: number): void {
-        this.showAttribuerNotesModal = { type, titre, evenementId };
-        const eleves = this.elevesParClasse.get(this.selectedClasse!) || [];
-        this.formAttribuer = eleves.map(e => ({ eleveId: e.id, note: 0 }));
-    }
-
-    enregistrerAttribution(): void {
-        if (!this.showAttribuerNotesModal) return;
-        const type = this.showAttribuerNotesModal.type as NoteEntry['type'];
-        const titre = this.showAttribuerNotesModal.titre;
-        const evenementId = this.showAttribuerNotesModal.evenementId;
-        const matiere = evenementId ? this.getMatiereEvenement(evenementId) : this.formDevoir.matiere;
-
-        this.formAttribuer.forEach(att => {
-            if (att.note < 0) return;
-            const note: NoteEntry = {
-                id: Date.now() + Math.random(),
-                eleveId: att.eleveId,
-                matiere: matiere || '',
-                type,
-                titre,
-                note: att.note,
-                date: new Date().toISOString().split('T')[0],
-                coefficient: evenementId ? this.getCoefficientEvenement(evenementId, matiere) : undefined
-            };
-            const notesEleve = this.notesStore.get(att.eleveId) || [];
-            notesEleve.push(note);
-            this.notesStore.set(att.eleveId, notesEleve);
-        });
-        this.showAttribuerNotesModal = null;
-    }
-
-    private getMatiereEvenement(evenementId: number): string {
-        const ev = this.evenements.find(e => e.id === evenementId);
-        return ev?.matieres[0]?.nom || '';
-    }
-
-    private getCoefficientEvenement(evenementId: number, matiere: string): number {
-        const ev = this.evenements.find(e => e.id === evenementId);
-        const mat = ev?.matieres.find(m => m.nom === matiere);
-        return mat?.coefficient || 1;
-    }
-
-    // ═══════════════════════ UTILITAIRES ═══════════════════════
-    /** Retourne le nom complet d'un élève à partir de son ID */
-    getEleveName(id: number): string {
-        for (const eleves of this.elevesParClasse.values()) {
-            const found = eleves.find(e => e.id === id);
-            if (found) return `${found.prenom} ${found.nom}`;
-        }
-        return '';
-    }
-
-    /** Retourne la liste des matières enseignées dans la classe sélectionnée */
-    getMatieresClasse(): string[] {
-        if (!this.selectedClasse) return [];
-        return this.schoolData.matieresPourClasse(this.selectedClasse).map(m => m.matiere);
-    }
-
-    // ═══════════════════════ RETOUR ═══════════════════════
     retourAccueil(): void {
         this.mode = 'home';
         this.selectedClasse = null;
