@@ -1293,6 +1293,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 10px;
+    min-height: 200px;
 }
 
 .eleve-list-item {
@@ -1324,12 +1325,25 @@
 }
 
 .eleve-list-item.has-notes {
+    border-color: #f59e0b;
+    background: #fefce8;
+}
+
+.eleve-list-item.has-notes .eleve-status {
+    color: #d97706;
+}
+
+.eleve-list-item.confirmed {
     border-color: #10b981;
     background: #ecfdf5;
 }
 
-.eleve-list-item.has-notes .eleve-status {
+.eleve-list-item.confirmed .eleve-status {
     color: #059669;
+}
+
+.eleve-list-item.confirmed .eleve-status.confirmed {
+    font-weight: 700;
 }
 
 .eleve-avatar {
@@ -1409,6 +1423,7 @@
     padding: 25px;
     overflow-y: auto;
     background: #f8fafc;
+    max-height: calc(90vh - 140px);
 }
 
 /* Nom de l'élève actuel dans le header */
@@ -1467,6 +1482,11 @@
 .btn-submit-all:disabled {
     background: #94a3b8 !important;
     cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-submit-all:disabled:hover {
+    transform: none;
 }
 
 /* --- Responsive --- */

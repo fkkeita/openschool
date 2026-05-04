@@ -408,20 +408,23 @@
                                placeholder="Rechercher un élève...">
                     </div>
                     
-                    <!-- Liste des élèves -.on peut cliquer sur n'importe lequel -->
+                    <!-- Liste des élèves - on peut cliquer sur n'importe lequel -->
                     <div class="sidebar-eleves">
                         @for (eleve of elevesFiltresTrimestre; track eleve.id) {
                             <div class="eleve-list-item" 
                                  [class.active]="getEleveActuel()?.id === eleve.id"
                                  [class.has-notes]="aDesNotesTemporaires(eleve.id)"
+                                 [class.confirmed]="aSesNotesEnregistrees(eleve.id)"
                                  (click)="selectEleveForTrimestre(eleve)">
                                 <div class="eleve-avatar">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="eleve-info">
                                     <span class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</span>
-                                    @if (aDesNotesTemporaires(eleve.id)) {
-                                        <span class="eleve-status"><i class="fas fa-check-circle"></i> Notes saisies</span>
+                                    @if (aSesNotesEnregistrees(eleve.id)) {
+                                        <span class="eleve-status confirmed"><i class="fas fa-check-circle"></i> Enregistré</span>
+                                    } @else if (aDesNotesTemporaires(eleve.id)) {
+                                        <span class="eleve-status"><i class="fas fa-edit"></i> Notes saisies</span>
                                     }
                                 </div>
                             </div>
@@ -431,11 +434,11 @@
                     <!-- Indicateur de progression -->
                     <div class="sidebar-progress">
                         <div class="progress-text">
-                            {{ nbElevesAvecNotes }} / {{ currentTrimestreState?.eleves?.length || 0 }} élèves thérapeut
+                            {{ nbElevesEnregistres }} / {{ currentTrimestreState?.eleves?.length || 0 }} élèves enregistré(s)
                         </div>
                         <div class="progress-bar-compact">
                             <div class="progress-fill" 
-                                 [style.width.%]="(nbElevesAvecNotes / (currentTrimestreState?.eleves?.length || 1)) * 100">
+                                 [style.width.%]="(nbElevesEnregistres / (currentTrimestreState?.eleves?.length || 1)) * 100">
                             </div>
                         </div>
                     </div>
@@ -537,10 +540,12 @@
                     {{ (currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0) ? 'Dernier élève' : 'Élève suivant' }}
                 </button>
                 
-                <!-- Bouton enregistrer TOUS les élèves - seulement activé quand tous ont des notes -->
-                <button class="btn-submit btn-submit-all" (click)="enregistrerTousLesEleves()">
+                <!-- Bouton enregistrer TOUS les élèves - uniquement activé quand tous ont enregistré -->
+                <button class="btn-submit btn-submit-all" 
+                        (click)="enregistrerTousLesEleves()"
+                        [disabled]="!tousLesElevesEnregistres">
                     <i class="fas fa-check-double"></i> 
-                    Enregistrer tous les élèves ({{ nbElevesAvecNotes }}/{{ currentTrimestreState?.eleves?.length }})
+                    Enregistrer tous les élèves ({{ nbElevesEnregistres }}/{{ currentTrimestreState?.eleves?.length }})
                 </button>
             </div>
         </div>

@@ -80,7 +80,7 @@ interface AttributionTrimestreState {
     trimestreId: number;              // ID du trimestre/composition/examen
     eleveIndex: number;                // Index de l'élève actuellement sélectionné (pour la progression)
     eleves: Eleve[];                  // Liste de TOUS les élèves de la classe
-    elevesTraites: Set<number>;       // Set des IDs des élèves dont on a déjà enregistré les notes
+    elevesEnregistres: Set<number>;    // Set des IDs des élèves AYANT CLICQUÉ sur "Enregistrer cet élève"
 }
 
 /**
@@ -341,13 +341,13 @@ export class NotesComponent implements OnInit {
         // - trimestreId: l'ID de l'événement
         // - eleveIndex: 0 (on commence par le premier élève)
         // - eleves: la liste de tous les élèves
-        // - elevesTraites: set vide (aucun élève n'a encore de notes enregistrées)
+        // - elevesEnregistres: set vide (aucun élève n'a encore cliqué sur "Enregistrer cet élève")
         this.currentTrimestreState = {
             opened: true,
             trimestreId: evenement.id,
             eleveIndex: 0,
             eleves: eleves,
-            elevesTraites: new Set<number>()
+            elevesEnregistres: new Set<number>()
         };
         
         // Préparer le formulaire pour le premier élève
@@ -524,16 +524,28 @@ export class NotesComponent implements OnInit {
         );
     }
     
-    /**
+/**
      * ==================================================================================================================================
      * VÉRIFIER SI UN ÉLÈVE A DES NOTES TEMPORAIRES
      * ==================================================================================================================================
      * 
      * @param eleveId - ID de l'élève
-     * @returns true si l'élève a des notes temporaires sauvegardées
+     * @returns true si l'élève a des notes temporaires sauvegardées (en cours de saisie)
      */
     aDesNotesTemporaires(eleveId: number): boolean {
         return !!this.donneesTempTrimestre[eleveId];
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * VÉRIFIER SI UN ÉLÈVE A SES NOTES ENREGISTRÉES (a cliqué sur "Enregistrer cet élève")
+     * ==================================================================================================================================
+     * 
+     * @param eleveId - ID de l'élève
+     * @returns true si l'élève a cliqué sur "Enregistrer cet élève"
+     */
+    aSesNotesEnregistrees(eleveId: number): boolean {
+        return this.currentTrimestreState?.elevesEnregistres.has(eleveId) ?? false;
     }
     
     /**
@@ -546,7 +558,7 @@ export class NotesComponent implements OnInit {
      * 
      * ÉTAPES:
      * 1. Sauvegarder dans le cache temporaire
-     * 2. Marquer l'élève comme thérapeut
+     * 2. Marquer l'élève comme Ayant Enregistré (a cliqué sur le bouton)
      * 3. Passer à l'élève suivant automatique
      */
     enregistrerNotesEleveActuel(): void {
@@ -558,7 +570,7 @@ export class NotesComponent implements OnInit {
         // Marquer l'élève comme thérapeut (ayant des notes enregistrées)
         const eleve = this.getEleveActuel();
         if (eleve) {
-            this.currentTrimestreState.elevesTraites.add(eleve.id);
+            this.currentTrimestreState.elevesEnregistres.add(eleve.id);
         }
         
         // Passer automatiquement à l'élève suivant (si disponible)
@@ -635,51 +647,43 @@ export class NotesComponent implements OnInit {
      * VÉRIFIER SI TOUS LES ÉLÈVES ONT LEURS NOTES ENREGISTRÉES
      * ==================================================================================================================================
      * 
-     * @returns true si tous les élèves ont au moins des notes temporaires
+     * @returns true si tous les élèves ont cliqué sur "Enregistrer cet élève"
+     * Cette information est utilisée pour activer/désactiver le bouton "Enregistrer tous les élèves"
      */
     get tousLesElevesEnregistres(): boolean {
         if (!this.currentTrimestreState) return false;
         
-        // Vérifier que chaque élève a des notes temporaires
-        return this.currentTrimestreState.eleves.every(eleve => 
-            this.donneesTempTrimestre[eleve.id] !== undefined
-        );
+        // Vérifier que chaque élève a cliqué sur "Enregistrer cet élève"
+        return this.currentTrimestreState.elevesEnregistres.size === this.currentTrimestreState.eleves.length;
     }
     
     /**
      * ==================================================================================================================================
-     * OBTENIR LE NOMBRE D'ÉLÈVES AYANT DES NOTES
+     * OBTENIR LE NOMBRE D'ÉLÈVES AYANT CLICQUÉ SUR "ENREGISTRER CET ÉLÈVE"
      * ==================================================================================================================================
      * 
-     * @returns Nombre d'élèves avec des notes temporaires
+     * @returns Nombre d'élèves ayant explicitement enregistré leurs notes
      */
-    get nbElevesAvecNotes(): number {
+    get nbElevesEnregistres(): number {
         if (!this.currentTrimestreState) return 0;
         
-        return this.currentTrimestreState.eleves.filter(eleve => 
-            this.donneesTempTrimestre[eleve.id] !== undefined
-        ).length;
+        return this.currentTrimestreState.elevesEnregistres.size;
     }
     
-    /**
+/**
      * ==================================================================================================================================
      * PASSER À L'ÉLÈVE SUIVANT (méthode conservée pour compatibilité)
      * ==================================================================================================================================
      * 
-     * Cette méthode est conservée mais她的 fonctionnalité est légèrement modifiée.
-     * Elle sauvegarde d'abord les notes de l'élève actuel, puis passe au suivant.
+     * Cette méthode permet de naviguer vers l'élève suivant.
+     * Elle sauvegarde les notes temporaires mais NE marque PAS l'élève comme enregistré.
+     * L'utilisateur doit clicker explicitement sur "Enregistrer cet élève".
      */
     siguienteEleveTrimestre(): void {
         if (!this.currentTrimestreState) return;
         
-        // Sauvegarder les notes temporaires de l'élève actuel
+        // Sauvegarder les notes temporaires de l'élève actuel (sans marquer comme enregistré)
         this.sauvegarderNotesTemporaires();
-        
-        // Marquer comme thérapeut
-        const eleve = this.getEleveActuel();
-        if (eleve) {
-            this.currentTrimestreState.elevesTraites.add(eleve.id);
-        }
         
         // Passer à l'élève suivant
         this.currentTrimestreState.eleveIndex++;
