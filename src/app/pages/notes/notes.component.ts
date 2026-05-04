@@ -502,6 +502,19 @@ export class NotesComponent implements OnInit {
     
     /**
      * ==================================================================================================================================
+     * OBTENIR LE TITRE DU TRIMESTRE ACTUEL
+     * ==================================================================================================================================
+     * 
+     * @returns Le titre du trimestre/composition/examen actuel
+     */
+    getTitreTrimestre(): string {
+        if (!this.currentTrimestreState) return '';
+        const evenement = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
+        return evenement?.titre || '';
+    }
+    
+    /**
+     * ==================================================================================================================================
      * OBTENIR LA LISTE DES ÉLÈVES FILTRÉS PAR RECHERCHE
      * ==================================================================================================================================
      * 
@@ -729,9 +742,119 @@ export class NotesComponent implements OnInit {
         this.rechercheEleveTrimestre = '';
     }
 
-    calculerMoyenneCoefficientee(index: number): void {
+    /**
+     * ==================================================================================================================================
+     * CALCULER LA MOYENNE/20
+     * ==================================================================================================================================
+     * 
+     * Formule: Moyenne/20 = (Moyenne Classe/20 + Note/40) / 3
+     * 
+     * @param ligne - La ligne d'attribution contenant moyenneClasse et noteCompo
+     * @returns La moyenne calculée sur 20
+     */
+    calculerMoyenne(ligne: LigneAttributionTrimestre): number {
+        const moyClasse = ligne.moyenneClasse || 0;
+        const noteCompo = ligne.noteCompo || 0;
+        
+        // Convertir note/40 en equivalent sur 20
+        const noteSur20 = (noteCompo / 40) * 20;
+        
+        // Moyenne = (moyenneClasse + noteSur20) / 3
+        const moyenne = (moyClasse + noteSur20) / 3;
+        
+        return Math.round(moyenne * 100) / 100;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CALCULER LA MOYENNE COEFFICIÉE
+     * ==================================================================================================================================
+     * 
+     * Formule: Moyenne coefficiée = Moyenne/20 × Coefficient
+     * 
+     * @param ligne - La ligne d'attribution
+     * @returns La moyenne coefficiée
+     */
+    calculerMoyenneCoefficientee(ligne: LigneAttributionTrimestre): number {
+        const moyenne = this.calculerMoyenne(ligne);
+        return Math.round(moyenne * ligne.coefficient * 100) / 100;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * DÉTERMINER L'APPRÉCIATION AUTOMATIQUEMENT
+     * ==================================================================================================================================
+     * 
+     * Tableau d'appréciation:
+     * - "Nul" si Moyenne/20 = 0
+     * - "Insuffisant" si Moyenne/20 <= 9
+     * - "Passable" si Moyenne/20 <= 11
+     * - "Assez-Bien" si Moyenne/20 <= 13
+     * - "Bien" si Moyenne/20 <= 15
+     * - "Très Bien" si Moyenne/20 <= 17
+     * - "Excellent" si Moyenne/20 <= 20
+     * 
+     * @param ligne - La ligne d'attribution
+     * @returns L'appréciation automatiquement déterminée
+     */
+    determinerAppreciation(ligne: LigneAttributionTrimestre): string {
+        const moyenne = this.calculerMoyenne(ligne);
+        
+        if (moyenne === 0) return 'Nul';
+        if (moyenne <= 9) return 'Insuffisant';
+        if (moyenne <= 11) return 'Passable';
+        if (moyenne <= 13) return 'Assez-Bien';
+        if (moyenne <= 15) return 'Bien';
+        if (moyenne <= 17) return 'Très Bien';
+        return 'Excellent';
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CALCULER LA MOYENNE GÉNÉRALE DU TRIMESTRE
+     * ==================================================================================================================================
+     * 
+     * Formule: Somme des moyennes coefficiées / Somme des coefficients
+     * 
+     * @returns La moyenne générale du trimestre pour l'élève actuel
+     */
+    get moyenneGeneraleTrimestre(): number {
+        if (!this.formAttribuerTrimestre || this.formAttribuerTrimestre.length === 0) return 0;
+        
+        let sommeMoyennesCoeff = 0;
+        let sommeCoefficients = 0;
+        
+        for (const ligne of this.formAttribuerTrimestre) {
+            const moyCoeff = this.calculerMoyenneCoefficientee(ligne);
+            sommeMoyennesCoeff += moyCoeff;
+            sommeCoefficients += ligne.coefficient;
+        }
+        
+        if (sommeCoefficients === 0) return 0;
+        
+        return Math.round((sommeMoyennesCoeff / sommeCoefficients) * 100) / 100;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * METTRE À JOUR LES CHAMPS AUTOMATIQUEMENT QUAND UN CHAMP CHANGE
+     * ==================================================================================================================================
+     * 
+     * Cette méthode est appelée quand l'utilisateur change un valeur dans le formulaire.
+     * Elle recalcule automatiquement:
+     * - La moyenne/20
+     * - La moyenne coefficiée
+     * - L'appréciation
+     * 
+     * @param index - Index de la ligne dans le formulaire
+     */
+    miseAJourAutomatique(index: number): void {
         const ligne = this.formAttribuerTrimestre[index];
-        ligne.moyenneCoefficientee = ligne.moyenne * ligne.coefficient;
+        if (!ligne) return;
+        
+ ligne.moyenne = this.calculerMoyenne(ligne);
+        ligne.moyenneCoefficientee = this.calculerMoyenneCoefficientee(ligne);
+        ligne.appreciation = this.determinerAppreciation(ligne);
     }
 
     // ═══════════════ RETOUR ═══════════════

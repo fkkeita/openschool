@@ -1194,6 +1194,99 @@
     text-align: center;
 }
 
+/* --- Appreciations automatiques --- */
+.appreciation-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+.appreciation-badge[data-appreciation="Nul"] {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.appreciation-badge[data-appreciation="Insuffisant"] {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.appreciation-badge[data-appreciation="Passable"] {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.appreciation-badge[data-appreciation="Assez-Bien"] {
+    background: #fef9c3;
+    color: #ca8210;
+}
+
+.appreciation-badge[data-appreciation="Bien"] {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.appreciation-badge[data-appreciation="Très Bien"] {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.appreciation-badge[data-appreciation="Excellent"] {
+    background: #166534;
+    color: white;
+}
+
+/* --- Moyenne générale du trimestre --- */
+.moyenne-general-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    border-radius: 16px;
+    margin-top: 25px;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.moyenne-general-label {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.95;
+}
+
+.moyenne-general-label i {
+    font-size: 18px;
+}
+
+.moyenne-general-value {
+    font-weight: 800;
+    font-size: 32px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.moyenne-general-value span {
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* --- Champs calculés automatiquement (lecture seule) --- */
+.champ.auto-calc .form-control[readonly] {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 600;
+    cursor: default;
+}
+
 /* Responsive pour les formulaires de saisie */
 @media (max-width: 1024px) {
     .ligne-champs {

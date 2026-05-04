@@ -63,10 +63,10 @@
                                             <button class="action-btn secondary" (click)="ouvrirGerer(annee)">
                                                 <i class="fas fa-edit"></i> Gérer
                                             </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+</div>
+                    </div>
+                </div>
+            </div>
                         </div>
                     </div>
                 </div>
@@ -481,21 +481,25 @@
                                 <div class="champ">
                                     <label>Moy. Classe/20</label>
                                     <input type="number" [(ngModel)]="ligne.moyenneClasse" 
+                                           (change)="miseAJourAutomatique(i)"
                                            step="0.01" min="0" max="20" class="form-control">
                                 </div>
                                 <div class="champ">
                                     <label>Note/40</label>
                                     <input type="number" [(ngModel)]="ligne.noteCompo" 
+                                           (change)="miseAJourAutomatique(i)"
                                            step="0.01" min="0" max="40" class="form-control">
                                 </div>
-                                <div class="champ">
+                                <div class="champ auto-calc">
                                     <label>Moy/20</label>
                                     <input type="number" [(ngModel)]="ligne.moyenne" 
-                                           step="0.01" min="0" max="20" class="form-control">
+                                           readonly class="form-control"
+                                           step="0.01" min="0" max="20">
                                 </div>
                                 <div class="champ">
                                     <label>Coef</label>
                                     <input type="number" [(ngModel)]="ligne.coefficient" 
+                                           (change)="miseAJourAutomatique(i)"
                                            step="1" min="1" class="form-control">
                                 </div>
                                 <div class="champ coef-calc">
@@ -504,19 +508,26 @@
                                         {{ ligne.moyenne * ligne.coefficient | number:'1.2-2' }}
                                     </span>
                                 </div>
-                                <div class="champ">
+                                <div class="champ auto-calc">
                                     <label>Appréciation</label>
-                                    <select [(ngModel)]="ligne.appreciation" class="form-control">
-                                        <option value="">-- Sélectionner --</option>
-                                        <option value="Excellent">Excellent</option>
-                                        <option value="Très Bien">Très Bien</option>
-                                        <option value="Bien">Bien</option>
-                                        <option value="Assez Bien">Assez Bien</option>
-                                        <option value="Passable">Passable</option>
-                                        <option value="Insuffisant">Insuffisant</option>
-                                    </select>
+                                    <span class="appreciation-badge" [attr.data-appreciation]="ligne.appreciation">
+                                        {{ ligne.appreciation || '--' }}
+                                    </span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Moyenne générale du trimestre pour l'élève actuel -->
+                    <div class="moyenne-general-box">
+                        <div class="moyenne-general-label">
+                            <i class="fas fa-chart-line"></i>
+                            @if (getEleveActuel(); as eleveActuel) {
+                                {{ getTitreTrimestre() }} - {{ eleveActuel.prenom }} {{ eleveActuel.nom }}
+                            }
+                        </div>
+                        <div class="moyenne-general-value">
+                            {{ moyenneGeneraleTrimestre | number:'1.2-2' }} <span>/ 20</span>
                         </div>
                     </div>
                 </div>
