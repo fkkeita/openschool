@@ -1287,6 +1287,15 @@
     cursor: default;
 }
 
+/* Readonly coefficient field */
+.champ .form-control[readonly][type="number"] {
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: 700;
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+}
+
 /* Responsive pour les formulaires de saisie */
 @media (max-width: 1024px) {
     .ligne-champs {

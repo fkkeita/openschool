@@ -184,12 +184,71 @@ export class NotesComponent implements OnInit {
         };
     }
 
-    getClassesAnnee(annee: Annee | null): string[] {
-        return annee ? this.schoolData.classesPourAnnee(annee.nom) : [];
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LES MATIÈRES D'UNE CLASSE (nom + coefficient)
+     * ==================================================================================================================================
+     * 
+     * Cette méthode retourne les matières enseignées dans une classe donnée,
+     * avec她们的 coefficient.
+     * 
+     * Format de retour: { matiere: string; coefficient: number }[]
+     * 
+     * @param classe - Le nom de la classe
+     * @returns Tableau de {matiere, coefficient}
+     */
+    getMatieresAvecCoefficient(classe: string): { matiere: string; coefficient: number }[] {
+        if (!classe) return [];
+        
+        // Appel au service pour récupérer les matières de cette classe
+        const matieres = this.schoolData.matieresPourClasse(classe);
+        
+        // Retourner un tableau avec le nom et le coefficient
+        return matieres.map(m => ({
+            matiere: m.matiere,
+            coefficient: this.getCoefficientMatiere(m.matiere, classe)
+        }));
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LE COEFFICIENT D'UNE MATIÈRE
+     * ==================================================================================================================================
+     * 
+     * Cette méthode retourne le coefficient d'une matière spécifique.
+     * Elle cherche d'abord dans les données du service, sinon retourne 1 par défaut.
+     * 
+     * @param matiere - Le nom de la matière
+     * @returns Le coefficient (défaut: 1)
+     */
+    getCoefficientMatiere(matiere: string, classe: string): number {
+        // Chercher dans les matières du service
+        const matiereData = this.schoolData.matieres.find(m => m.nom === matiere);
+        if (matiereData) {
+            return matiereData.coefficient;
+        }
+        
+        // Par défaut, retourner 1
+        return 1;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LES MATIÈRES SIMPLES (JUSQU LE NOM)
+     * ==================================================================================================================================
+     * 
+     * Alias pour compatibilité avec le code existant.
+     * 
+     * @param classe - Le nom de la classe
+     * @returns Tableau des noms de matières
+     */
+    getMatieresClasse(classe: string): string[] {
+        const matieres = this.getMatieresAvecCoefficient(classe);
+        return matieres.map(m => m.matiere);
     }
 
-    getMatieresClasse(classe: string): string[] {
-        return classe ? this.schoolData.matieresPourClasse(classe).map(m => m.matiere) : [];
+    getClassesAnnee(annee: Annee | null): string[] {
+        return annee ? this.schoolData.classesPourAnnee(annee.nom) : [];
     }
 
     getEleveName(id: number): string {
@@ -417,12 +476,13 @@ export class NotesComponent implements OnInit {
          } else {
              // Première fois qu'on remplit pour cet élève → créer formulaire vide
              // Une ligne par matière cochée lors de la création du trimestre
+             // On récupère automatiquement le coefficient de chaque matière
              this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
                  matiere: matiere,              // Nom de la matière
                  moyenneClasse: 0,             // Moyenne de la classe (saisie par le prof)
                  noteCompo: 0,                  // Note de composition (/40)
                  moyenne: 0,                    // Moyenne ramenée sur 20
-                 coefficient: 1,               // Coefficient de la matière
+                 coefficient: this.getCoefficientMatiere(matiere, this.selectedClasse || ''), // Coefficient AUTO de la matière
                  moyenneCoefficientee: 0,      // Moyenne × coefficient
                  appreciation: ''               // Appréciation (ex: "Bien", "Très Bien")
              }));

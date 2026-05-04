@@ -499,8 +499,8 @@
                                 <div class="champ">
                                     <label>Coef</label>
                                     <input type="number" [(ngModel)]="ligne.coefficient" 
-                                           (change)="miseAJourAutomatique(i)"
-                                           step="1" min="1" class="form-control">
+                                           readonly class="form-control"
+                                           step="1" min="1">
                                 </div>
                                 <div class="champ coef-calc">
                                     <label>Moy coef</label>
