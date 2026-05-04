@@ -449,17 +449,17 @@
                      ═══════════════════════════════════════════════════════════ -->
                 <div class="trimestre-main">
                     
-                    <!-- Indicateur de progression -->
-                    <div class="saisie-progress">
+                    <!-- Indicateur de progression - BARRE SIMPLE (%) avec sticky pour rester visible -->
+                    <div class="saisie-progress sticky">
                         <div class="progress-info">
-                            <span>Élève {{ (currentTrimestreState?.eleveIndex || 0) + 1 }} sur {{ currentTrimestreState?.eleves?.length || 0 }}</span>
+                            <span>Progression: {{ nbElevesEnregistres }} / {{ currentTrimestreState?.eleves?.length || 0 }} élèves</span>
                             @if (getEleveActuel(); as eleveActuel) {
-                                <span class="progress-name">{{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
+                                <span class="progress-name">Actuel: {{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
                             }
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill" 
-                                 [style.width.%]="((currentTrimestreState?.eleveIndex || 0) + 1) / (currentTrimestreState?.eleves?.length || 1) * 100">
+                                 [style.width.%]="(nbElevesEnregistres / (currentTrimestreState?.eleves?.length || 1)) * 100">
                             </div>
                         </div>
                     </div>
@@ -528,9 +528,12 @@
                     <i class="fas fa-times"></i> Annuler
                 </button>
                 
-                <!-- Bouton enregistrer UN SEUL élève (l目前的) -->
+                <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) -->
                 <button class="btn-submit" (click)="enregistrerNotesEleveActuel()">
-                    <i class="fas fa-save"></i> Enregistrer cet élève
+                    <i class="fas fa-save"></i> 
+                    @if (getEleveActuel(); as eleveActuel) {
+                        Enregistrer l'élève {{ eleveActuel.prenom }} {{ eleveActuel.nom }}
+                    }
                 </button>
                 
                 <!-- Bouton passer à l'élève suivant -->
