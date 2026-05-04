@@ -464,10 +464,22 @@
                         </div>
                     </div>
                     
+                    <!-- Indicateur mode consultation -->
+                    @if (modeConsultationTrimestre) {
+                        <div class="consultation-banner">
+                            <i class="fas fa-lock"></i>
+                            <span>Notes verrouillées — Consultation seule</span>
+                        </div>
+                    }
+                    
                     <!-- Instructions -->
-                    <p class="saisie-hint">
+                    <p class="saisie-hint" [class.consultation-hint]="modeConsultationTrimestre">
                         <i class="fas fa-info-circle"></i>
-                        Saisissez les notes pour chaque matière cochée lors de la création du trimestre:
+                        @if (modeConsultationTrimestre) {
+                            Consultation des notes confirmées:
+                        } @else {
+                            Saisissez les notes pour chaque matière cochée lors de la création du trimestre:
+                        }
                     </p>
                     
                     <!-- Formulaire par matière - une ligne par matière -->
@@ -477,17 +489,19 @@
                             <div class="ligne-matiere">{{ ligne.matiere }}</div>
                             
                             <!-- Champs de saisie à droite -->
-                            <div class="ligne-champs">
+                            <div class="ligne-champs" [class.readonly]="modeConsultationTrimestre">
                                 <div class="champ">
                                     <label>Moy. Classe/20</label>
                                     <input type="number" [(ngModel)]="ligne.moyenneClasse" 
                                            (change)="miseAJourAutomatique(i)"
+                                           [readonly]="modeConsultationTrimestre"
                                            step="0.01" min="0" max="20" class="form-control">
                                 </div>
                                 <div class="champ">
                                     <label>Note/40</label>
                                     <input type="number" [(ngModel)]="ligne.noteCompo" 
                                            (change)="miseAJourAutomatique(i)"
+                                           [readonly]="modeConsultationTrimestre"
                                            step="0.01" min="0" max="40" class="form-control">
                                 </div>
                                 <div class="champ auto-calc">
@@ -539,8 +553,8 @@
                     <i class="fas fa-times"></i> Annuler
                 </button>
                 
-                <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) -->
-                <button class="btn-submit" (click)="enregistrerNotesEleveActuel()">
+                <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) - OUVRE LE POPUP DE CONFIRMATION -->
+                <button class="btn-submit" (click)="ouvrirConfirmationTrimestre()">
                     <i class="fas fa-save"></i> 
                     @if (getEleveActuel(); as eleveActuel) {
                         Enregistrer l'élève {{ eleveActuel.prenom }} {{ eleveActuel.nom }}
@@ -560,6 +574,87 @@
                         [disabled]="!tousLesElevesEnregistres">
                     <i class="fas fa-check-double"></i> 
                     Enregistrer tous les élèves ({{ nbElevesEnregistres }}/{{ currentTrimestreState?.eleves?.length }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════
+         POPUP DE CONFIRMATION ENREGISTREMENT TRIMESTRE
+         ==================================================================================================================================
+         
+         Ce popup s'affiche quand l'utilisateur clique sur "Enregistrer l'élève [Prénom Nom]".
+         Il affiche:
+         - Le résumé des notes saisies pour chaque matière
+         - La moyenne du trimestre pour l'élève
+         - Un bouton pour confirmer (enregistre définitivement)
+         - Un bouton pour annuler (pour modifier)
+         
+         Design professionnel avec animations.
+    -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showConfirmationTrimestreModal" (click)="fermerConfirmationTrimestre()">
+        <div class="modal-container confirmation-modal" (click)="$event.stopPropagation()">
+            
+            <!-- En-tête du popup avec icône animée -->
+            <div class="confirmation-header">
+                <div class="confirmation-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Confirmer l'enregistrement</h3>
+                <button class="modal-close" (click)="fermerConfirmationTrimestre()">×</button>
+            </div>
+            
+            <!-- Corps du popup avec résumé des notes -->
+            <div class="modal-body confirmation-body">
+                <p class="confirmation-intro">
+                    Vérifiez les notes de <strong>{{ getEleveActuel()?.prenom }} {{ getEleveActuel()?.nom }}</strong> 
+                    pour le {{ getTitreTrimestre() }} avant de confirmer:
+                </p>
+                
+                <!-- Tableau récapitulatif des notes -->
+                <div class="confirmation-table">
+                    <div class="confirmation-table-header">
+                        <span>Matière</span>
+                        <span>Moy. Classe</span>
+                        <span>Note/40</span>
+                        <span>Moy/20</span>
+                        <span>Coef</span>
+                        <span>Moy. Coef</span>
+                        <span>Appréciation</span>
+                    </div>
+                    
+                    <div class="confirmation-table-row" *ngFor="let ligne of formAttribuerTrimestre">
+                        <span class="matiere">{{ ligne.matiere }}</span>
+                        <span>{{ ligne.moyenneClasse | number:'1.2-2' }}</span>
+                        <span>{{ ligne.noteCompo | number:'1.2-2' }}</span>
+                        <span class="moyenne">{{ ligne.moyenne | number:'1.2-2' }}</span>
+                        <span>{{ ligne.coefficient }}</span>
+                        <span class="moyenne-coef">{{ ligne.moyenneCoefficientee | number:'1.2-2' }}</span>
+                        <span class="appreciation" [attr.data-appreciation]="ligne.appreciation">
+                            {{ ligne.appreciation || '--' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Moyenne générale -->
+                <div class="confirmation-moyenne">
+                    <span class="label">Moyenne générale du {{ getTitreTrimestre() }}:</span>
+                    <span class="value">{{ moyenneGeneraleTrimestre | number:'1.2-2' }} / 20</span>
+                </div>
+                
+                <p class="confirmation-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Attention: Après confirmation, vous ne pourrez plus modifier ces notes.
+                </p>
+            </div>
+            
+            <!-- Pied du popup avec boutons -->
+            <div class="modal-footer confirmation-footer">
+                <button class="btn-cancel" (click)="fermerConfirmationTrimestre()">
+                    <i class="fas fa-arrow-left"></i> Modifier
+                </button>
+                <button class="btn-confirm" (click)="confirmerEnregistrementTrimestre()">
+                    <i class="fas fa-check"></i> Confirmer et enregistrer
                 </button>
             </div>
         </div>

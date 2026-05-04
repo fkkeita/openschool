@@ -135,6 +135,40 @@ export class NotesComponent implements OnInit {
     public showAttribuerNotesModal: { type: string; titre: string; evenementId?: number } | null = null;
     public showAttribuerTrimestreModal = false;
 
+    /**
+     * ==================================================================================================================================
+     * POPUP DE CONFIRMATION ENREGISTREMENT TRIMESTRE
+     * ==================================================================================================================================
+     * 
+     * Ce popup s'affiche quand l'utilisateur clique sur "Enregistrer l'élève [Prénom Nom]".
+     * Il affiche:
+     * - Le résumé des notes saisies pour chaque matière
+     * - La moyenne du trimestre pour l'élève
+     * - Un bouton pour confirmer (enregistre définitivement)
+     * - Un bouton pour annuler (pour modifier)
+     * 
+     * Après confirmation, les notes sont verrouillées pour cet élève.
+     */
+    public showConfirmationTrimestreModal = false;
+
+    /**
+     * ==================================================================================================================================
+     * NOTES VERRROUILLÉES PAR ÉLÈVE
+     * ==================================================================================================================================
+     * 
+     * Set qui stocke les IDs des élèves dont les notes de trimestre ont été confirmées.
+     * Format de la clé: "{trimestreId}_{eleveId}"
+     * 
+     * Une fois confirmé, on ne peut plus modifier les notes.
+     */
+    public notesTrimestreVerrouilles: Set<string> = new Set();
+    
+    /**
+     * Mode consultation pour les notes verrouillées.
+     * Quand true, l'utilisateur peut seulement consulter les notes sans pouvoir les modifier.
+     */
+    public modeConsultationTrimestre = false;
+
     // Stores de notes
     public notesStore: Map<number, NoteEntry[]> = new Map();
     public notesTrimestreStore: Map<number, NoteTrimestre[]> = new Map();
@@ -156,7 +190,7 @@ export class NotesComponent implements OnInit {
     // ═══════════════ INITIALISATION ═══════════════
     ngOnInit(): void {
         this.cycles.forEach((c, i) => this.cycleOuvert[c.nom] = i === 0);
-        // Les élèves sont déjà chargés par le service, pas d'initialisation locale.
+        this.chargerNotesVerrouilleesLocalStorage();
     }
 
     // ─── Helpers ────────────────────────────────────
@@ -199,17 +233,17 @@ export class NotesComponent implements OnInit {
      */
     getMatieresAvecCoefficient(classe: string): { matiere: string; coefficient: number }[] {
         if (!classe) return [];
-        
+
         // Appel au service pour récupérer les matières de cette classe
         const matieres = this.schoolData.matieresPourClasse(classe);
-        
+
         // Retourner un tableau avec le nom et le coefficient
         return matieres.map(m => ({
             matiere: m.matiere,
             coefficient: this.getCoefficientMatiere(m.matiere, classe)
         }));
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR LE COEFFICIENT D'UNE MATIÈRE
@@ -227,11 +261,11 @@ export class NotesComponent implements OnInit {
         if (matiereData) {
             return matiereData.coefficient;
         }
-        
+
         // Par défaut, retourner 1
         return 1;
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR LES MATIÈRES SIMPLES (JUSQU LE NOM)
@@ -388,13 +422,13 @@ export class NotesComponent implements OnInit {
     ouvrirAttribuerTrimestre(evenement: EvenementCollectif): void {
         // Vérification: on doit avoir une classe sélectionnée
         if (!this.selectedClasse) return;
-        
+
         // Récupérer la liste des élèves pour cette classe depuis le service partagé
         const eleves = this.schoolData.elevesPourClasse(this.selectedClasse);
-        
+
         // Vérification: la classe doit contenir des élèves
         if (eleves.length === 0) return;
-        
+
         // Initialiser l'état du trimestre avec:
         // - opened: true (modal ouvert)
         // - trimestreId: l'ID de l'événement
@@ -408,10 +442,10 @@ export class NotesComponent implements OnInit {
             eleves: eleves,
             elevesEnregistres: new Set<number>()
         };
-        
+
         // Préparer le formulaire pour le premier élève
         this.preparerFormulaireTrimestre(evenement);
-        
+
         // Ouvrir le modal
         this.showAttribuerTrimestreModal = true;
     }
@@ -421,7 +455,7 @@ export class NotesComponent implements OnInit {
      * Contient: liste des élèves, index actuel, ID du trimestre, set des élèves débloqués
      */
     currentTrimestreState: AttributionTrimestreState | null = null;
-    
+
     /**
      * ==================================================================================================================================
      * CACHE TEMPORAIRE - Conserve les notes en cours de saisie pour chaque élève
@@ -435,7 +469,7 @@ export class NotesComponent implements OnInit {
      * Format: { [eleveId]: LigneAttributionTrimestre[] }
      */
     private donneesTempTrimestre: DonneesTempTrimestre = {};
-    
+
     /**
      * ==================================================================================================================================
      * RECHERCHE D'ÉLÈVES - Champ de recherche pour trouver rapidement un élève
@@ -461,32 +495,53 @@ export class NotesComponent implements OnInit {
     private preparerFormulaireTrimestre(evenement: EvenementCollectif): void {
         // Vérifier si on a un état de trimester valide
         if (!this.currentTrimestreState) return;
-        
+
         // Récupérer l'élève actuellement sélectionné
         const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
         if (!eleve) return;
-        
+
+        const trimestreId = this.currentTrimestreState.trimestreId;
+
         // ==================================================================================================================================
-         // NOUVELLE LOGIQUE: Vérifier d'abord dans le cache temporaire
-         // ==================================================================================================================================
-         if (this.donneesTempTrimestre[eleve.id]) {
-             // Des notes existent déjà pour cet élève → les charger
-             // Cela permet à l'utilisateur de reprendre là où il s'était arrêté
-             this.formAttribuerTrimestre = this.donneesTempTrimestre[eleve.id];
-         } else {
-             // Première fois qu'on remplit pour cet élève → créer formulaire vide
-             // Une ligne par matière cochée lors de la création du trimestre
-             // On récupère automatiquement le coefficient de chaque matière
-             this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
-                 matiere: matiere,              // Nom de la matière
-                 moyenneClasse: 0,             // Moyenne de la classe (saisie par le prof)
-                 noteCompo: 0,                  // Note de composition (/40)
-                 moyenne: 0,                    // Moyenne ramenée sur 20
-                 coefficient: this.getCoefficientMatiere(matiere, this.selectedClasse || ''), // Coefficient AUTO de la matière
-                 moyenneCoefficientee: 0,      // Moyenne × coefficient
-                 appreciation: ''               // Appréciation (ex: "Bien", "Très Bien")
-             }));
-         }
+        // VÉRIFIER SI LES NOTES SONT VERRROUILLÉES
+        // ==================================================================================================================================
+        const sontVerrouillees = this.sontNotesVerrouillees(eleve.id, trimestreId);
+        this.modeConsultationTrimestre = sontVerrouillees;
+        
+        if (sontVerrouillees) {
+            // Notes verrouillées → charger depuis localStorage pour consultation seule
+            const notesVerrouillees = this.notesTrimestreStore.get(eleve.id);
+            if (notesVerrouillees && notesVerrouillees.length > 0) {
+                // Transformer les notes sauvegardées en format formulaire
+                this.formAttribuerTrimestre = notesVerrouillees.map(n => ({
+                    matiere: n.matiere,
+                    moyenneClasse: n.moyenneClasse,
+                    noteCompo: n.noteCompo,
+                    moyenne: n.moyenne,
+                    coefficient: n.coefficient,
+                    moyenneCoefficientee: n.moyenneCoefficientee,
+                    appreciation: n.appreciation
+                }));
+                return;
+            }
+        }
+
+        // ==================================================================================================================================
+        // Vérifier d'abord dans le cache temporaire
+        // ==================================================================================================================================
+        if (this.donneesTempTrimestre[eleve.id]) {
+            this.formAttribuerTrimestre = this.donneesTempTrimestre[eleve.id];
+        } else {
+            this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
+                matiere: matiere,
+                moyenneClasse: 0,
+                noteCompo: 0,
+                moyenne: 0,
+                coefficient: this.getCoefficientMatiere(matiere, this.selectedClasse || ''),
+                moyenneCoefficientee: 0,
+                appreciation: ''
+            }));
+        }
     }
 
     /**
@@ -507,25 +562,25 @@ export class NotesComponent implements OnInit {
     selectEleveForTrimestre(eleve: Eleve): void {
         // Vérifications de sécurité
         if (!this.currentTrimestreState) return;
-        
+
         // ÉTAPE 1: Sauvegarder les notes temporaires de l'élève ACTUEL
         // Avant de changer d'élève, on met à jour le cache pour ne rien perdre
         this.sauvegarderNotesTemporaires();
-        
+
         // ÉTAPE 2: Trouver l'index de l'élève cliqué
         const eleveIndex = this.currentTrimestreState.eleves.findIndex(e => e.id === eleve.id);
         if (eleveIndex === -1) return; // Élève non trouvé (ne devrait pas arriver)
-        
+
         // ÉTAPE 3: Mettre à jour l'index de l'élève actuel
         this.currentTrimestreState.eleveIndex = eleveIndex;
-        
+
         // ÉTAPE 4: Trouver l'événement (trimestre/composition) pour préloader le formulaire
         const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
         if (trimestre) {
             this.preparerFormulaireTrimestre(trimestre);
         }
     }
-    
+
     /**
      * ==================================================================================================================================
      * SAUVEGARDER LES NOTES TEMPORAIRES
@@ -540,14 +595,14 @@ export class NotesComponent implements OnInit {
      */
     private sauvegarderNotesTemporaires(): void {
         if (!this.currentTrimestreState) return;
-        
+
         const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
         if (!eleve) return;
-        
+
         // Sauvegarder les notes actuelles dans le cache avec l'ID de l'élève comme clé
         this.donneesTempTrimestre[eleve.id] = [...this.formAttribuerTrimestre];
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR L'ÉLÈVE ACTUELLEMENT SÉLECTIONNÉ
@@ -559,7 +614,7 @@ export class NotesComponent implements OnInit {
         if (!this.currentTrimestreState) return null;
         return this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex] || null;
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR LE TITRE DU TRIMESTRE ACTUEL
@@ -572,7 +627,7 @@ export class NotesComponent implements OnInit {
         const evenement = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
         return evenement?.titre || '';
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR LA LISTE DES ÉLÈVES FILTRÉS PAR RECHERCHE
@@ -585,30 +640,30 @@ export class NotesComponent implements OnInit {
      */
     get elevesFiltresTrimestre(): Eleve[] {
         if (!this.currentTrimestreState) return [];
-        
+
         // Pas de recherche → retourner tous les élèves
         if (!this.rechercheEleveTrimestre) return this.currentTrimestreState.eleves;
-        
+
         // Filtrer par nom ou prénom
         const terme = this.rechercheEleveTrimestre.toLowerCase();
-        return this.currentTrimestreState.eleves.filter(eleve => 
-            eleve.prenom.toLowerCase().includes(terme) || 
+        return this.currentTrimestreState.eleves.filter(eleve =>
+            eleve.prenom.toLowerCase().includes(terme) ||
             eleve.nom.toLowerCase().includes(terme)
         );
     }
-    
-/**
-     * ==================================================================================================================================
-     * VÉRIFIER SI UN ÉLÈVE A DES NOTES TEMPORAIRES
-     * ==================================================================================================================================
-     * 
-     * @param eleveId - ID de l'élève
-     * @returns true si l'élève a des notes temporaires sauvegardées (en cours de saisie)
-     */
+
+    /**
+         * ==================================================================================================================================
+         * VÉRIFIER SI UN ÉLÈVE A DES NOTES TEMPORAIRES
+         * ==================================================================================================================================
+         * 
+         * @param eleveId - ID de l'élève
+         * @returns true si l'élève a des notes temporaires sauvegardées (en cours de saisie)
+         */
     aDesNotesTemporaires(eleveId: number): boolean {
         return !!this.donneesTempTrimestre[eleveId];
     }
-    
+
     /**
      * ==================================================================================================================================
      * VÉRIFIER SI UN ÉLÈVE A SES NOTES ENREGISTRÉES (a cliqué sur "Enregistrer cet élève")
@@ -620,7 +675,7 @@ export class NotesComponent implements OnInit {
     aSesNotesEnregistrees(eleveId: number): boolean {
         return this.currentTrimestreState?.elevesEnregistres.has(eleveId) ?? false;
     }
-    
+
     /**
      * ==================================================================================================================================
      * ENREGISTRER LES NOTES DE L'ÉLÈVE ACTUEL
@@ -636,16 +691,16 @@ export class NotesComponent implements OnInit {
      */
     enregistrerNotesEleveActuel(): void {
         if (!this.currentTrimestreState) return;
-        
+
         // Sauvegarder les notes dans le cache temporaire
         this.sauvegarderNotesTemporaires();
-        
+
         // Marquer l'élève comme thérapeut (ayant des notes enregistrées)
         const eleve = this.getEleveActuel();
         if (eleve) {
             this.currentTrimestreState.elevesEnregistres.add(eleve.id);
         }
-        
+
         // Passer automatiquement à l'élève suivant (si disponible)
         const indexSuivant = this.currentTrimestreState.eleveIndex + 1;
         if (indexSuivant < this.currentTrimestreState.eleves.length) {
@@ -656,7 +711,7 @@ export class NotesComponent implements OnInit {
             }
         }
     }
-    
+
     /**
      * ==================================================================================================================================
      * ENREGISTRER TOUS LES ÉLÈVES
@@ -674,19 +729,19 @@ export class NotesComponent implements OnInit {
      */
     enregistrerTousLesEleves(): void {
         if (!this.currentTrimestreState) return;
-        
+
         // ÉTAPE 1: Sauvegarder d'abord les notes de l'élève actuel
         this.sauvegarderNotesTemporaires();
-        
+
         // ÉTAPE 2: Enregistrer définitivement chaque élève qui a des notes
         for (const eleve of this.currentTrimestreState.eleves) {
             // Vérifier si cet élève a des notes temporaires
             const notesTemp = this.donneesTempTrimestre[eleve.id];
             if (!notesTemp) continue; // Pas de notes pour cet élève
-            
+
             // Récupérer ou créer le tableau de notes existant
             let notesTrimestre = this.notesTrimestreStore.get(eleve.id) || [];
-            
+
             // Ajouter chaque note de chaque matière
             notesTemp.forEach(ligne => {
                 notesTrimestre.push({
@@ -703,18 +758,18 @@ export class NotesComponent implements OnInit {
                     date: new Date().toISOString().split('T')[0]
                 });
             });
-            
+
             // Sauvegarder dans le store permanent
             this.notesTrimestreStore.set(eleve.id, notesTrimestre);
         }
-        
+
         // ÉTAPE 3: Vider le cache temporaire
         this.donneesTempTrimestre = {};
-        
+
         // ÉTAPE 4: Fermer le modal
         this.fermerAttribuerTrimestreModal();
     }
-    
+
     /**
      * ==================================================================================================================================
      * VÉRIFIER SI TOUS LES ÉLÈVES ONT LEURS NOTES ENREGISTRÉES
@@ -725,11 +780,11 @@ export class NotesComponent implements OnInit {
      */
     get tousLesElevesEnregistres(): boolean {
         if (!this.currentTrimestreState) return false;
-        
+
         // Vérifier que chaque élève a cliqué sur "Enregistrer cet élève"
         return this.currentTrimestreState.elevesEnregistres.size === this.currentTrimestreState.eleves.length;
     }
-    
+
     /**
      * ==================================================================================================================================
      * OBTENIR LE NOMBRE D'ÉLÈVES AYANT CLICQUÉ SUR "ENREGISTRER CET ÉLÈVE"
@@ -739,34 +794,34 @@ export class NotesComponent implements OnInit {
      */
     get nbElevesEnregistres(): number {
         if (!this.currentTrimestreState) return 0;
-        
+
         return this.currentTrimestreState.elevesEnregistres.size;
     }
-    
-/**
-     * ==================================================================================================================================
-     * PASSER À L'ÉLÈVE SUIVANT (méthode conservée pour compatibilité)
-     * ==================================================================================================================================
-     * 
-     * Cette méthode permet de naviguer vers l'élève suivant.
-     * Elle sauvegarde les notes temporaires mais NE marque PAS l'élève comme enregistré.
-     * L'utilisateur doit clicker explicitement sur "Enregistrer cet élève".
-     */
+
+    /**
+         * ==================================================================================================================================
+         * PASSER À L'ÉLÈVE SUIVANT (méthode conservée pour compatibilité)
+         * ==================================================================================================================================
+         * 
+         * Cette méthode permet de naviguer vers l'élève suivant.
+         * Elle sauvegarde les notes temporaires mais NE marque PAS l'élève comme enregistré.
+         * L'utilisateur doit clicker explicitement sur "Enregistrer cet élève".
+         */
     siguienteEleveTrimestre(): void {
         if (!this.currentTrimestreState) return;
-        
+
         // Sauvegarder les notes temporaires de l'élève actuel (sans marquer comme enregistré)
         this.sauvegarderNotesTemporaires();
-        
+
         // Passer à l'élève suivant
         this.currentTrimestreState.eleveIndex++;
-        
+
         // Si on a fini tous les élèves, fermer le modal
         if (this.currentTrimestreState.eleveIndex >= this.currentTrimestreState.eleves.length) {
             this.fermerAttribuerTrimestreModal();
             return;
         }
-        
+
         // Préparer le formulaire pour l'élève suivant
         const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
         if (trimestre) {
@@ -788,16 +843,16 @@ export class NotesComponent implements OnInit {
     fermerAttribuerTrimestreModal(): void {
         // Fermer le modal
         this.showAttribuerTrimestreModal = false;
-        
+
         // Réinitialiser l'état du trimestre
         this.currentTrimestreState = null;
-        
+
         // Vider le formulaire
         this.formAttribuerTrimestre = [];
-        
+
         // Vider aussi le cache temporaire pour libérer de la mémoire
         this.donneesTempTrimestre = {};
-        
+
         // Réinitialiser la recherche
         this.rechercheEleveTrimestre = '';
     }
@@ -815,16 +870,15 @@ export class NotesComponent implements OnInit {
     calculerMoyenne(ligne: LigneAttributionTrimestre): number {
         const moyClasse = ligne.moyenneClasse || 0;
         const noteCompo = ligne.noteCompo || 0;
-        
-        // Convertir note/40 en equivalent sur 20
-        const noteSur20 = (noteCompo / 40) * 20;
-        
+
+
+
         // Moyenne = (moyenneClasse + noteSur20) / 3
-        const moyenne = (moyClasse + noteSur20) / 3;
-        
+        const moyenne = (moyClasse + noteCompo) / 3;
+
         return Math.round(moyenne * 100) / 100;
     }
-    
+
     /**
      * ==================================================================================================================================
      * CALCULER LA MOYENNE COEFFICIÉE
@@ -839,7 +893,7 @@ export class NotesComponent implements OnInit {
         const moyenne = this.calculerMoyenne(ligne);
         return Math.round(moyenne * ligne.coefficient * 100) / 100;
     }
-    
+
     /**
      * ==================================================================================================================================
      * DÉTERMINER L'APPRÉCIATION AUTOMATIQUEMENT
@@ -859,7 +913,7 @@ export class NotesComponent implements OnInit {
      */
     determinerAppreciation(ligne: LigneAttributionTrimestre): string {
         const moyenne = this.calculerMoyenne(ligne);
-        
+
         if (moyenne === 0) return 'Nul';
         if (moyenne <= 9) return 'Insuffisant';
         if (moyenne <= 11) return 'Passable';
@@ -868,7 +922,7 @@ export class NotesComponent implements OnInit {
         if (moyenne <= 17) return 'Très Bien';
         return 'Excellent';
     }
-    
+
     /**
      * ==================================================================================================================================
      * CALCULER LA MOYENNE GÉNÉRALE DU TRIMESTRE
@@ -880,21 +934,21 @@ export class NotesComponent implements OnInit {
      */
     get moyenneGeneraleTrimestre(): number {
         if (!this.formAttribuerTrimestre || this.formAttribuerTrimestre.length === 0) return 0;
-        
+
         let sommeMoyennesCoeff = 0;
         let sommeCoefficients = 0;
-        
+
         for (const ligne of this.formAttribuerTrimestre) {
             const moyCoeff = this.calculerMoyenneCoefficientee(ligne);
             sommeMoyennesCoeff += moyCoeff;
             sommeCoefficients += ligne.coefficient;
         }
-        
+
         if (sommeCoefficients === 0) return 0;
-        
+
         return Math.round((sommeMoyennesCoeff / sommeCoefficients) * 100) / 100;
     }
-    
+
     /**
      * ==================================================================================================================================
      * METTRE À JOUR LES CHAMPS AUTOMATIQUEMENT QUAND UN CHAMP CHANGE
@@ -911,10 +965,161 @@ export class NotesComponent implements OnInit {
     miseAJourAutomatique(index: number): void {
         const ligne = this.formAttribuerTrimestre[index];
         if (!ligne) return;
-        
- ligne.moyenne = this.calculerMoyenne(ligne);
+
+        ligne.moyenne = this.calculerMoyenne(ligne);
         ligne.moyenneCoefficientee = this.calculerMoyenneCoefficientee(ligne);
         ligne.appreciation = this.determinerAppreciation(ligne);
+    }
+
+    /**
+     * ==================================================================================================================================
+     * VÉRIFIER SI LES NOTES D'UN ÉLÈVE SONT VERRROUILLÉES
+     * ==================================================================================================================================
+     * 
+     * @param eleveId - ID de l'élève
+     * @param trimestreId - ID du trimestre
+     * @returns true si les notes sont verrouillées
+     */
+    public sontNotesVerrouillees(eleveId: number, trimestreId: number): boolean {
+        const cle = `${trimestreId}_${eleveId}`;
+        return this.notesTrimestreVerrouilles.has(cle);
+    }
+
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LA CLÉ DE VERRROUILLAGE
+     * ==================================================================================================================================
+     * Format: "{trimestreId}_{eleveId}"
+     */
+    private getCleVerrouillage(eleveId: number, trimestreId: number): string {
+        return `${trimestreId}_${eleveId}`;
+    }
+
+    /**
+     * ==================================================================================================================================
+     * OUVRIR LE POPUP DE CONFIRMATION
+     * ==================================================================================================================================
+     * Ouvre le popup avec résumé des notes avant enregistrement définitif.
+     */
+    ouvrirConfirmationTrimestre(): void {
+        this.sauvegarderNotesTemporaires();
+        this.showConfirmationTrimestreModal = true;
+    }
+
+    /**
+     * ==================================================================================================================================
+     * FERMER LE POPUP DE CONFIRMATION
+     * ==================================================================================================================================
+     */
+    fermerConfirmationTrimestre(): void {
+        this.showConfirmationTrimestreModal = false;
+    }
+
+    /**
+     * ==================================================================================================================================
+     * CONFIRMER ET ENREGISTRER LES NOTES DÉFINITIVEMENT
+     * ==================================================================================================================================
+     * Marque les notes comme verrouillées et sauvegarde dans localStorage.
+     */
+    confirmerEnregistrementTrimestre(): void {
+        if (!this.currentTrimestreState) return;
+
+        const eleve = this.getEleveActuel();
+        if (!eleve) return;
+
+        const trimestreId = this.currentTrimestreState.trimestreId;
+        const cleVerrouillage = this.getCleVerrouillage(eleve.id, trimestreId);
+
+        // Marquer comme verrouillé
+        this.notesTrimestreVerrouilles.add(cleVerrouillage);
+
+        // Sauvegarder dans localStorage
+        this.sauvegarderNotesTrimestreLocalStorage(eleve.id, trimestreId);
+
+        // Marquer comme enregistré
+        this.currentTrimestreState.elevesEnregistres.add(eleve.id);
+
+        // Sauvegarder temporairement
+        this.sauvegarderNotesTemporaires();
+
+        // Fermer popup
+        this.showConfirmationTrimestreModal = false;
+
+        // Passer à l'élève suivant
+        const indexSuivant = this.currentTrimestreState.eleveIndex + 1;
+        if (indexSuivant < this.currentTrimestreState.eleves.length) {
+            this.currentTrimestreState.eleveIndex = indexSuivant;
+            const trimestre = this.evenements.find(e => e.id === trimestreId);
+            if (trimestre) {
+                this.preparerFormulaireTrimestre(trimestre);
+            }
+        }
+    }
+
+    /**
+     * ==================================================================================================================================
+     * SAUVEGARDER DANS LOCALSTORAGE
+     * ==================================================================================================================================
+     */
+    private sauvegarderNotesTrimestreLocalStorage(eleveId: number, trimestreId: number): void {
+        try {
+            const notesTemp = this.donneesTempTrimestre[eleveId];
+            if (!notesTemp || notesTemp.length === 0) return;
+
+            const cleStorage = `notes_trimestre_${trimestreId}_${eleveId}`;
+            let notesExistantes: NoteTrimestre[] = [];
+            const dataExistante = localStorage.getItem(cleStorage);
+            if (dataExistante) {
+                try { notesExistantes = JSON.parse(dataExistante); } catch (e) { notesExistantes = []; }
+            }
+
+            notesTemp.forEach(ligne => {
+                notesExistantes.push({
+                    id: Date.now() + Math.random(),
+                    eleveId: eleveId,
+                    trimestreId: trimestreId,
+                    matiere: ligne.matiere,
+                    moyenneClasse: ligne.moyenneClasse,
+                    noteCompo: ligne.noteCompo,
+                    moyenne: ligne.moyenne,
+                    coefficient: ligne.coefficient,
+                    moyenneCoefficientee: ligne.moyenneCoefficientee,
+                    appreciation: ligne.appreciation,
+                    date: new Date().toISOString().split('T')[0]
+                });
+            });
+
+            localStorage.setItem(cleStorage, JSON.stringify(notesExistantes));
+            this.notesTrimestreStore.set(eleveId, notesExistantes);
+        } catch (error) {
+            console.error('Erreur sauvegarde notes:', error);
+        }
+    }
+
+    /**
+     * ==================================================================================================================================
+     * CHARGER LES NOTES VERRROUILLÉES DEPUIS LOCALSTORAGE
+     * ==================================================================================================================================
+     */
+    chargerNotesVerrouilleesLocalStorage(): void {
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const cle = localStorage.key(i);
+                if (cle && cle.startsWith('notes_trimestre_')) {
+                    const parts = cle.replace('notes_trimestre_', '').split('_');
+                    if (parts.length >= 2) {
+                        const trimestreId = parseInt(parts[0], 10);
+                        const eleveId = parseInt(parts[1], 10);
+                        if (!isNaN(trimestreId) && !isNaN(eleveId)) {
+                            const cleVerrouillage = this.getCleVerrouillage(eleveId, trimestreId);
+                            this.notesTrimestreVerrouilles.add(cleVerrouillage);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Erreur chargement notes verrouillées:', error);
+        }
     }
 
     // ═══════════════ RETOUR ═══════════════
