@@ -353,104 +353,194 @@
         </div>
     </div>
 
-    <!-- ═══════════ MODALE ATTRIBUTION NOTES DE TRIMESTRE (NOUVEAU!) ═══════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+     MODALE ATTRIBUTION NOTES DE TRIMESTRE - NOUVELLE VERSION AVEC PANNEAU LATERAL
+     ═══════════════════════════════════════════════════════════════════════════════════════ -->
+    
+    <!--
+        NOUVELLE STRUCTURE:
+        - Popup plus grand (modal-xl)
+        - Panneau latéral gauche: liste des élèves + recherche
+        - Zone principale à droite: formulaire de saisie
+        
+        L'utilisateur peut:
+        1. Rechercher un élève spécifique
+        2. Cliquer sur un élève pour voir ses notes
+        3. Naviguer librement entre les élèves
+        4. Enregistrer soit un élève, soit tous
+    -->
     <div class="modal-overlay" *ngIf="showAttribuerTrimestreModal" (click)="fermerAttribuerTrimestreModal()">
-        <div class="modal-container modal-large" (click)="$event.stopPropagation()">
+        <!-- Classe modal-xl pour un popup plus grand -->
+        <div class="modal-container modal-xl" (click)="$event.stopPropagation()">
+            
+            <!-- EN-TÊTE DU MODAL -->
             <div class="modal-header">
                 <h3>
                     <i class="fas fa-user-graduate"></i> 
-                    @if (currentTrimestreState; as state) {
-                        @if (state.eleves && state.eleveIndex !== undefined) {
-                            @if (state.eleves[state.eleveIndex]; as eleve) {
-                                Saisie des notes - {{ eleve.prenom }} {{ eleve.nom }}
-                            }
-                        }
+                    Saisie des notes de trimestre
+                    <!-- Afficher le nom de l'élève actuel -->
+                    @if (getEleveActuel(); as eleveActuel) {
+                        <span class="eleve-actuel-name">{{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
                     }
                 </h3>
                 <button class="modal-close" (click)="fermerAttribuerTrimestreModal()">×</button>
             </div>
-            <div class="modal-body trimestre-saisie-body">
-                <!-- Progress bar -->
-                <div class="saisie-progress">
-                    <div class="progress-info">
-                        <span>Élève {{ (currentTrimestreState?.eleveIndex || 0) + 1 }} / {{ currentTrimestreState?.eleves?.length || 0 }}</span>
-                        <span class="progress-name">
-                            @if (currentTrimestreState; as state) {
-                                @if (state.eleves && state.eleveIndex !== undefined) {
-                                    @if (state.eleves[state.eleveIndex]; as eleve) {
-                                        {{ eleve.prenom }} {{ eleve.nom }}
-                                    }
-                                }
-                            }
-                        </span>
+            
+            <!-- CORPS DU MODAL - DEUX ZONES: Latérale + Principale -->
+            <div class="modal-body trimestre-modal-body">
+                
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PANNEAU LATERAL GAUCHE - LISTE DES ÉLÈVES
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <div class="trimestre-sidebar">
+                    
+                    <!-- Titre du panneau -->
+                    <div class="sidebar-header">
+                        <h4><i class="fas fa-users"></i> Élèves</h4>
+                        <span class="eleve-count">{{ elevesFiltresTrimestre.length }} / {{ currentTrimestreState?.eleves?.length || 0 }}</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" 
-                             [style.width.%]="((currentTrimestreState?.eleveIndex || 0) + 1) / (currentTrimestreState?.eleves?.length || 1) * 100">
+                    
+                    <!-- Champ de recherche -->
+                    <div class="sidebar-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               [(ngModel)]="rechercheEleveTrimestre"
+                               placeholder="Rechercher un élève...">
+                    </div>
+                    
+                    <!-- Liste des élèves -.on peut cliquer sur n'importe lequel -->
+                    <div class="sidebar-eleves">
+                        @for (eleve of elevesFiltresTrimestre; track eleve.id) {
+                            <div class="eleve-list-item" 
+                                 [class.active]="getEleveActuel()?.id === eleve.id"
+                                 [class.has-notes]="aDesNotesTemporaires(eleve.id)"
+                                 (click)="selectEleveForTrimestre(eleve)">
+                                <div class="eleve-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="eleve-info">
+                                    <span class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</span>
+                                    @if (aDesNotesTemporaires(eleve.id)) {
+                                        <span class="eleve-status"><i class="fas fa-check-circle"></i> Notes saisies</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Indicateur de progression -->
+                    <div class="sidebar-progress">
+                        <div class="progress-text">
+                            {{ nbElevesAvecNotes }} / {{ currentTrimestreState?.eleves?.length || 0 }} élèves thérapeut
+                        </div>
+                        <div class="progress-bar-compact">
+                            <div class="progress-fill" 
+                                 [style.width.%]="(nbElevesAvecNotes / (currentTrimestreState?.eleves?.length || 1)) * 100">
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Formulaire de saisie par matière -->
-                <div class="saisie-matieres">
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ZONE PRINCIPALE DROITE - FORMULAIRE DE SAISIE
+                     ═══════════════════════════════════════════════════════════ -->
+                <div class="trimestre-main">
+                    
+                    <!-- Indicateur de progression -->
+                    <div class="saisie-progress">
+                        <div class="progress-info">
+                            <span>Élève {{ (currentTrimestreState?.eleveIndex || 0) + 1 }} sur {{ currentTrimestreState?.eleves?.length || 0 }}</span>
+                            @if (getEleveActuel(); as eleveActuel) {
+                                <span class="progress-name">{{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
+                            }
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" 
+                                 [style.width.%]="((currentTrimestreState?.eleveIndex || 0) + 1) / (currentTrimestreState?.eleves?.length || 1) * 100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instructions -->
                     <p class="saisie-hint">
+                        <i class="fas fa-info-circle"></i>
                         Saisissez les notes pour chaque matière cochée lors de la création du trimestre:
                     </p>
                     
-                    <div class="saisie-ligne" *ngFor="let ligne of formAttribuerTrimestre; let i = index">
-                        <div class="ligne-matiere">{{ ligne.matiere }}</div>
-                        
-                        <div class="ligne-champs">
-                            <div class="champ">
-                                <label>Moy. Classe/20</label>
-                                <input type="number" [(ngModel)]="ligne.moyenneClasse" 
-                                       step="0.01" min="0" max="20" class="form-control">
-                            </div>
-                            <div class="champ">
-                                <label>Note/40</label>
-                                <input type="number" [(ngModel)]="ligne.noteCompo" 
-                                       step="0.01" min="0" max="40" class="form-control">
-                            </div>
-                            <div class="champ">
-                                <label>Moy/20</label>
-                                <input type="number" [(ngModel)]="ligne.moyenne" 
-                                       step="0.01" min="0" max="20" class="form-control">
-                            </div>
-                            <div class="champ">
-                                <label>Coef</label>
-                                <input type="number" [(ngModel)]="ligne.coefficient" 
-                                       step="1" min="1" class="form-control">
-                            </div>
-                            <div class="champ coef-calc">
-                                <label>Moy coef</label>
-                                <span class="calc-result" 
-                                      (blur)="calculerMoyenneCoefficientee(i)">
-                                    {{ ligne.moyenne * ligne.coefficient | number:'1.2-2' }}
-                                </span>
-                            </div>
-                            <div class="champ">
-                                <label>Appréciation</label>
-                                <select [(ngModel)]="ligne.appreciation" class="form-control">
-                                    <option value="">-- Sélectionner --</option>
-                                    <option value="Excellent">Excellent</option>
-                                    <option value="Très Bien">Très Bien</option>
-                                    <option value="Bien">Bien</option>
-                                    <option value="Assez Bien">Assez Bien</option>
-                                    <option value="Passable">Passable</option>
-                                    <option value="Insuffisant">Insuffisant</option>
-                                </select>
+                    <!-- Formulaire par matière - une ligne par matière -->
+                    <div class="saisie-matieres">
+                        <div class="saisie-ligne" *ngFor="let ligne of formAttribuerTrimestre; let i = index">
+                            <!-- Nom de la matière à gauche -->
+                            <div class="ligne-matiere">{{ ligne.matiere }}</div>
+                            
+                            <!-- Champs de saisie à droite -->
+                            <div class="ligne-champs">
+                                <div class="champ">
+                                    <label>Moy. Classe/20</label>
+                                    <input type="number" [(ngModel)]="ligne.moyenneClasse" 
+                                           step="0.01" min="0" max="20" class="form-control">
+                                </div>
+                                <div class="champ">
+                                    <label>Note/40</label>
+                                    <input type="number" [(ngModel)]="ligne.noteCompo" 
+                                           step="0.01" min="0" max="40" class="form-control">
+                                </div>
+                                <div class="champ">
+                                    <label>Moy/20</label>
+                                    <input type="number" [(ngModel)]="ligne.moyenne" 
+                                           step="0.01" min="0" max="20" class="form-control">
+                                </div>
+                                <div class="champ">
+                                    <label>Coef</label>
+                                    <input type="number" [(ngModel)]="ligne.coefficient" 
+                                           step="1" min="1" class="form-control">
+                                </div>
+                                <div class="champ coef-calc">
+                                    <label>Moy coef</label>
+                                    <span class="calc-result">
+                                        {{ ligne.moyenne * ligne.coefficient | number:'1.2-2' }}
+                                    </span>
+                                </div>
+                                <div class="champ">
+                                    <label>Appréciation</label>
+                                    <select [(ngModel)]="ligne.appreciation" class="form-control">
+                                        <option value="">-- Sélectionner --</option>
+                                        <option value="Excellent">Excellent</option>
+                                        <option value="Très Bien">Très Bien</option>
+                                        <option value="Bien">Bien</option>
+                                        <option value="Assez Bien">Assez Bien</option>
+                                        <option value="Passable">Passable</option>
+                                        <option value="Insuffisant">Insuffisant</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            
+            <!-- PIED DU MODAL - BOUTONS D'ACTION -->
+            <div class="modal-footer trimestre-footer">
                 <button class="btn-prev" (click)="fermerAttribuerTrimestreModal()">
                     <i class="fas fa-times"></i> Annuler
                 </button>
-                <button class="btn-submit" (click)="siguienteEleveTrimestre()">
+                
+                <!-- Bouton enregistrer UN SEUL élève (l目前的) -->
+                <button class="btn-submit" (click)="enregistrerNotesEleveActuel()">
+                    <i class="fas fa-save"></i> Enregistrer cet élève
+                </button>
+                
+                <!-- Bouton passer à l'élève suivant -->
+                <button class="btn-next" (click)="siguienteEleveTrimestre()" 
+                        [disabled]="(currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0)">
                     <i class="fas fa-arrow-right"></i> 
-                    {{ (currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0) ? 'Terminer' : 'Élève suivant' }}
+                    {{ (currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0) ? 'Dernier élève' : 'Élève suivant' }}
+                </button>
+                
+                <!-- Bouton enregistrer TOUS les élèves - seulement activé quand tous ont des notes -->
+                <button class="btn-submit btn-submit-all" (click)="enregistrerTousLesEleves()">
+                    <i class="fas fa-check-double"></i> 
+                    Enregistrer tous les élèves ({{ nbElevesAvecNotes }}/{{ currentTrimestreState?.eleves?.length }})
                 </button>
             </div>
         </div>

@@ -63,11 +63,45 @@ interface LigneAttributionTrimestre {
     appreciation: string;
 }
 
+/**
+ * ==================================================================================================================================
+ * ÉTAT TRIMESTRE - Gère l'état de la saisie des notes de trimestre
+ * 
+ * Ce système permet de:
+ * - Naviguer librement entre les élèves (pas seulement séquentiel)
+ * - Chercher rapidement un élève avec le champ de recherche
+ * - Conserver les notes déjà saisies pour chaque élève (même si on change d'élève)
+ * - Enregistrer les notes de l'élève actuel à tout moment
+ * - Enregistrer TOUS les élèves quand on a fini
+ * ==================================================================================================================================
+ */
 interface AttributionTrimestreState {
-    opened: boolean;
-    trimestreId: number;
-    eleveIndex: number;
-    eleves: Eleve[];
+    opened: boolean;                    // Le modal est ouvert
+    trimestreId: number;              // ID du trimestre/composition/examen
+    eleveIndex: number;                // Index de l'élève actuellement sélectionné (pour la progression)
+    eleves: Eleve[];                  // Liste de TOUS les élèves de la classe
+    elevesTraites: Set<number>;       // Set des IDs des élèves dont on a déjà enregistré les notes
+}
+
+/**
+ * ==================================================================================================================================
+ * DONNÉES TEMPORAIRES PAR ÉLÈVE - Cache pour conserver les notes en cours de saisie
+ * 
+ * Clé: eleveId (number)
+ * Valeur: LigneAttributionTrimestre[] (les lignes du formulaire pour cet élève)
+ * 
+ * Quand l'utilisateur clique sur un élève:
+ * 1. On vérifie si des notes temporaires existent déjà pour cet élève
+ * 2. Si oui, on les charge dans le formulaire
+ * 3. Si non, on crée un formulaire vide
+ * 
+ * Quand l'utilisateur change d'élève:
+ * 1. On sauvegarde les notes actuelles dans le cache temporaire
+ * 2. On charge les notes de l'élève sélectionné (ou formulaire vide)
+ * ==================================================================================================================================
+ */
+interface DonneesTempTrimestre {
+    [eleveId: number]: LigneAttributionTrimestre[];
 }
 
 @Component({
@@ -280,74 +314,415 @@ export class NotesComponent implements OnInit {
         this.showAttribuerNotesModal = null;
     }
 
-    // ═══════════════ ATTRIBUTION NOTES TRIMESTRE ═══════════════
+    /**
+     * ==================================================================================================================================
+     * ATTRIBUTION NOTES DE TRIMESTRE - NOUVELLE VERSION AMÉLIORÉE
+     * ==================================================================================================================================
+     * 
+     * OUVERTURE DU MODAL:
+     * - Ouvre le modal de saisie des notes de trimestre
+     * - Initialise la liste des élèves
+     * - Prépare le formulaire pour le premier élève (ou celui qui était sélectionné)
+     * 
+     * @param evenement -L'événement collectif (trimestre/composition/examen) créé précédemment
+     */
     ouvrirAttribuerTrimestre(evenement: EvenementCollectif): void {
+        // Vérification: on doit avoir une classe sélectionnée
         if (!this.selectedClasse) return;
+        
+        // Récupérer la liste des élèves pour cette classe depuis le service partagé
         const eleves = this.schoolData.elevesPourClasse(this.selectedClasse);
+        
+        // Vérification: la classe doit contenir des élèves
         if (eleves.length === 0) return;
+        
+        // Initialiser l'état du trimestre avec:
+        // - opened: true (modal ouvert)
+        // - trimestreId: l'ID de l'événement
+        // - eleveIndex: 0 (on commence par le premier élève)
+        // - eleves: la liste de tous les élèves
+        // - elevesTraites: set vide (aucun élève n'a encore de notes enregistrées)
         this.currentTrimestreState = {
             opened: true,
             trimestreId: evenement.id,
             eleveIndex: 0,
-            eleves: eleves
+            eleves: eleves,
+            elevesTraites: new Set<number>()
         };
+        
+        // Préparer le formulaire pour le premier élève
         this.preparerFormulaireTrimestre(evenement);
+        
+        // Ouvrir le modal
         this.showAttribuerTrimestreModal = true;
     }
 
+    /**
+     * Variable qui stocke l'état actuel de la saisie des notes de trimestre
+     * Contient: liste des élèves, index actuel, ID du trimestre, set des élèves débloqués
+     */
     currentTrimestreState: AttributionTrimestreState | null = null;
+    
+    /**
+     * ==================================================================================================================================
+     * CACHE TEMPORAIRE - Conserve les notes en cours de saisie pour chaque élève
+     * ==================================================================================================================================
+     * 
+     * Ce cache est nécessaire car:
+     * - L'utilisateur peut naviguer librement entre les élèves
+     * - On ne perd pas les notes déjà saisies (m même si on change d'élève)
+     * - Le formulaire se remplit automatiquement quand on revient sur un élève
+     * 
+     * Format: { [eleveId]: LigneAttributionTrimestre[] }
+     */
+    private donneesTempTrimestre: DonneesTempTrimestre = {};
+    
+    /**
+     * ==================================================================================================================================
+     * RECHERCHE D'ÉLÈVES - Champ de recherche pour trouver rapidement un élève
+     * ==================================================================================================================================
+     */
+    public rechercheEleveTrimestre = '';
 
+    /**
+     * ==================================================================================================================================
+     * PRÉPARER LE FORMULAIRE POUR UN ÉLÈVE
+     * ==================================================================================================================================
+     * 
+     * Cette méthode prépare le formulaire de saisie des notes pour l'élève actuellement sélectionné.
+     * 
+     * NOUVELLE LOGIQUE:
+     * 1. On récupère l'ID de l'élève actuel (depuis eleveIndex)
+     * 2. On vérifie si des notes temporaires existent déjà dans le cache pour cet élève
+     * 3. Si oui → on les charge dans le formulaire (pour permettre modification)
+     * 4. Si non → on crée un formulaire vide avec les matières du trimestre
+     * 
+     * @param evenement - L'événement collectif contenant les matières à évaluer
+     */
     private preparerFormulaireTrimestre(evenement: EvenementCollectif): void {
-        this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
-            matiere,
-            moyenneClasse: 0,
-            noteCompo: 0,
-            moyenne: 0,
-            coefficient: 1,
-            moyenneCoefficientee: 0,
-            appreciation: ''
-        }));
+        // Vérifier si on a un état de trimester valide
+        if (!this.currentTrimestreState) return;
+        
+        // Récupérer l'élève actuellement sélectionné
+        const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
+        if (!eleve) return;
+        
+        // ==================================================================================================================================
+         // NOUVELLE LOGIQUE: Vérifier d'abord dans le cache temporaire
+         // ==================================================================================================================================
+         if (this.donneesTempTrimestre[eleve.id]) {
+             // Des notes existent déjà pour cet élève → les charger
+             // Cela permet à l'utilisateur de reprendre là où il s'était arrêté
+             this.formAttribuerTrimestre = this.donneesTempTrimestre[eleve.id];
+         } else {
+             // Première fois qu'on remplit pour cet élève → créer formulaire vide
+             // Une ligne par matière cochée lors de la création du trimestre
+             this.formAttribuerTrimestre = evenement.matieres.map(matiere => ({
+                 matiere: matiere,              // Nom de la matière
+                 moyenneClasse: 0,             // Moyenne de la classe (saisie par le prof)
+                 noteCompo: 0,                  // Note de composition (/40)
+                 moyenne: 0,                    // Moyenne ramenée sur 20
+                 coefficient: 1,               // Coefficient de la matière
+                 moyenneCoefficientee: 0,      // Moyenne × coefficient
+                 appreciation: ''               // Appréciation (ex: "Bien", "Très Bien")
+             }));
+         }
     }
 
+    /**
+     * ==================================================================================================================================
+     * SÉLECTIONNER UN ÉLÈVE (NOUVELLE MÉTHODE)
+     * ==================================================================================================================================
+     * 
+     * Cette méthode est appelée quand l'utilisateur clique sur un élève dans la liste latérale.
+     * 
+     * ÉTAPES:
+     * 1. Sauvegarder les notes temporaires de l'élève actuel AVANT de changer
+     * 2. Trouver l'index de l'élève cliqué dans la liste
+     * 3. Mettre à jour eleveIndex
+     * 4. Charger les notes de l'élève cliqué (ou formulaire vide si nouvelles)
+     * 
+     * @param eleve - L'élève sélectionné
+     */
+    selectEleveForTrimestre(eleve: Eleve): void {
+        // Vérifications de sécurité
+        if (!this.currentTrimestreState) return;
+        
+        // ÉTAPE 1: Sauvegarder les notes temporaires de l'élève ACTUEL
+        // Avant de changer d'élève, on met à jour le cache pour ne rien perdre
+        this.sauvegarderNotesTemporaires();
+        
+        // ÉTAPE 2: Trouver l'index de l'élève cliqué
+        const eleveIndex = this.currentTrimestreState.eleves.findIndex(e => e.id === eleve.id);
+        if (eleveIndex === -1) return; // Élève non trouvé (ne devrait pas arriver)
+        
+        // ÉTAPE 3: Mettre à jour l'index de l'élève actuel
+        this.currentTrimestreState.eleveIndex = eleveIndex;
+        
+        // ÉTAPE 4: Trouver l'événement (trimestre/composition) pour préloader le formulaire
+        const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
+        if (trimestre) {
+            this.preparerFormulaireTrimestre(trimestre);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * SAUVEGARDER LES NOTES TEMPORAIRES
+     * ==================================================================================================================================
+     * 
+     * Cette méthode sauvegarde les notes actuelles dans le cache temporaire.
+     * Elle est appelée:
+     * - Avant de changer d'élève
+     * - Avant de fermer le modal
+     * 
+     * Cela permet de conserver les notes saisies même si on change d'élève.
+     */
+    private sauvegarderNotesTemporaires(): void {
+        if (!this.currentTrimestreState) return;
+        
+        const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
+        if (!eleve) return;
+        
+        // Sauvegarder les notes actuelles dans le cache avec l'ID de l'élève comme clé
+        this.donneesTempTrimestre[eleve.id] = [...this.formAttribuerTrimestre];
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR L'ÉLÈVE ACTUELLEMENT SÉLECTIONNÉ
+     * ==================================================================================================================================
+     * 
+     * @returns L'élève actuellement sélectionné dans le formulaire de saisie
+     */
+    getEleveActuel(): Eleve | null {
+        if (!this.currentTrimestreState) return null;
+        return this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex] || null;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LA LISTE DES ÉLÈVES FILTRÉS PAR RECHERCHE
+     * ==================================================================================================================================
+     * 
+     * Cette méthode filtre la liste des élèves en fonction du champ de recherche.
+     * Elle est utilisée pour l'affichage dans le panneau latéral.
+     * 
+     * @returns Liste des élèves correspondant à la recherche
+     */
+    get elevesFiltresTrimestre(): Eleve[] {
+        if (!this.currentTrimestreState) return [];
+        
+        // Pas de recherche → retourner tous les élèves
+        if (!this.rechercheEleveTrimestre) return this.currentTrimestreState.eleves;
+        
+        // Filtrer par nom ou prénom
+        const terme = this.rechercheEleveTrimestre.toLowerCase();
+        return this.currentTrimestreState.eleves.filter(eleve => 
+            eleve.prenom.toLowerCase().includes(terme) || 
+            eleve.nom.toLowerCase().includes(terme)
+        );
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * VÉRIFIER SI UN ÉLÈVE A DES NOTES TEMPORAIRES
+     * ==================================================================================================================================
+     * 
+     * @param eleveId - ID de l'élève
+     * @returns true si l'élève a des notes temporaires sauvegardées
+     */
+    aDesNotesTemporaires(eleveId: number): boolean {
+        return !!this.donneesTempTrimestre[eleveId];
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * ENREGISTRER LES NOTES DE L'ÉLÈVE ACTUEL
+     * ==================================================================================================================================
+     * 
+     * Cette méthode enregistre les notes de l'élève actuellement sélectionné.
+     * Elle est appelée quand on clique sur "Enregistrer cet élève".
+     * 
+     * ÉTAPES:
+     * 1. Sauvegarder dans le cache temporaire
+     * 2. Marquer l'élève comme thérapeut
+     * 3. Passer à l'élève suivant automatique
+     */
+    enregistrerNotesEleveActuel(): void {
+        if (!this.currentTrimestreState) return;
+        
+        // Sauvegarder les notes dans le cache temporaire
+        this.sauvegarderNotesTemporaires();
+        
+        // Marquer l'élève comme thérapeut (ayant des notes enregistrées)
+        const eleve = this.getEleveActuel();
+        if (eleve) {
+            this.currentTrimestreState.elevesTraites.add(eleve.id);
+        }
+        
+        // Passer automatiquement à l'élève suivant (si disponible)
+        const indexSuivant = this.currentTrimestreState.eleveIndex + 1;
+        if (indexSuivant < this.currentTrimestreState.eleves.length) {
+            this.currentTrimestreState.eleveIndex = indexSuivant;
+            const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
+            if (trimestre) {
+                this.preparerFormulaireTrimestre(trimestre);
+            }
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * ENREGISTRER TOUS LES ÉLÈVES
+     * ==================================================================================================================================
+     * 
+     * Cette méthode est appelée quand on clique sur "Enregistrer tous les élèves".
+     * Elle enregistre les notes de TOUS les élèves qui ont des notes temporaires.
+     * 
+     * ÉTAPES:
+     * 1. D'abord sauvegarder les notes de l'élève actuel (si pas encore fait)
+     * 2. Pour chaque élève dans le cache temporaire:
+     *    - Enregistrer définitivement les notes dans le store
+     * 3. Vider le cache temporaire
+     * 4. Fermer le modal
+     */
+    enregistrerTousLesEleves(): void {
+        if (!this.currentTrimestreState) return;
+        
+        // ÉTAPE 1: Sauvegarder d'abord les notes de l'élève actuel
+        this.sauvegarderNotesTemporaires();
+        
+        // ÉTAPE 2: Enregistrer définitivement chaque élève qui a des notes
+        for (const eleve of this.currentTrimestreState.eleves) {
+            // Vérifier si cet élève a des notes temporaires
+            const notesTemp = this.donneesTempTrimestre[eleve.id];
+            if (!notesTemp) continue; // Pas de notes pour cet élève
+            
+            // Récupérer ou créer le tableau de notes existant
+            let notesTrimestre = this.notesTrimestreStore.get(eleve.id) || [];
+            
+            // Ajouter chaque note de chaque matière
+            notesTemp.forEach(ligne => {
+                notesTrimestre.push({
+                    id: Date.now() + Math.random(),
+                    eleveId: eleve.id,
+                    trimestreId: this.currentTrimestreState!.trimestreId,
+                    matiere: ligne.matiere,
+                    moyenneClasse: ligne.moyenneClasse,
+                    noteCompo: ligne.noteCompo,
+                    moyenne: ligne.moyenne,
+                    coefficient: ligne.coefficient,
+                    moyenneCoefficientee: ligne.moyenneCoefficientee,
+                    appreciation: ligne.appreciation,
+                    date: new Date().toISOString().split('T')[0]
+                });
+            });
+            
+            // Sauvegarder dans le store permanent
+            this.notesTrimestreStore.set(eleve.id, notesTrimestre);
+        }
+        
+        // ÉTAPE 3: Vider le cache temporaire
+        this.donneesTempTrimestre = {};
+        
+        // ÉTAPE 4: Fermer le modal
+        this.fermerAttribuerTrimestreModal();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * VÉRIFIER SI TOUS LES ÉLÈVES ONT LEURS NOTES ENREGISTRÉES
+     * ==================================================================================================================================
+     * 
+     * @returns true si tous les élèves ont au moins des notes temporaires
+     */
+    get tousLesElevesEnregistres(): boolean {
+        if (!this.currentTrimestreState) return false;
+        
+        // Vérifier que chaque élève a des notes temporaires
+        return this.currentTrimestreState.eleves.every(eleve => 
+            this.donneesTempTrimestre[eleve.id] !== undefined
+        );
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LE NOMBRE D'ÉLÈVES AYANT DES NOTES
+     * ==================================================================================================================================
+     * 
+     * @returns Nombre d'élèves avec des notes temporaires
+     */
+    get nbElevesAvecNotes(): number {
+        if (!this.currentTrimestreState) return 0;
+        
+        return this.currentTrimestreState.eleves.filter(eleve => 
+            this.donneesTempTrimestre[eleve.id] !== undefined
+        ).length;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * PASSER À L'ÉLÈVE SUIVANT (méthode conservée pour compatibilité)
+     * ==================================================================================================================================
+     * 
+     * Cette méthode est conservée mais她的 fonctionnalité est légèrement modifiée.
+     * Elle sauvegarde d'abord les notes de l'élève actuel, puis passe au suivant.
+     */
     siguienteEleveTrimestre(): void {
         if (!this.currentTrimestreState) return;
-        this.enregistrerNotesTrimestreEleve();
+        
+        // Sauvegarder les notes temporaires de l'élève actuel
+        this.sauvegarderNotesTemporaires();
+        
+        // Marquer comme thérapeut
+        const eleve = this.getEleveActuel();
+        if (eleve) {
+            this.currentTrimestreState.elevesTraites.add(eleve.id);
+        }
+        
+        // Passer à l'élève suivant
         this.currentTrimestreState.eleveIndex++;
+        
+        // Si on a fini tous les élèves, fermer le modal
         if (this.currentTrimestreState.eleveIndex >= this.currentTrimestreState.eleves.length) {
             this.fermerAttribuerTrimestreModal();
             return;
         }
+        
+        // Préparer le formulaire pour l'élève suivant
         const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
-        if (trimestre) this.preparerFormulaireTrimestre(trimestre);
+        if (trimestre) {
+            this.preparerFormulaireTrimestre(trimestre);
+        }
     }
 
-    private enregistrerNotesTrimestreEleve(): void {
-        if (!this.currentTrimestreState) return;
-        const eleve = this.currentTrimestreState.eleves[this.currentTrimestreState.eleveIndex];
-        if (!eleve) return;
-        let notesTrimestre = this.notesTrimestreStore.get(eleve.id) || [];
-        this.formAttribuerTrimestre.forEach(ligne => {
-            notesTrimestre.push({
-                id: Date.now() + Math.random(),
-                eleveId: eleve.id,
-                trimestreId: this.currentTrimestreState!.trimestreId,
-                matiere: ligne.matiere,
-                moyenneClasse: ligne.moyenneClasse,
-                noteCompo: ligne.noteCompo,
-                moyenne: ligne.moyenne,
-                coefficient: ligne.coefficient,
-                moyenneCoefficientee: ligne.moyenneCoefficientee,
-                appreciation: ligne.appreciation,
-                date: new Date().toISOString().split('T')[0]
-            });
-        });
-        this.notesTrimestreStore.set(eleve.id, notesTrimestre);
-    }
-
+    /**
+     * ==================================================================================================================================
+     * FERMER LE MODAL D'ATTRIBUTION TRIMESTRE
+     * ==================================================================================================================================
+     * 
+     * Cette méthode ferme le modal et réinitialise toutes les variables liées à la saisie.
+     * Elle est appelée:
+     * - Quand on clique sur "Annuler"
+     * - Quand on clique sur "X"
+     * - Quand on clique sur outside du modal
+     */
     fermerAttribuerTrimestreModal(): void {
+        // Fermer le modal
         this.showAttribuerTrimestreModal = false;
+        
+        // Réinitialiser l'état du trimestre
         this.currentTrimestreState = null;
+        
+        // Vider le formulaire
         this.formAttribuerTrimestre = [];
+        
+        // Vider aussi le cache temporaire pour libérer de la mémoire
+        this.donneesTempTrimestre = {};
+        
+        // Réinitialiser la recherche
+        this.rechercheEleveTrimestre = '';
     }
 
     calculerMoyenneCoefficientee(index: number): void {

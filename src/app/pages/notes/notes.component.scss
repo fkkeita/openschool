@@ -1197,3 +1197,306 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   NOUVEAUX STYLES POUR MODAL ATTRIBUTION TRIMESTRE AVEC PANNEAU LATERAL
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+/* --- Modal Extra Large (plus grand popup) --- */
+.modal-xl {
+    max-width: 1400px;
+    width: 95vw;
+    max-height: 90vh;
+}
+
+/* --- Corps du modal avec layout 2 colonnes --- */
+.trimestre-modal-body {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    padding: 0;
+    max-height: calc(90vh - 140px);
+    overflow: hidden;
+}
+
+/* --- PANNEAU LATERAL GAUCHE --- */
+.trimestre-sidebar {
+    background: #f1f5f9;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: white;
+}
+
+.sidebar-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.eleve-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: #e0e7ff;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* --- Champ de recherche dans le sidebar --- */
+.sidebar-search {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: white;
+    position: relative;
+}
+
+.sidebar-search i {
+    position: absolute;
+    left: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.sidebar-search input {
+    width: 100%;
+    padding: 10px 15px 10px 35px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.sidebar-search input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.1);
+}
+
+/* --- Liste des élèves dans le sidebar --- */
+.sidebar-eleves {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.eleve-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+}
+
+.eleve-list-item:hover {
+    background: #e0e7ff;
+    border-color: var(--color-primary);
+    transform: translateX(3px);
+}
+
+.eleve-list-item.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+.eleve-list-item.active .eleve-nom {
+    color: white;
+}
+
+.eleve-list-item.has-notes {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+.eleve-list-item.has-notes .eleve-status {
+    color: #059669;
+}
+
+.eleve-avatar {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.eleve-list-item.active .eleve-avatar {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.eleve-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.eleve-nom {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.eleve-status {
+    font-size: 11px;
+    font-weight: 500;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --- Progression en bas du sidebar --- */
+.sidebar-progress {
+    padding: 15px 20px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.progress-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.progress-bar-compact {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-compact .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* --- ZONE PRINCIPALE DROITE --- */
+.trimestre-main {
+    padding: 25px;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+/* Nom de l'élève actuel dans le header */
+.eleve-actuel-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: #e0e7ff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-left: 10px;
+}
+
+/* --- Footer avec plusieurs boutons --- */
+.trimestre-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.btn-next {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-next:hover:not(:disabled) {
+    background: #475569;
+    transform: translateY(-2px);
+}
+
+.btn-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-submit-all {
+    background: #10b981 !important;
+}
+
+.btn-submit-all:hover:not(:disabled) {
+    background: #059669 !important;
+    transform: translateY(-2px);
+}
+
+.btn-submit-all:disabled {
+    background: #94a3b8 !important;
+    cursor: not-allowed;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+    .trimestre-modal-body {
+        grid-template-columns: 280px 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .trimestre-modal-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    
+    .trimestre-sidebar {
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .sidebar-eleves {
+        max-height: 200px;
+    }
+    
+    .trimestre-footer {
+        flex-direction: column;
+    }
+    
+    .trimestre-footer button {
+        width: 100%;
+    }
+}
