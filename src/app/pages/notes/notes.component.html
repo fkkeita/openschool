@@ -553,6 +553,13 @@
                     <i class="fas fa-times"></i> Annuler
                 </button>
                 
+                <!-- Bouton apperçu du bulletin PDF - uniquement si les notes sont verrouillées (mode consultation) -->
+                @if (modeConsultationTrimestre) {
+                    <button class="btn-preview" (click)="genererBulletinPdf(getEleveActuel())">
+                        <i class="fas fa-file-pdf"></i> Aperçu bulletin
+                    </button>
+                }
+                
                 <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) - OUVRE LE POPUP DE CONFIRMATION -->
                 <button class="btn-submit" (click)="ouvrirConfirmationTrimestre()">
                     <i class="fas fa-save"></i> 
@@ -573,7 +580,7 @@
                         (click)="enregistrerTousLesEleves()"
                         [disabled]="!tousLesElevesEnregistres">
                     <i class="fas fa-check-double"></i> 
-                    Enregistrer tous les élèves ({{ nbElevesEnregistres }}/{{ currentTrimestreState?.eleves?.length }})
+                    Enregistrer tous les élèves ({{ nbElevesEnregistres}}/{{ currentTrimestreState?.eleves?.length }})
                 </button>
             </div>
         </div>
@@ -685,6 +692,25 @@
             <div class="modal-footer">
                 <button class="btn-prev" (click)="showAttribuerNotesModal = null">Annuler</button>
                 <button class="btn-submit" (click)="enregistrerAttribution()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ═══════════ POPUP APERÇU BULLETIN PDF ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuBulletin" (click)="showApercuBulletin = false">
+        <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">
+            <div class="apercu-header">
+                <h3><i class="fas fa-file-pdf"></i> Aperçu du Bulletin</h3>
+                <button class="modal-close" (click)="showApercuBulletin = false">×</button>
+            </div>
+            <div class="apercu-content">
+                <iframe [src]="pdfApercuUrl" class="pdf-iframe" type="application/pdf"></iframe>
+            </div>
+            <div class="apercu-footer">
+                <button class="btn-download" (click)="telechargerBulletin()">
+                    <i class="fas fa-download"></i> Télécharger PDF
+                </button>
+                <button class="btn-close" (click)="showApercuBulletin = false">Fermer</button>
             </div>
         </div>
     </div>

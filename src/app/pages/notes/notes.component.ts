@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from '../../core/layout/sidebar/sidebar.component';
 import { SchoolDataService, Cycle, Annee, Eleve } from '../../core/services/school-data.service';
+import { BulletinPdfComponent } from '../../core/components/bulletin-pdf/bulletin-pdf.component';
 
 // ─── Interfaces locales (inchangées) ──────────────────────────
 interface NoteEntry {
@@ -107,13 +108,16 @@ interface DonneesTempTrimestre {
 @Component({
     selector: 'app-notes',
     standalone: true,
-    imports: [CommonModule, FormsModule, SidebarComponent],
+    imports: [CommonModule, FormsModule, SidebarComponent, BulletinPdfComponent],
     templateUrl: './notes.component.html',
     styleUrl: './notes.component.scss'
 })
 export class NotesComponent implements OnInit {
 
     private schoolData = inject(SchoolDataService);
+    
+    // Composant de génération PDF bulletin
+    public bulletinPdf = new BulletinPdfComponent();
 
     // Navigation
     public rechercheAccueil = '';
@@ -168,6 +172,15 @@ export class NotesComponent implements OnInit {
      * Quand true, l'utilisateur peut seulement consulter les notes sans pouvoir les modifier.
      */
     public modeConsultationTrimestre = false;
+    
+    /**
+     * ==================================================================================================================================
+     * APERÇU DU BULLETIN PDF
+     * ==================================================================================================================================
+     * Contient les données PDF en base64 pour l'aperçu intégré.
+     */
+    public pdfApercuUrl: string | null = null;
+    public showApercuBulletin = false;
 
     // Stores de notes
     public notesStore: Map<number, NoteEntry[]> = new Map();
@@ -1045,6 +1058,9 @@ export class NotesComponent implements OnInit {
         // Fermer popup
         this.showConfirmationTrimestreModal = false;
 
+        // Générer et télécharger le bulletin PDF
+        this.genererBulletinPdf(eleve);
+
         // Passer à l'élève suivant
         const indexSuivant = this.currentTrimestreState.eleveIndex + 1;
         if (indexSuivant < this.currentTrimestreState.eleves.length) {
@@ -1054,6 +1070,71 @@ export class NotesComponent implements OnInit {
                 this.preparerFormulaireTrimestre(trimestre);
             }
         }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * GÉNÉRER LE BULLETIN PDF
+     * ==================================================================================================================================
+     * Génère le bulletin scolaire PDF pour l'aperçu intégré.
+     */
+    async genererBulletinPdf(eleve: Eleve | null): Promise<void> {
+        if (!eleve || !this.currentTrimestreState) return;
+        
+        const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
+        if (!trimestre) return;
+        
+        // Préparer les données pour le PDF
+        const data = {
+            nomEcole: 'Nom de l\'École',
+            nom: eleve.nom,
+            prenoms: eleve.prenom,
+            classe: this.selectedClasse || '',
+            trimestre: trimestre.titre,
+            anneeScolaire: this.getAnneeScolaire(),
+            matieres: this.formAttribuerTrimestre,
+            moyenneTrimestre: this.moyenneGeneraleTrimestre
+        };
+        
+        // Générer le PDF et stocker l'URL pour l'aperçu intégré
+        this.pdfApercuUrl = await BulletinPdfComponent.genererPdfDirect(data);
+        this.showApercuBulletin = true;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR L'ANNÉE SCOLAIRE
+     * ==================================================================================================================================
+     * Retourne l'année scolaire au format "2025 - 2026" (année actuelle - 1 - année actuelle).
+     */
+    private getAnneeScolaire(): string {
+        const year = new Date().getFullYear();
+        return `${year - 1} - ${year}`;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * TÉLÉCHARGER LE BULLETIN PDF
+     * ==================================================================================================================================
+     * Télécharge le PDF généré localement.
+     */
+    telechargerBulletin(): void {
+        if (!this.pdfApercuUrl) return;
+        
+        const link = document.createElement('a');
+        link.href = this.pdfApercuUrl;
+        link.download = `Bulletin_${this.currentTrimestreState?.trimestreId}.pdf`;
+        link.click();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * FERMER L'APERÇU DU BULLETIN
+     * ==================================================================================================================================
+     */
+    fermerApercuBulletin(): void {
+        this.showApercuBulletin = false;
+        this.pdfApercuUrl = null;
     }
 
     /**
