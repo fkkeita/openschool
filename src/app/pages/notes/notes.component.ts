@@ -109,7 +109,7 @@ interface DonneesTempTrimestre {
 @Component({
     selector: 'app-notes',
     standalone: true,
-    imports: [CommonModule, FormsModule, SidebarComponent, BulletinPdfComponent],
+    imports: [CommonModule, FormsModule, SidebarComponent],
     templateUrl: './notes.component.html',
     styleUrl: './notes.component.scss'
 })
@@ -140,6 +140,29 @@ export class NotesComponent implements OnInit {
     public showCreateEvenementModal = false;
     public showAttribuerNotesModal: { type: string; titre: string; evenementId?: number } | null = null;
     public showAttribuerTrimestreModal = false;
+    
+    /**
+     * ==================================================================================================================================
+     * POPUP CONSULTATION NOTES ÉLÈVE (NOUVEAU DESIGN)
+     * ==================================================================================================================================
+     * 
+     * Ce popup s'affiche quand on clique sur "Voir les notes" après sélection d'une classe.
+     * Il comporte:
+     * - Un panneau latéral gauche avec la liste des élèves + barre de recherche
+     * - Une partie droite avec le tableau des moyennes des trimestre/compositions
+     * 
+     * Propriétés:
+     * -elevesConsultation: liste des élèves de la classe sélectionnée
+     * -eleveActuelConsultation: élève actuellement sélectionné dans le panneau latéral
+     * -rechercheEleveConsultation: texte de recherche pour filtrer les élèves
+     * -vueActiveConsultation: 'devoirs' | 'trimestres' - permet de filtrer l'affichage
+     */
+    public showConsultationNotesModal = false;
+    public elevesConsultation: Eleve[] = [];
+    public eleveActuelConsultation: Eleve | null = null;
+    public rechercheEleveConsultation = '';
+    public classeConsultation = '';
+    public vueActiveConsultation: 'devoirs' | 'trimestres' = 'devoirs';
 
     /**
      * ==================================================================================================================================
@@ -207,6 +230,39 @@ export class NotesComponent implements OnInit {
     ngOnInit(): void {
         this.cycles.forEach((c, i) => this.cycleOuvert[c.nom] = i === 0);
         this.chargerNotesVerrouilleesLocalStorage();
+        this.chargerEvenementsLocalStorage();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * SAUVEGARDER LES ÉVÉNEMENTS (TRIMESTRES/COMPOSITIONS) DANS LOCALSTORAGE
+     * ==================================================================================================================================
+     * Sauvegarde tous les événements créés dans le localStorage pour persistance.
+     */
+    private sauvegarderEvenementsLocalStorage(): void {
+        try {
+            localStorage.setItem('evenements_scolaires', JSON.stringify(this.evenements));
+        } catch (error) {
+            console.error('Erreur sauvegarde événements:', error);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CHARGER LES ÉVÉNEMENTS DEPUIS LOCALSTORAGE
+     * ==================================================================================================================================
+     * Charge les événements au démarrage de l'application.
+     */
+    private chargerEvenementsLocalStorage(): void {
+        try {
+            const data = localStorage.getItem('evenements_scolaires');
+            if (data) {
+                this.evenements = JSON.parse(data);
+            }
+        } catch (error) {
+            console.error('Erreur chargement événements:', error);
+            this.evenements = [];
+        }
     }
 
     // ─── Helpers ────────────────────────────────────
@@ -314,8 +370,135 @@ export class NotesComponent implements OnInit {
 
     selectClasseVoir(classe: string): void {
         this.showVoirModal = false;
-        this.selectedClasse = classe;
-        this.showElevesModal = this.schoolData.elevesPourClasse(classe);
+        this.classeConsultation = classe;
+        this.elevesConsultation = this.schoolData.elevesPourClasse(classe);
+        
+        // Sélectionner le premier élève par défaut
+        if (this.elevesConsultation.length > 0) {
+            this.eleveActuelConsultation = this.elevesConsultation[0];
+        }
+        
+        // Par défaut, afficher les devoirs/interrogations
+        this.vueActiveConsultation = 'devoirs';
+        
+        // Ouvrir le nouveau popup de consultation
+        this.showConsultationNotesModal = true;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * FERMER LE POPUP DE CONSULTATION NOTES
+     * ==================================================================================================================================
+     * Ferme le popup de consultation des notes et réinitialise les propriétés.
+     */
+    fermerConsultationNotes(): void {
+        this.showConsultationNotesModal = false;
+        this.elevesConsultation = [];
+        this.eleveActuelConsultation = null;
+        this.rechercheEleveConsultation = '';
+        this.classeConsultation = '';
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * SÉLECTIONNER UN ÉLÈVE DANS LE POPUP DE CONSULTATION
+     * ==================================================================================================================================
+     * @param eleve - L'élève à sélectionner
+     */
+    selectEleveConsultation(eleve: Eleve): void {
+        this.eleveActuelConsultation = eleve;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LA LISTE DES ÉLÈVES FILTRÉS POUR LA CONSULTATION
+     * ==================================================================================================================================
+     * Retourne la liste des élèves filtrée par le champ de recherche.
+     */
+    get elevesFiltresConsultation(): Eleve[] {
+        if (!this.rechercheEleveConsultation) {
+            return this.elevesConsultation;
+        }
+        const terme = this.rechercheEleveConsultation.toLowerCase();
+        return this.elevesConsultation.filter(eleve =>
+            eleve.prenom.toLowerCase().includes(terme) ||
+            eleve.nom.toLowerCase().includes(terme)
+        );
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LES NOTES D'UN ÉLÈVE POUR TOUS LES TRIMESTRES/COMPOSITIONS
+     * ==================================================================================================================================
+     * Retourne les données pour le tableau des moyennes.
+     * Ces données proviennent du localStorage.
+     * 
+     * @param eleveId - ID de l'élève
+     * @returns Tableau avec les informations par trimestre/composition
+     */
+    getDonneesTrimestresEleve(eleveId: number): any[] {
+        const result: any[] = [];
+        
+        // Parcourir tous les événements (trimestres/compositions) créés
+        for (const evt of this.evenements) {
+            // Vérifier si des notes existent pour cet événement dans le localStorage
+            const cleStorage = `notes_trimestre_${evt.id}_${eleveId}`;
+            const data = localStorage.getItem(cleStorage);
+            
+            if (data) {
+                try {
+                    const notes: any[] = JSON.parse(data);
+                    
+                    // Calculer la moyenne générale pour ce trimestre
+                    let totalCoef = 0;
+                    let totalMoyCoef = 0;
+                    
+                    for (const note of notes) {
+                        totalCoef += note.coefficient || 0;
+                        totalMoyCoef += (note.moyenneCoefficientee || 0);
+                    }
+                    
+                    const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
+                    
+                    result.push({
+                        id: evt.id,
+                        titre: evt.titre,
+                        type: evt.type,
+                        date: evt.date,
+                        matieres: evt.matieres,
+                        moyenne: Math.round(moyenne * 100) / 100,
+                        coefficients: totalCoef
+                    });
+                } catch (e) {
+                    console.error('Erreur lecture notes:', e);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LES NOTES DEVOIRS/INTERROGATIONS D'UN ÉLÈVE
+     * ==================================================================================================================================
+     * Retourne les notes simples (devoirs, interros) pour un élève.
+     * 
+     * @param eleveId - ID de l'élève
+     * @returns Tableau avec les notes de devoirs/interrogations
+     */
+    getDonneesDevoirsEleve(eleveId: number): any[] {
+        return this.notesStore.get(eleveId) || [];
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CHANGER LE TYPE DE VUE DANS LE POPUP DE CONSULTATION
+     * ==================================================================================================================================
+     * @param vue - 'devoirs' ou 'trimestres'
+     */
+    changerVueConsultation(vue: 'devoirs' | 'trimestres'): void {
+        this.vueActiveConsultation = vue;
     }
 
     fermerElevesModal(): void {
@@ -390,6 +573,10 @@ export class NotesComponent implements OnInit {
             matieres: [...this.formTrimestre.matieres]
         };
         this.evenements.push(evenement);
+        
+        // Sauvegarder les événements dans localStorage pour persistance
+        this.sauvegarderEvenementsLocalStorage();
+        
         this.showCreateEvenementModal = false;
         this.ouvrirAttribuerTrimestre(evenement);
     }

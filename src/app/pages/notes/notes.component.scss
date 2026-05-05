@@ -2100,3 +2100,558 @@
 .btn-preview:hover {
     background: #d97706;
 }
+
+/* ============================================================================
+   POPUP CONSULTATION NOTES ÉLÈVE - NOUVEAU DESIGN AVEC PANNEAU LATÉRAL
+   ============================================================================ */
+
+.consultation-overlay {
+    z-index: 1000;
+}
+
+.consultation-modal {
+    max-width: 1200px;
+    width: 95%;
+    max-height: 90vh;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.consultation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background: linear-gradient(135deg, #2c5aa0, #3b7ccc);
+    color: white;
+}
+
+.consultation-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.consultation-header .modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.consultation-header .modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.consultation-body {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    padding: 0;
+    max-height: calc(90vh - 80px);
+    overflow: hidden;
+}
+
+/* --- PANNEAU LATÉRAL GAUCHE --- */
+.consultation-sidebar {
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.consultation-sidebar .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: white;
+}
+
+.consultation-sidebar .sidebar-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.consultation-sidebar .sidebar-search {
+    padding: 15px 20px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.consultation-sidebar .sidebar-search i {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.consultation-sidebar .sidebar-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #334155;
+    background: transparent;
+}
+
+.consultation-sidebar .sidebar-search input::placeholder {
+    color: #94a3b8;
+}
+
+.consultation-sidebar .sidebar-eleves {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.consultation-sidebar .eleve-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+}
+
+.consultation-sidebar .eleve-list-item:hover {
+    background: #e0e7ff;
+    border-color: var(--color-primary);
+}
+
+.consultation-sidebar .eleve-list-item.active {
+    background: var(--color-primary);
+    color: white;
+}
+
+.consultation-sidebar .eleve-avatar {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.consultation-sidebar .eleve-list-item.active .eleve-avatar {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.consultation-sidebar .eleve-info {
+    flex: 1;
+}
+
+.consultation-sidebar .eleve-nom {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.consultation-sidebar .eleve-list-item.active .eleve-nom {
+    color: white;
+}
+
+/* --- PARTIE DROITE - TABLEAU DES MOYENNES --- */
+.consultation-main {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding: 20px;
+}
+
+.eleve-summary {
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-radius: 12px;
+}
+
+.eleve-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.eleve-summary-header i {
+    color: #2c5aa0;
+}
+
+.moyennes-table-container {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.moyennes-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.moyennes-table thead {
+    background: #2c5aa0;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.moyennes-table thead th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.moyennes-table thead th:not(:first-child) {
+    text-align: center;
+}
+
+.moyennes-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.moyennes-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.moyennes-table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.moyennes-table tbody td:not(:first-child) {
+    text-align: center;
+}
+
+.trimestre-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.trimestre-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.trimestre-type[data-type="trimestre"] {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.trimestre-type[data-type="composition"] {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.trimestre-type[data-type="examen"] {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.trimestre-titre {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.trimestre-date {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.moyenne-value {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 8px 15px;
+    border-radius: 8px;
+}
+
+.moyenne-value.high {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.moyenne-value.medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.moyenne-value.low {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-apercu {
+    padding: 8px 16px;
+    background: #2c5aa0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-apercu:hover {
+    background: #3b7ccc;
+}
+
+.actions-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.btn-download {
+    background: #10b981;
+    color: white;
+}
+
+.btn-download:hover {
+    background: #059669;
+}
+
+.btn-send {
+    background: #6366f1;
+    color: white;
+}
+
+.btn-send:hover {
+    background: #4f46e5;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px !important;
+    color: #64748b;
+}
+
+.no-data i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.no-data p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* --- BOUTONS DE FILTRE --- */
+.vue-filtres {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filtre-btn {
+    padding: 12px 20px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filtre-btn:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.filtre-btn.active {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+}
+
+/* --- TABLEAU NOTES (DEVOIRS/INTERROS) --- */
+.notes-table-container {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.notes-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.notes-table thead {
+    background: #2c5aa0;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.notes-table thead th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.notes-table thead th:not(:first-child) {
+    text-align: center;
+}
+
+.notes-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.notes-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.notes-table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.notes-table tbody td:not(:first-child) {
+    text-align: center;
+}
+
+.note-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.note-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.note-type-badge[data-type="devoir"] {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.note-type-badge[data-type="interrogation"] {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.note-titre {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.note-matiere {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.note-value {
+    font-size: 16px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+.note-value.high {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.note-value.medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.note-value.low {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.note-date {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.appreciation {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.appreciation-default {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #64748b;
+}

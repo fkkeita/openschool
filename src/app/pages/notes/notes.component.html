@@ -148,38 +148,225 @@
         </div>
     </div>
 
-    <!-- ═══════════ POPUP NOTES D'UN ÉLÈVE ═══════════ -->
-    <div class="modal-overlay" *ngIf="selectedEleve" (click)="fermerNotesEleve()">
-        <div class="modal-container" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-check"></i> Notes de {{ selectedEleve.prenom }} {{ selectedEleve.nom }}</h3>
-                <button class="modal-close" (click)="fermerNotesEleve()">×</button>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════
+         POPUP CONSULTATION NOTES ÉLÈVE - NOUVEAU DESIGN AVEC PANNEAU LATÉRAL
+         ======================================================================================
+         
+         Ce popup s'affiche quand on clique sur "Voir les notes" après sélection d'une classe.
+         
+         Structure:
+         - Panneau latéral gauche: liste des élèves avec barre de recherche
+         - Partie droite: tableau des moyennes des trimestre/composition
+         
+         Colonnes du tableau:
+         - Titre du Trimestre/Composition
+         - Moyenne
+         - Aperçu du Bulletin
+         - Actions (Télécharger / Envoyer au parent)
+    -->
+    <div class="modal-overlay consultation-overlay" *ngIf="showConsultationNotesModal" (click)="fermerConsultationNotes()">
+        <div class="modal-container consultation-modal" (click)="$event.stopPropagation()">
+            
+            <!-- En-tête du popup -->
+            <div class="consultation-header">
+                <h3><i class="fas fa-user-graduate"></i> Notes des élèves - {{ classeConsultation }}</h3>
+                <button class="modal-close" (click)="fermerConsultationNotes()">×</button>
             </div>
-            <div class="modal-body notes-modal-body">
-                <div class="no-notes" *ngIf="getNotesEleve(selectedEleve.id).length === 0">
-                    <i class="fas fa-clipboard"></i>
-                    <p>Aucune note enregistrée</p>
+            
+            <!-- Corps du popup - DEUX ZONES: Latérale + Principale -->
+            <div class="consultation-body">
+                
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PANNEAU LATÉRAL GAUCHE - LISTE DES ÉLÈVES
+                -->
+                <div class="consultation-sidebar">
+                    
+                    <!-- Titre du panneau -->
+                    <div class="sidebar-header">
+                        <h4><i class="fas fa-users"></i> Élèves</h4>
+                        <span class="eleve-count">{{ elevesFiltresConsultation.length }} / {{ elevesConsultation.length }}</span>
+                    </div>
+                    
+                    <!-- Champ de recherche -->
+                    <div class="sidebar-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               [(ngModel)]="rechercheEleveConsultation"
+                               placeholder="Rechercher un élève...">
+                    </div>
+                    
+                    <!-- Liste des élèves -->
+                    <div class="sidebar-eleves">
+                        @for (eleve of elevesFiltresConsultation; track eleve.id) {
+                            <div class="eleve-list-item" 
+                                 [class.active]="eleveActuelConsultation?.id === eleve.id"
+                                 (click)="selectEleveConsultation(eleve)">
+                                <div class="eleve-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="eleve-info">
+                                    <span class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
-                <table class="eleves-table" *ngIf="getNotesEleve(selectedEleve.id).length > 0">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Titre</th>
-                            <th>Matière</th>
-                            <th>Note</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let note of getNotesEleve(selectedEleve.id)">
-                            <td><span class="note-type-badge" [attr.data-type]="note.type">{{ note.type }}</span></td>
-                            <td>{{ note.titre }}</td>
-                            <td>{{ note.matiere }}</td>
-                            <td><span class="note-value" [class.high]="note.note >= 15" [class.low]="note.note < 10">{{ note.note }}/20</span></td>
-                            <td>{{ note.date }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PARTIE DROITE - TABLEAU DES MOYENNES + NOTES
+                -->
+                <div class="consultation-main">
+                    
+                    <!-- Informations de l'élève sélectionné -->
+                    <div class="eleve-summary" *ngIf="eleveActuelConsultation">
+                        <div class="eleve-summary-header">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>{{ eleveActuelConsultation.prenom }} {{ eleveActuelConsultation.nom }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons de filtre -->
+                    <div class="vue-filtres">
+                        <button class="filtre-btn" 
+                                [class.active]="vueActiveConsultation === 'devoirs'"
+                                (click)="changerVueConsultation('devoirs')">
+                            <i class="fas fa-pencil-alt"></i>
+                            Devoirs / Interrogations
+                        </button>
+                        <button class="filtre-btn" 
+                                [class.active]="vueActiveConsultation === 'trimestres'"
+                                (click)="changerVueConsultation('trimestres')">
+                            <i class="fas fa-calendar-alt"></i>
+                            Trimestres / Compositions
+                        </button>
+                    </div>
+                    
+                    <!-- Tableau pour les_DEVOIRS/INTERROGATIONS -->
+                    <div class="notes-table-container" *ngIf="vueActiveConsultation === 'devoirs'">
+                        <table class="notes-table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Notes</th>
+                                    <th>Appréciation</th>
+                                    <th>Aperçu</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (note of getDonneesDevoirsEleve(eleveActuelConsultation?.id || 0); track note.id) {
+                                    <tr>
+                                        <td>
+                                            <div class="note-info">
+                                                <span class="note-type-badge" [attr.data-type]="note.type">{{ note.type }}</span>
+                                                <span class="note-titre">{{ note.titre }}</span>
+                                                <span class="note-matiere">{{ note.matiere }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="note-value" [class.high]="note.note >= 15" [class.medium]="note.note >= 10 && note.note < 15" [class.low]="note.note < 10">
+                                                {{ note.note | number:'1.2-2' }}/20
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="appreciation" [attr.data-appreciation]="note.appreciation || ''">
+                                                {{ note.appreciation || '--' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-apercu">
+                                                <i class="fas fa-eye"></i> Voir
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span class="note-date">{{ note.date }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="actions-btns">
+                                                <button class="btn-action btn-download" title="Télécharger">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button class="btn-action btn-send" title="Envoyer au parent">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </button>
+                                            </div>
+                                    </tr>
+                                }
+                                @if (getDonneesDevoirsEleve(eleveActuelConsultation?.id || 0).length === 0) {
+                                    <tr>
+                                        <td colspan="6" class="no-data">
+                                            <i class="fas fa-clipboard"></i>
+                                            <p>Aucun devoir ou interrogation enregistré</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Tableau pour les TRIMESTRES/COMPOSITIONS -->
+                    <div class="moyennes-table-container" *ngIf="vueActiveConsultation === 'trimestres'">
+                        <table class="moyennes-table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Moyenne</th>
+                                    <th>Appréciation</th>
+                                    <th>Aperçu Bulletin</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (trimestre of getDonneesTrimestresEleve(eleveActuelConsultation?.id || 0); track trimestre.id) {
+                                    <tr>
+                                        <td>
+                                            <div class="trimestre-info">
+                                                <span class="trimestre-type" [attr.data-type]="trimestre.type">{{ trimestre.type }}</span>
+                                                <span class="trimestre-titre">{{ trimestre.titre }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="moyenne-value" [class.high]="trimestre.moyenne >= 15" [class.medium]="trimestre.moyenne >= 10 && trimestre.moyenne < 15" [class.low]="trimestre.moyenne < 10">
+                                                {{ trimestre.moyenne | number:'1.2-2' }}/20
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="appreciation-default">{{ trimestre.moyenne >= 15 ? 'Bien' : trimestre.moyenne >= 10 ? 'Passable' : 'Insuffisant' }}</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-apercu" (click)="genererBulletinPdf(eleveActuelConsultation)">
+                                                <i class="fas fa-eye"></i> Voir
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <span class="trimestre-date">{{ trimestre.date }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="actions-btns">
+                                                <button class="btn-action btn-download" title="Télécharger le bulletin">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button class="btn-action btn-send" title="Envoyer au parent">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (getDonneesTrimestresEleve(eleveActuelConsultation?.id || 0).length === 0) {
+                                    <tr>
+                                        <td colspan="6" class="no-data">
+                                            <i class="fas fa-clipboard"></i>
+                                            <p>Aucune note de trimestre enregistrée</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
