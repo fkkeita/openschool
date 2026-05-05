@@ -704,7 +704,7 @@
                 <button class="modal-close" (click)="showApercuBulletin = false">×</button>
             </div>
             <div class="apercu-content">
-                <iframe [src]="pdfApercuUrl" class="pdf-iframe" type="application/pdf"></iframe>
+                <iframe [src]="pdfApercuSafeUrl" class="pdf-iframe" type="application/pdf"></iframe>
             </div>
             <div class="apercu-footer">
                 <button class="btn-download" (click)="telechargerBulletin()">

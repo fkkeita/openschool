@@ -19,11 +19,11 @@ export class BulletinPdfComponent {
     this.telechargerPdf();
   }
 
-static async genererPdfDirect(data: BulletinData): Promise<string> {
+  static async genererPdfDirect(data: BulletinData): Promise<string> {
     try {
       const jsPDF = await import('jspdf');
       const { jsPDF: JsPDFClass } = jsPDF;
-      
+
       const doc = new JsPDFClass({
         orientation: 'portrait',
         unit: 'mm',
@@ -100,7 +100,7 @@ static async genererPdfDirect(data: BulletinData): Promise<string> {
     doc.setTextColor(44, 90, 160);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('INFORMATIONS ÉLÈVE', margin + 5, startY + 7);
+    doc.text('INFORMATIONS DE L\'ÉLÈVE', margin + 5, startY + 7);
 
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
@@ -214,14 +214,15 @@ static async genererPdfDirect(data: BulletinData): Promise<string> {
     const startY = 82 + 10 + (nbLignes * 8);
 
     // ============================================================================
-    // Positions des colonnes (calculées à partir des largeurs dans le tableau)
-    // Matière(45) + Moy.Classe(22) + Note/40(20) + Moy/20(18) = 105 (début colonne Coef)
-    // Coef(14) → centre = 105 + 7 = 112
-    // Coef(14) + Moy.Coef(22) = 126 (début colonne Appréciation)
-    // Moy.Coef(22) → centre = 126 + 11 = 137
+    // Positions des colonnes (calculées à partir de la même logique que le tableau)
+    // Début de chaque colonne = margin + 2 + somme(largeurs précédentes)
+    // Centre = Début + largeur / 2
+    // 
+    // Colonne Coef (index 4): début = margin + 2 + (45+22+20+18) = margin + 107, centre = 107 + 7 = margin + 114
+    // Colonne Moy. Coef (index 5): début = margin + 2 + (45+22+20+18+14) = margin + 121, centre = 121 + 11 = margin + 132
     // ============================================================================
-    const coefX = margin + 112;  // Centre de la colonne Coef
-    const moyCoefX = margin + 137; // Centre de la colonne Moy. Coef
+    const coefX = margin + 114;  // Centre de la colonne Coef
+    const moyCoefX = margin + 132; // Centre de la colonne Moy. Coef
 
     doc.setFillColor(241, 245, 249);
     doc.rect(margin, startY, contentWidth, 16, 'F');

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SidebarComponent } from '../../core/layout/sidebar/sidebar.component';
 import { SchoolDataService, Cycle, Annee, Eleve } from '../../core/services/school-data.service';
 import { BulletinPdfComponent } from '../../core/components/bulletin-pdf/bulletin-pdf.component';
@@ -115,6 +116,7 @@ interface DonneesTempTrimestre {
 export class NotesComponent implements OnInit {
 
     private schoolData = inject(SchoolDataService);
+    private sanitizer = inject(DomSanitizer);
     
     // Composant de génération PDF bulletin
     public bulletinPdf = new BulletinPdfComponent();
@@ -180,6 +182,7 @@ export class NotesComponent implements OnInit {
      * Contient les données PDF en base64 pour l'aperçu intégré.
      */
     public pdfApercuUrl: string | null = null;
+    public pdfApercuSafeUrl: SafeResourceUrl | null = null;
     public showApercuBulletin = false;
 
     // Stores de notes
@@ -1097,7 +1100,9 @@ export class NotesComponent implements OnInit {
         };
         
         // Générer le PDF et stocker l'URL pour l'aperçu intégré
-        this.pdfApercuUrl = await BulletinPdfComponent.genererPdfDirect(data);
+        const pdfDataUri = await BulletinPdfComponent.genererPdfDirect(data);
+        this.pdfApercuUrl = pdfDataUri;
+        this.pdfApercuSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfDataUri);
         this.showApercuBulletin = true;
     }
     
