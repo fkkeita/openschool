@@ -1438,8 +1438,12 @@ export class NotesComponent implements OnInit {
                 });
             });
 
-            // Sauvegarder dans le store permanent
+            // Sauvegarder dans le store permanent (mémoire)
             this.notesTrimestreStore.set(eleve.id, notesTrimestre);
+            
+            // Sauvegarder aussi dans localStorage
+            const cleStorage = `notes_trimestre_${this.currentTrimestreState!.trimestreId}_${eleve.id}`;
+            localStorage.setItem(cleStorage, JSON.stringify(notesTrimestre));
             
             // Marquer comme verrouillé
             const cleVerrouillage = this.getCleVerrouillage(eleve.id, this.currentTrimestreState!.trimestreId);
