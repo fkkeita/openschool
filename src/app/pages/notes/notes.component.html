@@ -1013,14 +1013,14 @@
                                 <td class="moyenne-cell">{{ item.moyenne | number:'1.2-2' }}/20</td>
                                 <td>
                                     <button class="btn-action btn-preview" title="Aperçu"
-                                        (click)="genererBulletinPdf(item.eleve)">
+                                        (click)="genererBulletinPdf(item.eleve, premiereMoyenneClasse)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
-                                <td>
+<td>
                                     <div class="actions-btns">
                                         <button class="btn-action btn-download" title="Télécharger PDF"
-                                            (click)="genererBulletinPdf(item.eleve)">
+                                            (click)="telechargerBulletinPdf(item.eleve, premiereMoyenneClasse)">
                                             <i class="fas fa-download"></i>
                                         </button>
                                         <button class="btn-action btn-send" title="Envoyer au parent"

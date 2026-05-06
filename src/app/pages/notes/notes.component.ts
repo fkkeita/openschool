@@ -1775,8 +1775,10 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
      * GÉNÉRER LE BULLETIN PDF POUR LA CONSULTATION
      * ==================================================================================================================================
      * Génère le bulletin scolaire PDF pour le popup d'aperçu.
+     * @param eleve - Élève pour lequel générer le bulletin
+     * @param premiereMoyenne - Moyenne du premier de la classe (optionnel)
      */
-    async genererBulletinPdf(eleve: Eleve | null): Promise<void> {
+    async genererBulletinPdf(eleve: Eleve | null, premiereMoyenne?: number): Promise<void> {
         if (!eleve) return;
         
         // Chercher le premier événement (trimestre) pour lequel l'élève a des notes
@@ -1801,7 +1803,7 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
                         
                         const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
                         
-                        const dataPdf = {
+                        const dataPdf: any = {
                             nomEcole: 'Nom de l\'École',
                             nom: eleve.nom,
                             prenoms: eleve.prenom,
@@ -1811,6 +1813,10 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
                             matieres: notes,
                             moyenneTrimestre: Math.round(moyenne * 100) / 100
                         };
+                        
+                        if (premiereMoyenne !== undefined) {
+                            dataPdf.premiereMoyenne = premiereMoyenne;
+                        }
                         
                         // Générer le PDF et afficher dans le popup d'aperçu
                         const pdfDataUri = await BulletinPdfComponent.genererPdfDirect(dataPdf);
@@ -1910,6 +1916,65 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
         link.href = this.pdfApercuUrl;
         link.download = nomFichier;
         link.click();
+    }
+
+    /**
+     * ==================================================================================================================================
+     * TÉLÉCHARGER DIRECTEMENT LE PDF DU BULLETIN SANS AFFICHER LE POPUP
+     * ==================================================================================================================================
+     * Génère et télécharger le PDF directement sans afficher l'aperçu.
+     */
+    async telechargerBulletinPdf(eleve: Eleve, premiereMoyenne?: number): Promise<void> {
+        if (!eleve) return;
+
+        for (const evt of this.evenements) {
+            const cleStorage = `notes_trimestre_${evt.id}_${eleve.id}`;
+            const data = localStorage.getItem(cleStorage);
+            
+            if (data) {
+                try {
+                    const notes: any[] = JSON.parse(data);
+                    if (notes.length > 0) {
+                        let totalCoef = 0;
+                        let totalMoyCoef = 0;
+                        
+                        for (const note of notes) {
+                            totalCoef += note.coefficient || 0;
+                            totalMoyCoef += (note.moyenneCoefficientee || 0);
+                        }
+                        
+                        const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
+                        
+                        const dataPdf: any = {
+                            nomEcole: 'Nom de l\'École',
+                            nom: eleve.nom,
+                            prenoms: eleve.prenom,
+                            classe: this.classeConsultation || '',
+                            trimestre: evt.titre,
+                            anneeScolaire: this.getAnneeScolaire(),
+                            matieres: notes,
+                            moyenneTrimestre: Math.round(moyenne * 100) / 100
+                        };
+                        
+                        if (premiereMoyenne !== undefined) {
+                            dataPdf.premiereMoyenne = premiereMoyenne;
+                        }
+                        
+                        const pdfDataUri = await BulletinPdfComponent.genererPdfDirect(dataPdf);
+                        
+                        const link = document.createElement('a');
+                        link.href = pdfDataUri;
+                        link.download = `Bulletin_${eleve.nom}_${eleve.prenom}.pdf`;
+                        link.click();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Erreur:', e);
+                }
+            }
+        }
+        
+        alert('Aucune note de trimestre trouvée pour cet élève');
     }
     
     /**

@@ -323,13 +323,19 @@
 
 /* --- Modale --- */
 .modal-overlay {
-   position: fixed;
-   inset: 0;
-   background: rgba(0, 0, 0, 0.5);
-   z-index: 2000;
-   display: flex;
-   align-items: center;
-   justify-content: center;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Popup d'aperçu du bulletin PDF - au dessus de tout */
+.confirmation-overlay {
+    animation: fadeIn 0.3s ease;
+    z-index: 4000;
 }
 
 .modal-container {
@@ -2907,6 +2913,7 @@
 .classement-modal {
     max-width: 900px;
     width: 95%;
+    z-index: 3000;
 }
 
 .classement-info {
