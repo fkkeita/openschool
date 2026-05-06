@@ -982,7 +982,7 @@
                     <span class="info-badge premiere">
                         <i class="fas fa-crown"></i> La plus forte moyenne est : {{ premiereMoyenneClasse |
                         number:'1.2-2' }}/20
-                    </span>
+</span>
                 </div>
                 <div class="classement-table-container">
                     <table class="classement-table">
@@ -997,7 +997,7 @@
                         </thead>
                         <tbody>
                             @for (item of classementGlobal; track item.rang) {
-                            <tr [class.first]="item.rang === 1">
+                            <tr [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementGlobal.length - 2">
                                 <td class="rang-cell">
                                     @if (item.rang === 1) {
                                     <span class="rang-badge or">1</span>
@@ -1005,7 +1005,9 @@
                                     <span class="rang-badge argent">2</span>
                                     } @else if (item.rang === 3) {
                                     <span class="rang-badge bronze">3</span>
-}
+                                    } @else {
+                                    <span class="rang-number">{{ item.rang }}</span>
+                                    }
                                 </td>
                                 <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
                                 <td class="moyenne-cell">{{ item.moyenne | number:'1.2-2' }}/20</td>
@@ -1033,11 +1035,25 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-prev" (click)="fermerClassementGlobal()">Fermer</button>
-                <button class="btn-submit" (click)="fermerAttribuerTrimestreModal(); fermerClassementGlobal()">
-                    <i class="fas fa-check"></i> Terminer
-                </button>
+            <div class="modal-footer classement-footer">
+                <div class="footer-left">
+                    <button class="btn-footer" (click)="telechargerClassement()">
+                        <i class="fas fa-list-ol"></i> Classement
+                    </button>
+                </div>
+                <div class="footer-center">
+                    <button class="btn-footer btn-primary" (click)="imprimerTousBulletins()">
+                        <i class="fas fa-print"></i> Imprimer PDF
+                    </button>
+                    <button class="btn-footer btn-success" (click)="telechargerTousBulletins()">
+                        <i class="fas fa-file-pdf"></i> Tous les PDF
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button class="btn-footer btn-outline" (click)="fermerAttribuerTrimestreModal(); fermerClassementGlobal()">
+                        <i class="fas fa-check"></i> Terminer
+                    </button>
+                </div>
             </div>
         </div>
     </div>

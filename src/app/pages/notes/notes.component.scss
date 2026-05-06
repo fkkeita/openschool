@@ -2944,10 +2944,11 @@
 }
 
 .classement-table-container {
-    max-height: 500px;
+    max-height: 55vh;
     overflow-y: auto;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
+    background: white;
 }
 
 .classement-table {
@@ -3054,4 +3055,137 @@
     display: flex;
     gap: 8px;
     justify-content: center;
+}
+
+/* Classe pour les derniers élèves */
+.classement-table tbody tr.derniere {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-bottom: 2px solid #fca5a5;
+}
+
+.classement-table tbody tr.derniere:hover {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+/* Footer fixe du classement */
+.classement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    gap: 16px;
+}
+
+.classement-footer .footer-left,
+.classement-footer .footer-center,
+.classement-footer .footer-right {
+    display: flex;
+    gap: 12px;
+}
+
+.classement-footer .footer-center {
+    justify-content: center;
+}
+
+.btn-footer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: white;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-footer:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-footer.btn-primary {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.btn-footer.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-footer.btn-success {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+.btn-footer.btn-success:hover {
+    background: #059669;
+}
+
+.btn-footer.btn-outline {
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-footer.btn-outline:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+/* Amélioration du tableau */
+.classement-table thead {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.classement-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.classement-table thead th:not(:first-child) {
+    text-align: center;
+}
+
+.classement-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s;
+}
+
+.classement-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.classement-table tbody tr.first {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.classement-table tbody tr.first:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+}
+
+.rang-number {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 14px;
 }

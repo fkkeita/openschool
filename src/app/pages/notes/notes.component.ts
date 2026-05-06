@@ -2102,4 +2102,77 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
         this.selectedEleve = null;
         this.showGererClasseModal = null;
     }
+
+    /**
+     * ==================================================================================================================================
+     * TÉLÉCHARGER LE CLASSEMENT SOUS FORMAT IMPRIMÉ
+     * ==================================================================================================================================
+     * Génère un fichier texte avec le classement des élèves.
+     */
+    telechargerClassement(): void {
+        if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
+        
+        const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
+        let contenu = `CLASSEMENT DU TRIMESTRE\n`;
+        contenu += `================\n\n`;
+        contenu += `Trimestre: ${trimestre?.titre || ''}\n`;
+        contenu += `Date: ${new Date().toLocaleDateString('fr-FR')}\n`;
+        contenu += `Nombre d'élèves: ${this.classementGlobal.length}\n`;
+        contenu += `Première moyenne: ${this.premiereMoyenneClasse.toFixed(2)}/20\n\n`;
+        contenu += `CLASSEMENT:\n`;
+        contenu += `---------\n`;
+        
+        for (const item of this.classementGlobal) {
+            const rangStr = item.rang.toString().padStart(2, ' ');
+            const moyenneStr = item.moyenne.toFixed(2);
+            contenu += `${rangStr}. ${item.eleve.prenom} ${item.eleve.nom} - ${moyenneStr}/20\n`;
+        }
+        
+        const blob = new Blob([contenu], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Classement_${trimestre?.titre || 'trimestre'}_${new Date().toISOString().split('T')[0]}.txt`;
+        link.click();
+    }
+
+    /**
+     * ==================================================================================================================================
+     * IMPRIMER TOUS LES BULLETINS
+     * ==================================================================================================================================
+     * Ouvre les bulletins PDF dans des onglets pour impression.
+     */
+    async imprimerTousBulletins(): Promise<void> {
+        if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
+        
+        for (const item of this.classementGlobal) {
+            const triId = this.currentTrimestreState!.trimestreId;
+            const clePdf = `bulletin_pdf_${triId}_${item.eleve.id}`;
+            const pdfData = localStorage.getItem(clePdf);
+            
+            if (pdfData) {
+                const win = window.open('');
+                if (win) {
+                    win.document.write(`<iframe src="${pdfData}" style="width:100%;height:100%;border:none;"></iframe>`);
+                }
+            } else {
+                await this.genererBulletinPdf(item.eleve, this.premiereMoyenneClasse, triId);
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+    }
+
+    /**
+     * ==================================================================================================================================
+     * TÉLÉCHARGER TOUS LES BULLETINS
+     * ==================================================================================================================================
+     * Télécharge les PDF de tous les élèves.
+     */
+    async telechargerTousBulletins(): Promise<void> {
+        if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
+        
+        for (const item of this.classementGlobal) {
+            await this.telechargerBulletinPdf(item.eleve, this.premiereMoyenneClasse, this.currentTrimestreState!.trimestreId);
+            await new Promise(r => setTimeout(r, 300));
+        }
+    }
 }
