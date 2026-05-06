@@ -211,6 +211,9 @@ export class NotesComponent implements OnInit {
     public pdfApercuUrl: string | null = null;
     public pdfApercuSafeUrl: SafeResourceUrl | null = null;
     public showApercuBulletin = false;
+    public apercuFichierUrl: string | null = null;
+    public apercuFichierType: 'pdf' | 'image' | null = null;
+    public showApercuFichier = false;
 
     // Stores de notes
     public notesStore: Map<number, NoteEntry[]> = new Map();
@@ -220,7 +223,7 @@ export class NotesComponent implements OnInit {
     // Formulaires
     public formDevoir: FormDevoir = this.creerFormDevoirVide();
     public formTrimestre: FormTrimestre = this.creerFormTrimestreVide();
-    public formAttribuer: { eleveId: number; note: number }[] = [];
+    public formAttribuer: { eleveId: number; note: number; fichier: string | null }[] = [];
     public formAttribuerTrimestre: LigneAttributionTrimestre[] = [];
 
     // ═══════════════ ACCESSEURS ═══════════════
@@ -661,6 +664,18 @@ export class NotesComponent implements OnInit {
         reader.readAsDataURL(fichier);
     }
     
+    onFichierAttribuerChange(event: any, eleveId: number, index: number): void {
+        const fichier = event.target.files[0];
+        if (!fichier) return;
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result as string;
+            this.formAttribuer[index].fichier = base64;
+        };
+        reader.readAsDataURL(fichier);
+    }
+    
     /**
      * ==================================================================================================================================
      * TÉLÉCHARGER UN FICHIER UPLOADÉ
@@ -674,12 +689,17 @@ export class NotesComponent implements OnInit {
         const contenu = this.getFichierUpload(eleve.id, note.id);
         if (!contenu) return;
         
-        const link = document.createElement('a');
-        link.href = contenu;
+        this.telechargerFichierDirect(contenu);
+    }
+    
+    telechargerFichierDirect(url: string | null): void {
+        if (!url) return;
         
-        // Déterminer l'extension selon le type de fichier
-        const extension = contenu.includes('data:application/pdf') ? '.pdf' : '.jpg';
-        link.download = `${note.titre}_${eleve.nom}${extension}`;
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const extension = url.includes('data:application/pdf') ? '.pdf' : '.jpg';
+        link.download = `piece_jointe${extension}`;
         link.click();
     }
     
@@ -699,8 +719,14 @@ export class NotesComponent implements OnInit {
             return;
         }
         
-        // Ouvrir dans un nouvel onglet
-        window.open(contenu, '_blank');
+        this.apercuFichierUrl = contenu;
+        this.apercuFichierType = contenu.startsWith('data:application/pdf') ? 'pdf' : 'image';
+        this.showApercuFichier = true;
+    }
+    
+    fermerApercuFichier(): void {
+        this.showApercuFichier = false;
+        this.apercuFichierUrl = null;
     }
 
     fermerElevesModal(): void {
@@ -787,13 +813,41 @@ export class NotesComponent implements OnInit {
     ouvrirAttribuerNotes(type: string, titre: string, _evenementId?: number): void {
         this.showAttribuerNotesModal = { type, titre };
         const eleves = this.schoolData.elevesPourClasse(this.selectedClasse!);
-        this.formAttribuer = eleves.map(e => ({ eleveId: e.id, note: 0 }));
+        // Extraire l'ID du devoir depuis le titre ou utiliser une clé basée sur le type
+        const fichierKey = this.getDevoirIdFromTitre(titre, type);
+        
+        this.formAttribuer = eleves.map(e => ({ 
+            eleveId: e.id, 
+            note: 0,
+            fichier: this.getFichierUpload(e.id, fichierKey)
+        }));
+    }
+    
+    private getDevoirIdFromTitre(titre: string, type: string): number {
+        // Génère un ID basé sur le titre pour le stockage du fichier
+        // On utilise le hash du titre + type pour créer un ID cohérent
+        let hash = 0;
+        const str = titre + type;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
     }
 
     enregistrerAttribution(): void {
         if (!this.showAttribuerNotesModal) return;
+        
+        const notesSaisies = this.getNombreNotesSaisies();
+        if (notesSaisies === 0) {
+            alert('Veuillez saisir au moins une note');
+            return;
+        }
+        
         const { type, titre } = this.showAttribuerNotesModal;
         const matiere = this.formDevoir.matiere;
+        const fichierKey = this.getDevoirIdFromTitre(titre, type);
+        
         this.formAttribuer.forEach(att => {
             if (att.note < 0) return;
             const note: NoteEntry = {
@@ -808,8 +862,16 @@ export class NotesComponent implements OnInit {
             const notesEleve = this.notesStore.get(att.eleveId) || [];
             notesEleve.push(note);
             this.notesStore.set(att.eleveId, notesEleve);
+            
+            if (att.fichier) {
+                this.sauvegarderFichierUpload(att.eleveId, fichierKey, att.fichier);
+            }
         });
         this.showAttribuerNotesModal = null;
+    }
+    
+    getNombreNotesSaisies(): number {
+        return this.formAttribuer.filter(att => att.note >= 0).length;
     }
 
     /**

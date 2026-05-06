@@ -881,29 +881,64 @@
 
     <!-- ═══════════ MODALE ATTRIBUTION NOTES SIMPLES ═══════════ -->
     <div class="modal-overlay" *ngIf="showAttribuerNotesModal as ctx" (click)="showAttribuerNotesModal = null">
-        <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-container attribution-modal" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fas fa-clipboard-list"></i> Attribuer les notes — {{ ctx.titre }}</h3>
+                <h3><i class="fas fa-clipboard-check"></i> Saisie des Notes</h3>
                 <button class="modal-close" (click)="showAttribuerNotesModal = null">×</button>
             </div>
             <div class="modal-body attribution-modal-body">
-                <div class="attribution-intro">
-                    <p>Saisissez la note de chaque élève (sur 20) :</p>
+                <div class="attribution-header">
+                    <div class="attribution-info">
+                        <span class="info-badge"><i class="fas fa-book"></i> {{ formDevoir.matiere }}</span>
+                        <span class="info-badge"><i class="fas fa-tag"></i> {{ ctx.titre }}</span>
+                        <span class="info-badge type-badge"><i class="fas fa-clock"></i> {{ ctx.type }}</span>
+                    </div>
+                    <div class="attribution-stats">
+                        <span class="stat-item">
+                            <strong>{{ formAttribuer.length }}</strong> élève(s)
+                        </span>
+                        <span class="stat-item">
+                            <strong>{{ getNombreNotesSaisies() }}</strong> note(s)
+                        </span>
+                    </div>
                 </div>
-                <div class="eleve-list attribution-list">
-                    <div class="eleve-item attribution-item" *ngFor="let att of formAttribuer; let i = index">
-                        <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
-                        <div class="attribution-input-wrap">
-                            <input type="number" [(ngModel)]="att.note" class="form-control attribution-input" min="0"
-                                max="40" placeholder="0">
-                            <span class="attribution-max">/20</span>
+                <div class="attribution-list">
+                    <div class="attribution-list-header">
+                        <span>Élève</span>
+                        <span>Note</span>
+                        <span>Pièce jointe</span>
+                    </div>
+                    <div class="attribution-scroll">
+                        <div class="attribution-row" *ngFor="let att of formAttribuer; let i = index" [class.has-file]="att.fichier" [class.has-note]="att.note > 0">
+                            <div class="eleve-info">
+                                <span class="eleve-number">{{ i + 1 }}</span>
+                                <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
+                            </div>
+                            <div class="attribution-input-wrap">
+                                <input type="number" [(ngModel)]="att.note" class="form-control attribution-input" min="0"
+                                    max="40" placeholder="—">
+                                <span class="attribution-max">/20</span>
+                            </div>
+                            <div class="attribution-file">
+                                @if (att.fichier) {
+                                    <span class="file-attached"><i class="fas fa-paperclip"></i></span>
+                                }
+                                <label class="btn-upload-mini" [title]="att.fichier ? 'Fichier joint' : 'Joindre un fichier'">
+                                    <i class="fas" [class.fa-check-circle]="att.fichier" [class.fa-plus]="!att.fichier"></i>
+                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" 
+                                           (change)="onFichierAttribuerChange($event, att.eleveId, i)"
+                                           style="display: none;">
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer attribution-footer">
                 <button class="btn-prev" (click)="showAttribuerNotesModal = null">Annuler</button>
-                <button class="btn-submit" (click)="enregistrerAttribution()">Enregistrer</button>
+                <button class="btn-submit" (click)="enregistrerAttribution()">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
             </div>
         </div>
     </div>
@@ -923,6 +958,29 @@
                     <i class="fas fa-download"></i> Télécharger PDF
                 </button>
                 <button class="btn-close" (click)="showApercuBulletin = false">Fermer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ═══════════ POPUP APERÇU FICHIER DEVOIR ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuFichier" (click)="fermerApercuFichier()">
+        <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">
+            <div class="apercu-header">
+                <h3><i class="fas fa-file"></i> Pièce jointe</h3>
+                <button class="modal-close" (click)="fermerApercuFichier()">×</button>
+            </div>
+            <div class="apercu-content">
+                @if (apercuFichierType === 'pdf') {
+                    <iframe [src]="apercuFichierUrl" class="pdf-iframe" type="application/pdf"></iframe>
+                } @else {
+                    <img [src]="apercuFichierUrl" alt="Pièce jointe" class="apercu-image">
+                }
+            </div>
+            <div class="apercu-footer">
+                <button class="btn-download" (click)="telechargerFichierDirect(apercuFichierUrl)">
+                    <i class="fas fa-download"></i> Télécharger
+                </button>
+                <button class="btn-close" (click)="fermerApercuFichier()">Fermer</button>
             </div>
         </div>
     </div>
