@@ -351,7 +351,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="appreciation-default">{{ trimestre.moyenne >= 15 ? 'Bien' : trimestre.moyenne >= 10 ? 'Passable' : 'Insuffisant' }}</span>
+                                            <span class="appreciation-default">{{ getAppreciationTrimestre(trimestre.moyenne) }}</span>
                                         </td>
                                         <td>
                                             <button class="btn-apercu" (click)="genererBulletinPdf(eleveActuelConsultation)">

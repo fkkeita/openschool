@@ -242,6 +242,37 @@ export class NotesComponent implements OnInit {
         this.chargerNotesVerrouilleesLocalStorage();
         this.chargerEvenementsLocalStorage();
         this.chargerFichiersUploadesLocalStorage();
+        this.chargerNotesDevoirsLocalStorage();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * SAUVEGARDER LES NOTES DE DEVOIRS DANS LOCALSTORAGE
+     * ==================================================================================================================================
+     */
+    sauvegarderNotesDevoirsLocalStorage(): void {
+        try {
+            const data = Array.from(this.notesStore.entries());
+            localStorage.setItem('notes_devoirs', JSON.stringify(data));
+        } catch (error) {
+            console.error('Erreur sauvegarde notes:', error);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CHARGER LES NOTES DE DEVOIRS DEPUIS LOCALSTORAGE
+     * ==================================================================================================================================
+     */
+    private chargerNotesDevoirsLocalStorage(): void {
+        try {
+            const data = localStorage.getItem('notes_devoirs');
+            if (data) {
+                this.notesStore = new Map(JSON.parse(data));
+            }
+        } catch (error) {
+            console.error('Erreur chargement notes:', error);
+        }
     }
     
     /**
@@ -625,7 +656,7 @@ export class NotesComponent implements OnInit {
      * @returns Appréciation correspondante
      */
     determinerAppreciationDevoir(note: number): string {
-        if (note === 0) return 'Nul';
+        if (note < 4) return 'Nul';
         if (note < 10) return 'Insuffisant';
         if (note < 12) return 'Passable';
         if (note < 14) return 'Assez-Bien';
@@ -1042,6 +1073,7 @@ export class NotesComponent implements OnInit {
             notesEleve.push(note);
             this.notesStore.set(att.eleveId, notesEleve);
         });
+        this.sauvegarderNotesDevoirsLocalStorage();
         this.showAttribuerNotesModal = null;
     }
     
@@ -1555,13 +1587,23 @@ export class NotesComponent implements OnInit {
      */
     determinerAppreciation(ligne: LigneAttributionTrimestre): string {
         const moyenne = this.calculerMoyenne(ligne);
-
-        if (moyenne === 0) return 'Nul';
-        if (moyenne <= 9) return 'Insuffisant';
-        if (moyenne <= 11) return 'Passable';
-        if (moyenne <= 13) return 'Assez-Bien';
-        if (moyenne <= 15) return 'Bien';
-        if (moyenne <= 17) return 'Très Bien';
+        
+        if (moyenne < 4) return 'Nul';
+        if (moyenne < 10) return 'Insuffisant';
+        if (moyenne < 12) return 'Passable';
+        if (moyenne < 14) return 'Assez-Bien';
+        if (moyenne < 16) return 'Bien';
+        if (moyenne < 18) return 'Très Bien';
+        return 'Excellent';
+    }
+    
+    getAppreciationTrimestre(moyenne: number): string {
+        if (moyenne < 4) return 'Nul';
+        if (moyenne < 10) return 'Insuffisant';
+        if (moyenne < 12) return 'Passable';
+        if (moyenne < 14) return 'Assez-Bien';
+        if (moyenne < 16) return 'Bien';
+        if (moyenne < 18) return 'Très Bien';
         return 'Excellent';
     }
 
