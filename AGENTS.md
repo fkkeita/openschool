@@ -6,7 +6,7 @@
 # Démarrer l'application
 npm start          # ng serve
 
-# Lancer avec открытие automatique du navigateur
+# Lancer avec ouverture automatique du navigateur
 npm run serve       # ng serve --open
 
 # Vérifier les types TypeScript
@@ -68,10 +68,21 @@ pdfSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfDataUri);
 ### 4. Calcul de Position dans PDF jsPDF
 Les positions sont en **millimètres** depuis le bord gauche de la page :
 - marge = 10mm
-- _positions = marge + somme(largeurs précédentes) + décalage_
+- positions = marge + somme(largeurs précédentes) + décalage_
 
 ### 5. Commit Git
 Toujours vérifier le status avec `git status` avant de commiter. Les warnings LF/CRLF sont normaux sur Windows.
+
+### 6. Génération Bulletin PDF - Trimestre Correct
+Pour générer le bulletin du trimestre actuel (pas un ancien), utiliser le 3ème paramètre :
+```typescript
+genererBulletinPdf(eleve, premiereMoyenne, currentTrimestreState?.trimestreId)
+```
+Sinon utiliser `genererEtSauvegarderBulletinPdf()` après confirmation.
+
+### 7. Clés localStorage pour Notes Trimestre
+- Format : `notes_trimestre_{trimestreId}_{eleveId}`
+- Clé PDF : `bulletin_pdf_{trimestreId}_{eleveId}`
 
 ---
 

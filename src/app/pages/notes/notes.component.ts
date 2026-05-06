@@ -1777,14 +1777,27 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
      * Génère le bulletin scolaire PDF pour le popup d'aperçu.
      * @param eleve - Élève pour lequel générer le bulletin
      * @param premiereMoyenne - Moyenne du premier de la classe (optionnel)
+     * @param trimestreId - ID du trimestre spécifique à utiliser (optionnel)
      */
-    async genererBulletinPdf(eleve: Eleve | null, premiereMoyenne?: number): Promise<void> {
+    async genererBulletinPdf(eleve: Eleve | null, premiereMoyenne?: number, trimestreId?: number): Promise<void> {
         if (!eleve) return;
         
-        // Chercher le premier événement (trimestre) pour lequel l'élève a des notes
-        for (const evt of this.evenements) {
-            const eleveId = eleve.id;
-            const cleStorage = `notes_trimestre_${evt.id}_${eleveId}`;
+        // Utiliser le trimestre fourni, ou le trimestre actuel depuis currentTrimestreState
+        const trimestreIdsToSearch: number[] = [];
+        if (trimestreId) {
+            trimestreIdsToSearch.push(trimestreId);
+        } else if (this.currentTrimestreState) {
+            trimestreIdsToSearch.push(this.currentTrimestreState.trimestreId);
+        } else {
+            // Fallback: chercher dans tous les événements
+            for (const evt of this.evenements) {
+                trimestreIdsToSearch.push(evt.id);
+            }
+        }
+        
+        // Chercher les notes pour les trimestreIds définis
+        for (const triId of trimestreIdsToSearch) {
+            const cleStorage = `notes_trimestre_${triId}_${eleve.id}`;
             const data = localStorage.getItem(cleStorage);
             
             if (data) {
@@ -1792,6 +1805,10 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
                     const notes: any[] = JSON.parse(data);
                     
                     if (notes.length > 0) {
+                        // Trouver le trimestre par ID
+                        const trimestre = this.evenements.find(e => e.id === triId);
+                        if (!trimestre) continue;
+                        
                         // Calculer la moyenne
                         let totalCoef = 0;
                         let totalMoyCoef = 0;
@@ -1808,7 +1825,7 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
                             nom: eleve.nom,
                             prenoms: eleve.prenom,
                             classe: this.classeConsultation || '',
-                            trimestre: evt.titre,
+                            trimestre: trimestre.titre,
                             anneeScolaire: this.getAnneeScolaire(),
                             matieres: notes,
                             moyenneTrimestre: Math.round(moyenne * 100) / 100
@@ -1923,18 +1940,36 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
      * TÉLÉCHARGER DIRECTEMENT LE PDF DU BULLETIN SANS AFFICHER LE POPUP
      * ==================================================================================================================================
      * Génère et télécharger le PDF directement sans afficher l'aperçu.
+     * @param eleve - Élève pour lequel générer le bulletin
+     * @param premiereMoyenne - Moyenne du premier de la classe (optionnel)
+     * @param trimestreId - ID du trimestre spécifique à utiliser (optionnel)
      */
-    async telechargerBulletinPdf(eleve: Eleve, premiereMoyenne?: number): Promise<void> {
+    async telechargerBulletinPdf(eleve: Eleve, premiereMoyenne?: number, trimestreId?: number): Promise<void> {
         if (!eleve) return;
 
-        for (const evt of this.evenements) {
-            const cleStorage = `notes_trimestre_${evt.id}_${eleve.id}`;
+        // Utiliser le trimestre fourni, ou le trimestre actuel depuis currentTrimestreState
+        const trimestreIdsToSearch: number[] = [];
+        if (trimestreId) {
+            trimestreIdsToSearch.push(trimestreId);
+        } else if (this.currentTrimestreState) {
+            trimestreIdsToSearch.push(this.currentTrimestreState.trimestreId);
+        } else {
+            for (const evt of this.evenements) {
+                trimestreIdsToSearch.push(evt.id);
+            }
+        }
+
+        for (const triId of trimestreIdsToSearch) {
+            const cleStorage = `notes_trimestre_${triId}_${eleve.id}`;
             const data = localStorage.getItem(cleStorage);
             
             if (data) {
                 try {
                     const notes: any[] = JSON.parse(data);
                     if (notes.length > 0) {
+                        const trimestre = this.evenements.find(e => e.id === triId);
+                        if (!trimestre) continue;
+                        
                         let totalCoef = 0;
                         let totalMoyCoef = 0;
                         
@@ -1950,7 +1985,7 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
                             nom: eleve.nom,
                             prenoms: eleve.prenom,
                             classe: this.classeConsultation || '',
-                            trimestre: evt.titre,
+                            trimestre: trimestre.titre,
                             anneeScolaire: this.getAnneeScolaire(),
                             matieres: notes,
                             moyenneTrimestre: Math.round(moyenne * 100) / 100
