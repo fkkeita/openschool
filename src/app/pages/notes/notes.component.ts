@@ -1542,9 +1542,12 @@ export class NotesComponent implements OnInit {
     telechargerBulletin(): void {
         if (!this.pdfApercuUrl) return;
         
+        const eleve = this.eleveActuelConsultation;
+        const nomFichier = eleve ? `Bulletin_${eleve.nom}_${eleve.prenom}.pdf` : 'Bulletin.pdf';
+        
         const link = document.createElement('a');
         link.href = this.pdfApercuUrl;
-        link.download = `Bulletin_${this.currentTrimestreState?.trimestreId}.pdf`;
+        link.download = nomFichier;
         link.click();
     }
     
