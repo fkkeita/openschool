@@ -2655,3 +2655,58 @@
     background: #f1f5f9;
     color: #64748b;
 }
+
+/* --- CONTENEUR FILTRES (vue + mois) --- */
+.filtres-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.filtres-container .vue-filtres {
+    margin-bottom: 0;
+}
+
+.mois-filtre {
+    min-width: 180px;
+}
+
+.mois-filtre select {
+    padding: 10px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+    background: white;
+    cursor: pointer;
+    width: 100%;
+}
+
+.mois-filtre select:focus {
+    outline: none;
+    border-color: #2c5aa0;
+}
+
+/* --- BOUTON UPLOAD --- */
+.btn-upload {
+    background: #6366f1 !important;
+    color: white !important;
+    cursor: pointer;
+    position: relative;
+}
+
+.btn-upload:hover {
+    background: #4f46e5 !important;
+}
+
+.btn-upload input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}

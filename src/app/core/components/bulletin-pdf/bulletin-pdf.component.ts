@@ -41,7 +41,7 @@ export class BulletinPdfComponent {
       BulletinPdfComponent.genererRecapitulatifStatic(doc, margin, contentWidth, data);
       BulletinPdfComponent.genererSignaturesStatic(doc, pageWidth, pageHeight, margin);
 
-      // Retourne les données PDF en base64 au lieu d'ouvrir dans un nouvel onglet
+      // Retourne les données PDF en base64 pour affichage dans popup
       return doc.output('datauristring');
     } catch (error) {
       console.error('Erreur génération PDF:', error);

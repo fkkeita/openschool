@@ -225,20 +225,32 @@
                         </div>
                     </div>
                     
-                    <!-- Boutons de filtre -->
-                    <div class="vue-filtres">
-                        <button class="filtre-btn" 
-                                [class.active]="vueActiveConsultation === 'devoirs'"
-                                (click)="changerVueConsultation('devoirs')">
-                            <i class="fas fa-pencil-alt"></i>
-                            Devoirs / Interrogations
-                        </button>
-                        <button class="filtre-btn" 
-                                [class.active]="vueActiveConsultation === 'trimestres'"
-                                (click)="changerVueConsultation('trimestres')">
-                            <i class="fas fa-calendar-alt"></i>
-                            Trimestres / Compositions
-                        </button>
+                    <!-- Boutons de filtre (vue + mois) -->
+                    <div class="filtres-container">
+                        <div class="vue-filtres">
+                            <button class="filtre-btn" 
+                                    [class.active]="vueActiveConsultation === 'devoirs'"
+                                    (click)="changerVueConsultation('devoirs')">
+                                <i class="fas fa-pencil-alt"></i>
+                                Devoirs / Interrogations
+                            </button>
+                            <button class="filtre-btn" 
+                                    [class.active]="vueActiveConsultation === 'trimestres'"
+                                    (click)="changerVueConsultation('trimestres')">
+                                <i class="fas fa-calendar-alt"></i>
+                                Trimestres / Compositions
+                            </button>
+                        </div>
+                        
+                        <!-- Filtre par mois -->
+                        <div class="mois-filtre" *ngIf="getMoisDisponiblesConsultation().length > 0">
+                            <select class="form-control" [(ngModel)]="moisConsultation" (change)="changerMoisConsultation(moisConsultation)">
+                                <option [ngValue]="null">Tous les mois</option>
+                                @for (mois of getMoisDisponiblesConsultation(); track mois) {
+                                    <option [ngValue]="mois">{{ getNomMois(mois) }}</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     
                     <!-- Tableau pour les_DEVOIRS/INTERROGATIONS -->
@@ -270,13 +282,18 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="appreciation" [attr.data-appreciation]="note.appreciation || ''">
-                                                {{ note.appreciation || '--' }}
+                                            <span class="appreciation" [attr.data-appreciation]="determinerAppreciationDevoir(note.note)">
+                                                {{ determinerAppreciationDevoir(note.note) || '--' }}
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn-apercu">
-                                                <i class="fas fa-eye"></i> Voir
+                                            <button class="btn-apercu" (click)="voirFichierDevoir(note, eleveActuelConsultation)">
+                                                <i class="fas fa-eye"></i> 
+                                                @if (getFichierUpload(eleveActuelConsultation?.id || 0, note.id)) {
+                                                    Voir
+                                                } @else {
+                                                    Voir
+                                                }
                                             </button>
                                         </td>
                                         <td>
@@ -284,9 +301,17 @@
                                         </td>
                                         <td>
                                             <div class="actions-btns">
-                                                <button class="btn-action btn-download" title="Télécharger">
-                                                    <i class="fas fa-download"></i>
-                                                </button>
+                                                <label class="btn-action btn-upload" title="Uploader un fichier">
+                                                    <i class="fas fa-upload"></i>
+                                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" 
+                                                           (change)="onFichierChange($event, eleveActuelConsultation?.id || 0, note.id)"
+                                                           style="display: none;">
+                                                </label>
+                                                @if (getFichierUpload(eleveActuelConsultation?.id || 0, note.id)) {
+                                                    <button class="btn-action btn-download" title="Télécharger" (click)="telechargerFichier(note, eleveActuelConsultation)">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                }
                                                 <button class="btn-action btn-send" title="Envoyer au parent">
                                                     <i class="fas fa-paper-plane"></i>
                                                 </button>

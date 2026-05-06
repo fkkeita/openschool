@@ -156,6 +156,8 @@ export class NotesComponent implements OnInit {
      * -eleveActuelConsultation: élève actuellement sélectionné dans le panneau latéral
      * -rechercheEleveConsultation: texte de recherche pour filtrer les élèves
      * -vueActiveConsultation: 'devoirs' | 'trimestres' - permet de filtrer l'affichage
+     * -moisConsultation: filtre par mois (null = tous les mois)
+     * -fichiersUploades: Map des fichiers uploadés par élève et devoir
      */
     public showConsultationNotesModal = false;
     public elevesConsultation: Eleve[] = [];
@@ -163,6 +165,8 @@ export class NotesComponent implements OnInit {
     public rechercheEleveConsultation = '';
     public classeConsultation = '';
     public vueActiveConsultation: 'devoirs' | 'trimestres' = 'devoirs';
+    public moisConsultation: string | null = null;
+    public fichiersUploades: Map<string, string> = new Map();
 
     /**
      * ==================================================================================================================================
@@ -231,6 +235,7 @@ export class NotesComponent implements OnInit {
         this.cycles.forEach((c, i) => this.cycleOuvert[c.nom] = i === 0);
         this.chargerNotesVerrouilleesLocalStorage();
         this.chargerEvenementsLocalStorage();
+        this.chargerFichiersUploadesLocalStorage();
     }
     
     /**
@@ -434,7 +439,7 @@ export class NotesComponent implements OnInit {
      * Ces données proviennent du localStorage.
      * 
      * @param eleveId - ID de l'élève
-     * @returns Tableau avec les informations par trimestre/composition
+     * @returns Tableau avec les informations par trimestre/composition (filtré par mois si sélectionné)
      */
     getDonneesTrimestresEleve(eleveId: number): any[] {
         const result: any[] = [];
@@ -444,6 +449,11 @@ export class NotesComponent implements OnInit {
             // Vérifier si des notes existent pour cet événement dans le localStorage
             const cleStorage = `notes_trimestre_${evt.id}_${eleveId}`;
             const data = localStorage.getItem(cleStorage);
+            
+            // Filtrer par mois si un mois est sélectionné
+            if (this.moisConsultation && evt.date && !evt.date.startsWith(this.moisConsultation)) {
+                continue;
+            }
             
             if (data) {
                 try {
@@ -485,10 +495,18 @@ export class NotesComponent implements OnInit {
      * Retourne les notes simples (devoirs, interros) pour un élève.
      * 
      * @param eleveId - ID de l'élève
-     * @returns Tableau avec les notes de devoirs/interrogations
+     * @returns Tableau avec les notes de devoirs/interrogations (filtrées par mois si sélectionné)
      */
     getDonneesDevoirsEleve(eleveId: number): any[] {
-        return this.notesStore.get(eleveId) || [];
+        const notes = this.notesStore.get(eleveId) || [];
+        
+        // Filtrer par mois si un mois est sélectionné
+        if (this.moisConsultation) {
+            const mois = this.moisConsultation;
+            return notes.filter(note => note.date && note.date.startsWith(mois));
+        }
+        
+        return notes;
     }
     
     /**
@@ -499,6 +517,190 @@ export class NotesComponent implements OnInit {
      */
     changerVueConsultation(vue: 'devoirs' | 'trimestres'): void {
         this.vueActiveConsultation = vue;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CHANGER LE MOIS DE FILTRE DANS LE POPUP DE CONSULTATION
+     * ==================================================================================================================================
+     * @param mois - Mois au format 'YYYY-MM' ou null pour tous les mois
+     */
+    changerMoisConsultation(mois: string | null): void {
+        this.moisConsultation = mois;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LA LISTE DES MOIS DISPONIBLES POUR LA CONSULTATION
+     * ==================================================================================================================================
+     * Retourne la liste des mois pour lesquels l'élève a des notes.
+     */
+    getMoisDisponiblesConsultation(): string[] {
+        if (!this.eleveActuelConsultation) return [];
+        
+        const moisSet = new Set<string>();
+        const notes = this.notesStore.get(this.eleveActuelConsultation.id) || [];
+        
+        for (const note of notes) {
+            if (note.date) {
+                const mois = note.date.substring(0, 7);
+                moisSet.add(mois);
+            }
+        }
+        
+        // Ajouter aussi les mois des trimestres
+        const donneesTrimestres = this.getDonneesTrimestresEleve(this.eleveActuelConsultation.id);
+        for (const trim of donneesTrimestres) {
+            if (trim.date) {
+                const mois = trim.date.substring(0, 7);
+                moisSet.add(mois);
+            }
+        }
+        
+        return Array.from(moisSet).sort().reverse();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CHARGER LES FICHIERS UPLOADÉS DEPUIS LOCALSTORAGE
+     * ==================================================================================================================================
+     * Charge les fichiers uploadés pour les devoirs/interrogations.
+     */
+    private chargerFichiersUploadesLocalStorage(): void {
+        try {
+            const data = localStorage.getItem('fichiers_uploades');
+            if (data) {
+                this.fichiersUploades = new Map(JSON.parse(data));
+            }
+        } catch (error) {
+            console.error('Erreur chargement fichiers:', error);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * SAUVEGARDER UN FICHIER UPLOADÉ DANS LOCALSTORAGE
+     * ==================================================================================================================================
+     * @param eleveId - ID de l'élève
+     * @param devoirId - ID du devoir
+     * @param contenu - Contenu du fichier en base64
+     */
+    sauvegarderFichierUpload(eleveId: number, devoirId: number, contenu: string): void {
+        const cle = `${eleveId}_${devoirId}`;
+        this.fichiersUploades.set(cle, contenu);
+        
+        try {
+            localStorage.setItem('fichiers_uploades', JSON.stringify(Array.from(this.fichiersUploades.entries())));
+        } catch (error) {
+            console.error('Erreur sauvegarde fichier:', error);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LE FICHIER UPLOADÉ D'UN ÉLÈVE POUR UN DEVOIR
+     * ==================================================================================================================================
+     * @param eleveId - ID de l'élève
+     * @param devoirId - ID du devoir
+     * @returns Contenu du fichier en base64 ou null
+     */
+    getFichierUpload(eleveId: number, devoirId: number): string | null {
+        const cle = `${eleveId}_${devoirId}`;
+        return this.fichiersUploades.get(cle) || null;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * CALCULER L'APPRÉCIATION POUR UN DEVOIR/INTERROGATION
+     * ==================================================================================================================================
+     * Même règle que pour les trimestres.
+     * 
+     * @param note - Note sur 20
+     * @returns Appréciation correspondante
+     */
+    determinerAppreciationDevoir(note: number): string {
+        if (note === 0) return 'Nul';
+        if (note < 10) return 'Insuffisant';
+        if (note < 12) return 'Passable';
+        if (note < 14) return 'Assez-Bien';
+        if (note < 16) return 'Bien';
+        if (note < 18) return 'Très Bien';
+        return 'Excellent';
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * OBTENIR LE NOM DU MOIS POUR L'AFFICHAGE
+     * ==================================================================================================================================
+     * @param mois - Mois au format 'YYYY-MM'
+     * @returns Nom du mois formaté (ex: 'Janvier 2025')
+     */
+    getNomMois(mois: string): string {
+        const [annee, month] = mois.split('-');
+        const moisNoms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        return `${moisNoms[parseInt(month, 10) - 1]} ${annee}`;
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * GÉRER LE CHANGEMENT DE FICHIER UPLOADÉ
+     * ==================================================================================================================================
+     * @param event - Événement de change de l'input file
+     * @param eleveId - ID de l'élève
+     * @param devoirId - ID du devoir
+     */
+    onFichierChange(event: any, eleveId: number, devoirId: number): void {
+        const fichier = event.target.files[0];
+        if (!fichier) return;
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result as string;
+            this.sauvegarderFichierUpload(eleveId, devoirId, base64);
+        };
+        reader.readAsDataURL(fichier);
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * TÉLÉCHARGER UN FICHIER UPLOADÉ
+     * ==================================================================================================================================
+     * @param note - Note du devoir
+     * @param eleve - Élève
+     */
+    telechargerFichier(note: any, eleve: Eleve | null): void {
+        if (!eleve) return;
+        
+        const contenu = this.getFichierUpload(eleve.id, note.id);
+        if (!contenu) return;
+        
+        const link = document.createElement('a');
+        link.href = contenu;
+        
+        // Déterminer l'extension selon le type de fichier
+        const extension = contenu.includes('data:application/pdf') ? '.pdf' : '.jpg';
+        link.download = `${note.titre}_${eleve.nom}${extension}`;
+        link.click();
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * VOIR LE FICHIER DANS UN POPUP
+     * ==================================================================================================================================
+     * @param note - Note du devoir
+     * @param eleve - Élève
+     */
+    voirFichierDevoir(note: any, eleve: Eleve | null): void {
+        if (!eleve) return;
+        
+        const contenu = this.getFichierUpload(eleve.id, note.id);
+        if (!contenu) {
+            alert('Aucun fichier uploadé pour ce devoir');
+            return;
+        }
+        
+        // Ouvrir dans un nouvel onglet
+        window.open(contenu, '_blank');
     }
 
     fermerElevesModal(): void {
@@ -1269,28 +1471,55 @@ export class NotesComponent implements OnInit {
      * Génère le bulletin scolaire PDF pour l'aperçu intégré.
      */
     async genererBulletinPdf(eleve: Eleve | null): Promise<void> {
-        if (!eleve || !this.currentTrimestreState) return;
+        if (!eleve) return;
         
-        const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
-        if (!trimestre) return;
+        // Chercher le premier événement (trimestre) pour lequel l'élève a des notes
+        for (const evt of this.evenements) {
+            const eleveId = eleve.id;
+            const cleStorage = `notes_trimestre_${evt.id}_${eleveId}`;
+            const data = localStorage.getItem(cleStorage);
+            
+            if (data) {
+                try {
+                    const notes: any[] = JSON.parse(data);
+                    
+                    if (notes.length > 0) {
+                        // Calculer la moyenne
+                        let totalCoef = 0;
+                        let totalMoyCoef = 0;
+                        
+                        for (const note of notes) {
+                            totalCoef += note.coefficient || 0;
+                            totalMoyCoef += (note.moyenneCoefficientee || 0);
+                        }
+                        
+                        const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
+                        
+                        const dataPdf = {
+                            nomEcole: 'Nom de l\'École',
+                            nom: eleve.nom,
+                            prenoms: eleve.prenom,
+                            classe: this.classeConsultation || '',
+                            trimestre: evt.titre,
+                            anneeScolaire: this.getAnneeScolaire(),
+                            matieres: notes,
+                            moyenneTrimestre: Math.round(moyenne * 100) / 100
+                        };
+                        
+                        // Générer le PDF et afficher dans le popup d'aperçu
+                        const pdfDataUri = await BulletinPdfComponent.genererPdfDirect(dataPdf);
+                        this.pdfApercuUrl = pdfDataUri;
+                        this.pdfApercuSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfDataUri);
+                        this.showApercuBulletin = true;
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Erreur:', e);
+                }
+            }
+        }
         
-        // Préparer les données pour le PDF
-        const data = {
-            nomEcole: 'Nom de l\'École',
-            nom: eleve.nom,
-            prenoms: eleve.prenom,
-            classe: this.selectedClasse || '',
-            trimestre: trimestre.titre,
-            anneeScolaire: this.getAnneeScolaire(),
-            matieres: this.formAttribuerTrimestre,
-            moyenneTrimestre: this.moyenneGeneraleTrimestre
-        };
-        
-        // Générer le PDF et stocker l'URL pour l'aperçu intégré
-        const pdfDataUri = await BulletinPdfComponent.genererPdfDirect(data);
-        this.pdfApercuUrl = pdfDataUri;
-        this.pdfApercuSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfDataUri);
-        this.showApercuBulletin = true;
+        alert('Aucune note de trimestre trouvée pour cet élève');
     }
     
     /**
