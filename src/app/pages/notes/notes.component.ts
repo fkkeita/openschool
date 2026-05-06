@@ -210,10 +210,13 @@ export class NotesComponent implements OnInit {
      */
     public pdfApercuUrl: string | null = null;
     public pdfApercuSafeUrl: SafeResourceUrl | null = null;
+    public apercuFichierSafeUrl: SafeResourceUrl | null = null;
     public showApercuBulletin = false;
     public apercuFichierUrl: string | null = null;
     public apercuFichierType: 'pdf' | 'image' | null = null;
     public showApercuFichier = false;
+    public showApercuRecu = false;
+    public apercuRecuSafeUrl: SafeResourceUrl | null = null;
 
     // Stores de notes
     public notesStore: Map<number, NoteEntry[]> = new Map();
@@ -223,7 +226,7 @@ export class NotesComponent implements OnInit {
     // Formulaires
     public formDevoir: FormDevoir = this.creerFormDevoirVide();
     public formTrimestre: FormTrimestre = this.creerFormTrimestreVide();
-    public formAttribuer: { eleveId: number; note: number; fichier: string | null }[] = [];
+    public formAttribuer: { eleveId: number; note: number }[] = [];
     public formAttribuerTrimestre: LigneAttributionTrimestre[] = [];
 
     // ═══════════════ ACCESSEURS ═══════════════
@@ -664,18 +667,6 @@ export class NotesComponent implements OnInit {
         reader.readAsDataURL(fichier);
     }
     
-    onFichierAttribuerChange(event: any, eleveId: number, index: number): void {
-        const fichier = event.target.files[0];
-        if (!fichier) return;
-        
-        const reader = new FileReader();
-        reader.onload = () => {
-            const base64 = reader.result as string;
-            this.formAttribuer[index].fichier = base64;
-        };
-        reader.readAsDataURL(fichier);
-    }
-    
     /**
      * ==================================================================================================================================
      * TÉLÉCHARGER UN FICHIER UPLOADÉ
@@ -703,6 +694,119 @@ export class NotesComponent implements OnInit {
         link.click();
     }
     
+    telechargerOuGenererRecu(note: any, eleve: Eleve | null): void {
+        if (!eleve) return;
+        
+        const fichierKey = this.getDevoirIdFromTitre(note.titre, note.type);
+        const contenu = this.getFichierUpload(eleve.id, fichierKey);
+        if (contenu) {
+            this.telechargerFichierDirect(contenu);
+            return;
+        }
+        
+        this.genererEtTelechargerRecuPdf(note, eleve);
+    }
+    
+    async genererEtTelechargerRecuPdf(note: any, eleve: Eleve): Promise<void> {
+        try {
+            const jsPDF = await import('jspdf');
+            const doc = new jsPDF.jsPDF();
+            
+            const appreciation = this.determinerAppreciationDevoir(note.note);
+            const dateNote = new Date(note.date).toLocaleDateString('fr-FR');
+            
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Reçu de Note', 105, 25, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            
+            doc.text('École:', 20, 45);
+            doc.text('OpenSchool', 60, 45);
+            
+            doc.text('Année scolaire:', 20, 55);
+            doc.text('2025-2026', 60, 55);
+            
+            doc.line(20, 62, 190, 62);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informations de la note', 105, 75, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            
+            doc.text('Élève:', 20, 90);
+            doc.text(`${eleve.nom} ${eleve.prenom || ''}`, 60, 90);
+            
+            doc.text('Matière:', 20, 100);
+            doc.text(note.matiere || '', 60, 100);
+            
+            doc.text('Type:', 20, 110);
+            doc.text(note.type || '', 60, 110);
+            
+            doc.text('Titre:', 20, 120);
+            doc.text(note.titre || '', 60, 120);
+            
+            doc.text('Date:', 20, 130);
+            doc.text(dateNote, 60, 130);
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Note:', 20, 150);
+            doc.text(`${note.note}/20`, 60, 150);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Appréciation:', 20, 165);
+            doc.setTextColor(99, 102, 241);
+            doc.text(appreciation, 70, 165);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.line(20, 175, 190, 175);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'italic');
+            doc.text('Document généré automatiquement par OpenSchool', 105, 185, { align: 'center' });
+            
+            doc.save(`${eleve.nom}_${note.titre}_${note.date}.pdf`);
+        } catch (error) {
+            console.error('Erreur génération PDF:', error);
+            alert('Erreur lors de la génération du PDF');
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+     * ENVOYER LA NOTE AU PARENT PAR WHATSAPP
+     * ==================================================================================================================================
+     * @param note - Note du devoir
+     * @param eleve - Élève
+     */
+    async envoyerNoteParent(note: any, eleve: Eleve | null): Promise<void> {
+        if (!eleve) return;
+        
+        const telephoneParent = (eleve as any).telephoneParent || (eleve as any).parent || (eleve as any).telephone;
+        
+        if (!telephoneParent) {
+            alert('Numéro WhatsApp du parent non disponible pour cet élève');
+            return;
+        }
+        
+        const appreciation = this.determinerAppreciationDevoir(note.note);
+        const message = `Bonjour, Voici la note de ${eleve.nom} ${eleve.prenom || ''} pour le devoir de ${note.matiere} "${note.titre}" : ${note.note}/20 - Appréciation: ${appreciation}. OpenSchool`;
+        
+        let numeroClean = telephoneParent.replace(/[^\d\+]/g, '');
+        let numeroWhatsApp = numeroClean;
+        if (!numeroClean.startsWith('+')) {
+            numeroWhatsApp = '+223' + numeroClean.replace(/^0+/, '');
+        }
+        numeroWhatsApp = numeroWhatsApp.replace(/^\+223223/, '+223');
+        
+        const url = `https://wa.me/${numeroWhatsApp.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+    
     /**
      * ==================================================================================================================================
      * VOIR LE FICHIER DANS UN POPUP
@@ -713,20 +817,99 @@ export class NotesComponent implements OnInit {
     voirFichierDevoir(note: any, eleve: Eleve | null): void {
         if (!eleve) return;
         
-        const contenu = this.getFichierUpload(eleve.id, note.id);
-        if (!contenu) {
-            alert('Aucun fichier uploadé pour ce devoir');
-            return;
+        this.genererRecuPdfPourPopup(note, eleve);
+    }
+    
+    async genererRecuPdfPourPopup(note: any, eleve: Eleve): Promise<void> {
+        try {
+            const jsPDF = await import('jspdf');
+            const doc = new jsPDF.jsPDF();
+            
+            const appreciation = this.determinerAppreciationDevoir(note.note);
+            const dateNote = new Date(note.date).toLocaleDateString('fr-FR');
+            
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Reçu de Note', 105, 25, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            
+            doc.text('École:', 20, 45);
+            doc.text('OpenSchool', 60, 45);
+            
+            doc.text('Année scolaire:', 20, 55);
+            doc.text('2025-2026', 60, 55);
+            
+            doc.line(20, 62, 190, 62);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Informations de la note', 105, 75, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            
+            doc.text('Élève:', 20, 90);
+            doc.text(`${eleve.nom} ${eleve.prenom || ''}`, 60, 90);
+            
+            doc.text('Matière:', 20, 100);
+            doc.text(note.matiere || '', 60, 100);
+            
+            doc.text('Type:', 20, 110);
+            doc.text(note.type || '', 60, 110);
+            
+            doc.text('Titre:', 20, 120);
+            doc.text(note.titre || '', 60, 120);
+            
+            doc.text('Date:', 20, 130);
+            doc.text(dateNote, 60, 130);
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Note:', 20, 150);
+            doc.text(`${note.note}/20`, 60, 150);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Appréciation:', 20, 165);
+            doc.setTextColor(99, 102, 241);
+            doc.text(appreciation, 70, 165);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.line(20, 175, 190, 175);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'italic');
+            doc.text('Document généré automatiquement par OpenSchool', 105, 185, { align: 'center' });
+            
+            const pdfOutput = doc.output('datauristring');
+            this.apercuFichierUrl = pdfOutput;
+            this.apercuRecuSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfOutput);
+            this.showApercuRecu = true;
+        } catch (error) {
+            console.error('Erreur génération PDF:', error);
+            alert('Erreur lors de la génération du PDF');
         }
-        
-        this.apercuFichierUrl = contenu;
-        this.apercuFichierType = contenu.startsWith('data:application/pdf') ? 'pdf' : 'image';
-        this.showApercuFichier = true;
+    }
+    
+    fermerApercuRecu(): void {
+        this.showApercuRecu = false;
+        this.apercuRecuSafeUrl = null;
+        this.apercuFichierUrl = null;
+    }
+    
+    telechargerRecuDirect(): void {
+        if (!this.apercuFichierUrl) return;
+        const link = document.createElement('a');
+        link.href = this.apercuFichierUrl;
+        link.download = `recu_note.pdf`;
+        link.click();
     }
     
     fermerApercuFichier(): void {
         this.showApercuFichier = false;
         this.apercuFichierUrl = null;
+        this.apercuFichierSafeUrl = null;
     }
 
     fermerElevesModal(): void {
@@ -818,14 +1001,11 @@ export class NotesComponent implements OnInit {
         
         this.formAttribuer = eleves.map(e => ({ 
             eleveId: e.id, 
-            note: 0,
-            fichier: this.getFichierUpload(e.id, fichierKey)
+            note: 0
         }));
     }
     
-    private getDevoirIdFromTitre(titre: string, type: string): number {
-        // Génère un ID basé sur le titre pour le stockage du fichier
-        // On utilise le hash du titre + type pour créer un ID cohérent
+    getDevoirIdFromTitre(titre: string, type: string): number {
         let hash = 0;
         const str = titre + type;
         for (let i = 0; i < str.length; i++) {
@@ -846,7 +1026,6 @@ export class NotesComponent implements OnInit {
         
         const { type, titre } = this.showAttribuerNotesModal;
         const matiere = this.formDevoir.matiere;
-        const fichierKey = this.getDevoirIdFromTitre(titre, type);
         
         this.formAttribuer.forEach(att => {
             if (att.note < 0) return;
@@ -862,10 +1041,6 @@ export class NotesComponent implements OnInit {
             const notesEleve = this.notesStore.get(att.eleveId) || [];
             notesEleve.push(note);
             this.notesStore.set(att.eleveId, notesEleve);
-            
-            if (att.fichier) {
-                this.sauvegarderFichierUpload(att.eleveId, fichierKey, att.fichier);
-            }
         });
         this.showAttribuerNotesModal = null;
     }

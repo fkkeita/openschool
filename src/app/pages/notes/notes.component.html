@@ -287,12 +287,13 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn-apercu" (click)="voirFichierDevoir(note, eleveActuelConsultation)">
+                                            <button class="btn-apercu" (click)="voirFichierDevoir(note, eleveActuelConsultation)"
+                                                [title]="getFichierUpload(eleveActuelConsultation?.id || 0, getDevoirIdFromTitre(note.titre, note.type)) ? 'Voir le fichier joint' : 'Générer un reçu'">
                                                 <i class="fas fa-eye"></i> 
-                                                @if (getFichierUpload(eleveActuelConsultation?.id || 0, note.id)) {
+                                                @if (getFichierUpload(eleveActuelConsultation?.id || 0, getDevoirIdFromTitre(note.titre, note.type))) {
                                                     Voir
                                                 } @else {
-                                                    Voir
+                                                    Reçu
                                                 }
                                             </button>
                                         </td>
@@ -301,18 +302,10 @@
                                         </td>
                                         <td>
                                             <div class="actions-btns">
-                                                <label class="btn-action btn-upload" title="Uploader un fichier">
-                                                    <i class="fas fa-upload"></i>
-                                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" 
-                                                           (change)="onFichierChange($event, eleveActuelConsultation?.id || 0, note.id)"
-                                                           style="display: none;">
-                                                </label>
-                                                @if (getFichierUpload(eleveActuelConsultation?.id || 0, note.id)) {
-                                                    <button class="btn-action btn-download" title="Télécharger" (click)="telechargerFichier(note, eleveActuelConsultation)">
-                                                        <i class="fas fa-download"></i>
-                                                    </button>
-                                                }
-                                                <button class="btn-action btn-send" title="Envoyer au parent" disabled>
+                                                <button class="btn-action btn-download" title="Télécharger" (click)="telechargerOuGenererRecu(note, eleveActuelConsultation)">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </button>
+                                                <button class="btn-action btn-send" title="Envoyer au parent" (click)="envoyerNoteParent(note, eleveActuelConsultation)">
                                                     <i class="fas fa-paper-plane"></i>
                                                 </button>
                                             </div>
@@ -906,10 +899,9 @@
                     <div class="attribution-list-header">
                         <span>Élève</span>
                         <span>Note</span>
-                        <span>Pièce jointe</span>
                     </div>
                     <div class="attribution-scroll">
-                        <div class="attribution-row" *ngFor="let att of formAttribuer; let i = index" [class.has-file]="att.fichier" [class.has-note]="att.note > 0">
+                        <div class="attribution-row" *ngFor="let att of formAttribuer; let i = index" [class.has-note]="att.note > 0">
                             <div class="eleve-info">
                                 <span class="eleve-number">{{ i + 1 }}</span>
                                 <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
@@ -918,17 +910,6 @@
                                 <input type="number" [(ngModel)]="att.note" class="form-control attribution-input" min="0"
                                     max="40" placeholder="—">
                                 <span class="attribution-max">/20</span>
-                            </div>
-                            <div class="attribution-file">
-                                @if (att.fichier) {
-                                    <span class="file-attached"><i class="fas fa-paperclip"></i></span>
-                                }
-                                <label class="btn-upload-mini" [title]="att.fichier ? 'Fichier joint' : 'Joindre un fichier'">
-                                    <i class="fas" [class.fa-check-circle]="att.fichier" [class.fa-plus]="!att.fichier"></i>
-                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" 
-                                           (change)="onFichierAttribuerChange($event, att.eleveId, i)"
-                                           style="display: none;">
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -962,27 +943,23 @@
         </div>
     </div>
     
-    <!-- ═══════════ POPUP APERÇU FICHIER DEVOIR ═══════════ -->
-    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuFichier" (click)="fermerApercuFichier()">
+    <!-- ═══════════ POPUP APERÇU REÇU DE NOTE ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuRecu" (click)="fermerApercuRecu()">
         <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">
             <div class="apercu-header">
-                <h3><i class="fas fa-file"></i> Pièce jointe</h3>
-                <button class="modal-close" (click)="fermerApercuFichier()">×</button>
+                <h3><i class="fas fa-file-pdf"></i> Reçu de Note</h3>
+                <button class="modal-close" (click)="fermerApercuRecu()">×</button>
             </div>
             <div class="apercu-content">
-                @if (apercuFichierType === 'pdf') {
-                    <iframe [src]="apercuFichierUrl" class="pdf-iframe" type="application/pdf"></iframe>
-                } @else {
-                    <img [src]="apercuFichierUrl" alt="Pièce jointe" class="apercu-image">
-                }
+                <iframe [src]="apercuRecuSafeUrl" class="pdf-iframe" type="application/pdf"></iframe>
             </div>
             <div class="apercu-footer">
-                <button class="btn-download" (click)="telechargerFichierDirect(apercuFichierUrl)">
+                <button class="btn-download" (click)="telechargerRecuDirect()">
                     <i class="fas fa-download"></i> Télécharger
                 </button>
-                <button class="btn-close" (click)="fermerApercuFichier()">Fermer</button>
+                <button class="btn-close" (click)="fermerApercuRecu()">Fermer</button>
             </div>
         </div>
     </div>
-
-</div>
+    
+    </div>
