@@ -45,6 +45,7 @@ export interface Eleve {
     email?: string;
     telephone?: string;
     parent?: string;
+    telephoneParent?: string;  // Numéro WhatsApp du parent
 }
 
 // ─── SERVICE ─────────────────────────────────────────────────────

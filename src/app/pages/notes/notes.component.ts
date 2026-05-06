@@ -1447,7 +1447,7 @@ export class NotesComponent implements OnInit {
         // Sauvegarder temporairement
         this.sauvegarderNotesTemporaires();
 
-        // Fermer popup
+// Fermer popup
         this.showConfirmationTrimestreModal = false;
 
         // Générer et télécharger le bulletin PDF
@@ -1466,9 +1466,9 @@ export class NotesComponent implements OnInit {
     
     /**
      * ==================================================================================================================================
-     * GÉNÉRER LE BULLETIN PDF
+     * GÉNÉRER LE BULLETIN PDF POUR LA CONSULTATION
      * ==================================================================================================================================
-     * Génère le bulletin scolaire PDF pour l'aperçu intégré.
+     * Génère le bulletin scolaire PDF pour le popup d'aperçu.
      */
     async genererBulletinPdf(eleve: Eleve | null): Promise<void> {
         if (!eleve) return;
@@ -1522,6 +1522,61 @@ export class NotesComponent implements OnInit {
         alert('Aucune note de trimestre trouvée pour cet élève');
     }
     
+    /**
+     * ==================================================================================================================================
+     * ENVOYER LE BULLETIN PAR WHATSAPP AU PARENT
+     * ==================================================================================================================================
+     * Ouvre WhatsApp avec le numéro du parent pour envoyer le bulletin.
+     * Utilise l'API WhatsApp: https://wa.me/
+     * 
+     * @param eleve - Élève dont le parent doit recevoir le bulletin
+     */
+async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
+        if (!eleve) return;
+        
+        // Vérifier si l'aperçu du PDF est généré
+        if (!this.pdfApercuUrl) {
+            // Générer d'abord le PDF
+            await this.genererBulletinPdf(eleve);
+        }
+        
+        // Récupérer le numéro du parent
+        const telephoneParent = (eleve as any).telephoneParent || (eleve as any).parent || (eleve as any).telephone;
+        
+        console.log('Téléphone parent:', telephoneParent);
+        console.log('Élève:', eleve);
+        
+        if (!telephoneParent) {
+            alert('Numéro WhatsApp du parent non disponible pour cet élève');
+            return;
+        }
+        
+        // Nettoyer le numéro (supprimer tous les caractères non numériques sauf le +)
+        let numeroClean = telephoneParent.replace(/[^\d\+]/g, '');
+        
+        // Si le numéro commence par +, le garder tel quel
+        // Sinon, ajouter l'indicatif Mali (+223)
+        let numeroWhatsApp = numeroClean;
+        if (!numeroClean.startsWith('+')) {
+            // Ajouter l'indicatif Mali
+            numeroWhatsApp = '+223' + numeroClean.replace(/^0+/, '');
+        }
+        
+        // Enlever les doublons d'indicatif
+        numeroWhatsApp = numeroWhatsApp.replace(/^\+223223/, '+223');
+        
+        console.log('Numéro WhatsApp:', numeroWhatsApp);
+        
+        // Message à envoyer
+        const message = `Bonjour, voici le bulletin scolaire de ${eleve.prenom} ${eleve.nom}. Veuillez trouver ci-joint le document.`;
+        
+        // Encoder le message
+        const messageEncoded = encodeURIComponent(message);
+        
+        // Ouvrir WhatsApp
+        window.open(`https://wa.me/${numeroWhatsApp}?text=${messageEncoded}`, '_blank');
+    }
+
     /**
      * ==================================================================================================================================
      * OBTENIR L'ANNÉE SCOLAIRE

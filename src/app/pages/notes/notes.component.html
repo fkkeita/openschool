@@ -312,7 +312,7 @@
                                                         <i class="fas fa-download"></i>
                                                     </button>
                                                 }
-                                                <button class="btn-action btn-send" title="Envoyer au parent">
+                                                <button class="btn-action btn-send" title="Envoyer au parent" disabled>
                                                     <i class="fas fa-paper-plane"></i>
                                                 </button>
                                             </div>
@@ -373,7 +373,7 @@
                                                 <button class="btn-action btn-download" title="Télécharger le bulletin" (click)="telechargerBulletin()">
                                                     <i class="fas fa-download"></i>
                                                 </button>
-                                                <button class="btn-action btn-send" title="Envoyer au parent">
+                                                <button class="btn-action btn-send" title="Envoyer au parent" (click)="envoyerBulletinWhatsApp(eleveActuelConsultation)">
                                                     <i class="fas fa-paper-plane"></i>
                                                 </button>
                                             </div>
