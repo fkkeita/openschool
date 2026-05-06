@@ -2902,3 +2902,149 @@
     height: 1px;
     opacity: 0;
 }
+
+/* --- CLASSEMENT GLOBAL POPUP --- */
+.classement-modal {
+    max-width: 900px;
+    width: 95%;
+}
+
+.classement-info {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.classement-info .info-badge.premiere {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    border: 2px solid #f59e0b;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #b45309;
+}
+
+.classement-info .info-badge i {
+    color: #f59e0b;
+    font-size: 18px;
+}
+
+.classement-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.classement-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.classement-table thead {
+    background: #1e40af;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.classement-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.classement-table thead th:not(:first-child) {
+    text-align: center;
+}
+
+.classement-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.classement-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.classement-table tbody tr.first {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.classement-table tbody tr.first:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+}
+
+.classement-table tbody td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.classement-table tbody td:not(:first-child) {
+    text-align: center;
+}
+
+.rang-cell {
+    width: 60px;
+    text-align: center !important;
+}
+
+.rang-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.rang-badge.or {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+}
+
+.rang-badge.argent {
+    background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+    color: white;
+}
+
+.rang-badge.bronze {
+    background: linear-gradient(135deg, #fdba74 0%, #ea580c 100%);
+    color: white;
+}
+
+.rang-number {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.eleve-name {
+    font-weight: 500;
+    color: #334155;
+}
+
+.moyenne-cell {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1e40af;
+}
+
+.classement-table .actions-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}

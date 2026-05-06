@@ -222,6 +222,11 @@ export class NotesComponent implements OnInit {
     public notesStore: Map<number, NoteEntry[]> = new Map();
     public notesTrimestreStore: Map<number, NoteTrimestre[]> = new Map();
     public evenements: EvenementCollectif[] = [];
+    
+    // Classement global
+    public showClassementGlobal = false;
+    public classementGlobal: { eleve: Eleve; moyenne: number; rang: number }[] = [];
+    public premiereMoyenneClasse = 0;
 
     // Formulaires
     public formDevoir: FormDevoir = this.creerFormDevoirVide();
@@ -1435,13 +1440,17 @@ export class NotesComponent implements OnInit {
 
             // Sauvegarder dans le store permanent
             this.notesTrimestreStore.set(eleve.id, notesTrimestre);
+            
+            // Marquer comme verrouillé
+            const cleVerrouillage = this.getCleVerrouillage(eleve.id, this.currentTrimestreState!.trimestreId);
+            this.notesTrimestreVerrouilles.add(cleVerrouillage);
         }
 
         // ÉTAPE 3: Vider le cache temporaire
         this.donneesTempTrimestre = {};
 
-        // ÉTAPE 4: Fermer le modal
-        this.fermerAttribuerTrimestreModal();
+        // ÉTAPE 4: Calculer le classement global et afficher le popup
+        this.calculerClassementGlobal();
     }
 
     /**
@@ -1675,36 +1684,18 @@ export class NotesComponent implements OnInit {
      * ==================================================================================================================================
      * Format: "{trimestreId}_{eleveId}"
      */
-    private getCleVerrouillage(eleveId: number, trimestreId: number): string {
+private getCleVerrouillage(eleveId: number, trimestreId: number): string {
         return `${trimestreId}_${eleveId}`;
     }
 
-    /**
-     * ==================================================================================================================================
-     * OUVRIR LE POPUP DE CONFIRMATION
-     * ==================================================================================================================================
-     * Ouvre le popup avec résumé des notes avant enregistrement définitif.
-     */
-    ouvrirConfirmationTrimestre(): void {
-        this.sauvegarderNotesTemporaires();
-        this.showConfirmationTrimestreModal = true;
-    }
-
-    /**
-     * ==================================================================================================================================
-     * FERMER LE POPUP DE CONFIRMATION
-     * ==================================================================================================================================
-     */
     fermerConfirmationTrimestre(): void {
         this.showConfirmationTrimestreModal = false;
     }
 
-    /**
-     * ==================================================================================================================================
-     * CONFIRMER ET ENREGISTRER LES NOTES DÉFINITIVEMENT
-     * ==================================================================================================================================
-     * Marque les notes comme verrouillées et sauvegarde dans localStorage.
-     */
+    ouvrirConfirmationTrimestre(): void {
+        this.showConfirmationTrimestreModal = true;
+    }
+
     confirmerEnregistrementTrimestre(): void {
         if (!this.currentTrimestreState) return;
 
@@ -1714,25 +1705,13 @@ export class NotesComponent implements OnInit {
         const trimestreId = this.currentTrimestreState.trimestreId;
         const cleVerrouillage = this.getCleVerrouillage(eleve.id, trimestreId);
 
-        // Marquer comme verrouillé
         this.notesTrimestreVerrouilles.add(cleVerrouillage);
-
-        // Sauvegarder dans localStorage
         this.sauvegarderNotesTrimestreLocalStorage(eleve.id, trimestreId);
-
-        // Marquer comme enregistré
         this.currentTrimestreState.elevesEnregistres.add(eleve.id);
-
-        // Sauvegarder temporairement
         this.sauvegarderNotesTemporaires();
 
-// Fermer popup
         this.showConfirmationTrimestreModal = false;
 
-        // Générer et télécharger le bulletin PDF
-        this.genererBulletinPdf(eleve);
-
-        // Passer à l'élève suivant
         const indexSuivant = this.currentTrimestreState.eleveIndex + 1;
         if (indexSuivant < this.currentTrimestreState.eleves.length) {
             this.currentTrimestreState.eleveIndex = indexSuivant;
@@ -1741,6 +1720,54 @@ export class NotesComponent implements OnInit {
                 this.preparerFormulaireTrimestre(trimestre);
             }
         }
+    }
+
+    calculerClassementGlobal(): void {
+        if (!this.currentTrimestreState) return;
+        
+        const trimestreId = this.currentTrimestreState.trimestreId;
+        const eleves = this.currentTrimestreState.eleves;
+        const trimestre = this.evenements.find(e => e.id === trimestreId);
+        
+        if (!trimestre) return;
+        
+        const moyennes: { eleve: Eleve; moyenne: number }[] = [];
+        
+        for (const eleve of eleves) {
+            const cleVerrouillage = this.getCleVerrouillage(eleve.id, trimestreId);
+            if (!this.notesTrimestreVerrouilles.has(cleVerrouillage)) continue;
+            
+            const notes = this.notesTrimestreStore.get(eleve.id) || [];
+            if (notes.length === 0) continue;
+            
+            let totalCoef = 0;
+            let totalMoyCoef = 0;
+            
+            for (const note of notes) {
+                if (note.trimestreId === trimestreId) {
+                    totalCoef += note.coefficient || 0;
+                    totalMoyCoef += (note.moyenneCoefficientee || 0);
+                }
+            }
+            
+            const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
+            moyennes.push({ eleve, moyenne });
+        }
+        
+        moyennes.sort((a, b) => b.moyenne - a.moyenne);
+        
+        this.classementGlobal = moyennes.map((item, index) => ({
+            ...item,
+            rang: index + 1
+        }));
+        
+        this.premiereMoyenneClasse = this.classementGlobal.length > 0 ? this.classementGlobal[0].moyenne : 0;
+        this.showClassementGlobal = true;
+    }
+
+    fermerClassementGlobal(): void {
+        this.showClassementGlobal = false;
+        this.classementGlobal = [];
     }
     
     /**

@@ -266,6 +266,35 @@ export class BulletinPdfComponent {
       startY2 + 7.5,
       { align: 'center' }
     );
+    
+    // ============================================================================
+    // LIGNE DU PREMIER DE LA CLASSE (si disponible)
+    // ============================================================================
+    const startY3 = startY2 + 14;
+    
+    if (data.premiereMoyenne !== undefined && data.premiereMoyenne !== null) {
+      doc.setFillColor(254, 252, 232);
+      doc.rect(margin, startY3, contentWidth, 12, 'F');
+      
+      doc.setDrawColor(251, 191, 36);
+      doc.rect(margin, startY3, contentWidth, 12, 'S');
+      
+      doc.setTextColor(180, 83, 9);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PREMIER DE LA CLASSE :', margin + 5, startY3 + 8);
+      
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(margin + 60, startY3 + 2, 35, 8, 1, 1, 'F');
+      
+      doc.setTextColor(180, 83, 9);
+      doc.text(
+        BulletinPdfComponent.formatNumber(data.premiereMoyenne) + ' / 20',
+        margin + 77,
+        startY3 + 7.5,
+        { align: 'center' }
+      );
+    }
   }
 
   private static genererSignaturesStatic(doc: any, pageWidth: number, pageHeight: number, margin: number): void {
@@ -301,6 +330,11 @@ export class BulletinPdfComponent {
     if (valeur === undefined || valeur === null) return '0.00';
     return valeur.toFixed(2);
   }
+  
+  private static formatNumber(valeur: number | undefined): string {
+    if (valeur === undefined || valeur === null) return '0.00';
+    return valeur.toFixed(2);
+  }
 }
 
 interface BulletinData {
@@ -314,4 +348,6 @@ interface BulletinData {
   moyenneTrimestre: number;
   totalCoefficients?: number;
   totalMoyennesCoeff?: number;
+  premiereMoyenne?: number;
+  rangGeneral?: number;
 }
