@@ -56,12 +56,15 @@
                                             </div>
                                         </div>
                                         <p class="year-description">{{ annee.description }}</p>
-                                        <div class="year-actions">
+<div class="year-actions">
                                             <button class="action-btn primary" (click)="ouvrirVoir(annee)">
                                                 <i class="fas fa-eye"></i> Voir les notes
                                             </button>
                                             <button class="action-btn secondary" (click)="ouvrirGerer(annee)">
-                                                <i class="fas fa-edit"></i> Gérer
+                                                <i class="fas fa-edit"></i> Gerer
+                                            </button>
+                                            <button class="action-btn success" (click)="ouvrirResultats(annee)">
+                                                <i class="fas fa-trophy"></i> Resultat
                                             </button>
                                         </div>
                                     </div>
@@ -772,10 +775,10 @@
                 }
 
                 <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) - OUVRE LE POPUP DE CONFIRMATION -->
-                <button class="btn-submit" (click)="ouvrirConfirmationTrimestre()">
+                <button class="btn-submit" (click)="ouvrirConfirmationTrimestre()" [disabled]="eleveActuelEnregistre">
                     <i class="fas fa-save"></i>
                     @if (getEleveActuel(); as eleveActuel) {
-                    Enregistrer l'élève {{ eleveActuel.prenom }} {{ eleveActuel.nom }}
+                    {{ eleveActuelEnregistre ? 'Enregistré' : 'Enregistrer l\'élève ' + eleveActuel.prenom + ' ' + eleveActuel.nom }}
                     }
                 </button>
 

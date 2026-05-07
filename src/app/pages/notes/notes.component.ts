@@ -25,6 +25,7 @@ interface EvenementCollectif {
     titre: string;
     date: string;
     matieres: string[];
+    annee?: string;
 }
 
 interface NoteTrimestre {
@@ -228,6 +229,10 @@ export class NotesComponent implements OnInit {
     public showClassementGlobal = false;
     public classementGlobal: { eleve: Eleve; moyenne: number; rang: number }[] = [];
     public premiereMoyenneClasse = 0;
+    
+    // Donnees pour reafficher le classement (stockage entre les sessions)
+    public classementClasse: string = '';
+    public classementAnnee: string = '';
 
     // Formulaires
     public formDevoir: FormDevoir = this.creerFormDevoirVide();
@@ -1487,14 +1492,21 @@ export class NotesComponent implements OnInit {
         return this.currentTrimestreState.elevesEnregistres.size;
     }
 
+    get eleveActuelEnregistre(): boolean {
+        if (!this.currentTrimestreState) return false;
+        const eleve = this.getEleveActuel();
+        if (!eleve) return false;
+        return this.currentTrimestreState.elevesEnregistres.has(eleve.id);
+    }
+
     /**
          * ==================================================================================================================================
-         * PASSER À L'ÉLÈVE SUIVANT (méthode conservée pour compatibilité)
+         * PASSER A L'ELEVE SUIVANT (methode conservee pour compatibilite)
          * ==================================================================================================================================
          * 
-         * Cette méthode permet de naviguer vers l'élève suivant.
-         * Elle sauvegarde les notes temporaires mais NE marque PAS l'élève comme enregistré.
-         * L'utilisateur doit clicker explicitement sur "Enregistrer cet élève".
+         * Cette methode permet de naviguer vers l'eleve suivant.
+         * Elle sauvegard les notes temporaires mais NE marque PAS l'eleve comme enregistre.
+         * L'utilisateur doit clicker explicitement sur "Enregistrer cet eleve".
          */
     siguienteEleveTrimestre(): void {
         if (!this.currentTrimestreState) return;
@@ -2355,4 +2367,134 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
             console.error('Erreur generation PDF unifie:', error);
         }
     }
+    
+    /**
+     * ==================================================================================================================================
+      * OUVRIR LES RESULTATS (CLASSEMENT)
+      * ==================================================================================================================================
+      * Ouvre le popup de classement pour une annee et une classe donnees.
+      * @param annee - L'annee pour laquelle afficher les resultats
+      */
+    ouvrirResultats(annee: Annee): void {
+        // Trouver les classes qui ont des donnees de trimestre enregistrees
+        const classes = this.getClassesAvecResultats(annee.nom);
+        
+        if (classes.length === 0) {
+            alert('Aucun resultat disponible pour cette annee');
+            return;
+        }
+        
+        // Si une seule classe, ouvrir directement
+        if (classes.length === 1) {
+            this.afficherClassementAnneeClasse(annee.nom, classes[0]);
+        } else {
+            // Sinon ouvrir un selecteur de classe
+            this.anneeSelectionnee = annee.nom;
+            this.showSelecteurClasse = true;
+        }
+    }
+    
+    get showSelecteurClasse(): boolean {
+        return this._showSelecteurClasse;
+    }
+    
+    set showSelecteurClasse(value: boolean) {
+        this._showSelecteurClasse = value;
+    }
+    
+    private _showSelecteurClasse = false;
+    
+    public selectClasseResultats(classe: string): void {
+        this.showSelecteurClasse = false;
+        if (this.anneeSelectionnee) {
+            this.afficherClassementAnneeClasse(this.anneeSelectionnee, classe);
+        }
+    }
+    
+    public getClassesAvecResultats(annee: string): string[] {
+        const classes: string[] = [];
+        const trimestreIds = new Set<number>();
+        
+        // Chercher tous les trimestreIds pour cette annee
+        for (const evt of this.evenements) {
+            if (evt.annee === annee && evt.type === 'trimestre') {
+                trimestreIds.add(evt.id);
+            }
+        }
+        
+        if (trimestreIds.size === 0) return [];
+        
+        // Pour chaque eleve dans le systeme, verifier s'il a des notes
+        const classesWithNotes = new Set<string>();
+        const eleves = this.schoolData.tousLesEleves;
+        
+        for (const eleve of eleves) {
+            for (const triId of trimestreIds) {
+                const cleStorage = `notes_trimestre_${triId}_${eleve.id}`;
+                const data = localStorage.getItem(cleStorage);
+                if (data) {
+                    const notes = JSON.parse(data);
+                    if (notes.length > 0) {
+                        classesWithNotes.add(eleve.classe);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return Array.from(classesWithNotes);
+    }
+    
+    private afficherClassementAnneeClasse(annee: string, classe: string): void {
+        // Trouver le trimestre le plus recent pour cette classe
+        let trimestreId: number | null = null;
+        
+        for (const evt of this.evenements) {
+            if (evt.annee === annee && evt.type === 'trimestre') {
+                // Verifier s'il y a des notes pour cette classe
+                const eleves = this.schoolData.elevesPourClasse(classe);
+                let hasNotes = false;
+                
+                for (const eleve of eleves) {
+                    const cleStorage = `notes_trimestre_${evt.id}_${eleve.id}`;
+                    if (localStorage.getItem(cleStorage)) {
+                        hasNotes = true;
+                        break;
+                    }
+                }
+                
+                if (hasNotes && (!trimestreId || evt.id > trimestreId)) {
+                    trimestreId = evt.id;
+                }
+            }
+        }
+        
+        if (!trimestreId) {
+            alert('Aucun resultat disponible pour cette classe');
+            return;
+        }
+        
+        const trimestre = this.evenements.find(e => e.id === trimestreId);
+        if (!trimestre) return;
+        
+        // Initialiser currentTrimestreState
+        const eleves = this.schoolData.elevesPourClasse(classe);
+        
+        this.currentTrimestreState = {
+            opened: true,
+            trimestreId: trimestreId,
+            eleveIndex: 0,
+            eleves: eleves,
+            elevesEnregistres: new Set<number>(),
+            classe: classe
+        };
+        
+        this.classementAnnee = annee;
+        this.classementClasse = classe;
+        
+        // Calculer le classement
+        this.calculerClassementGlobal();
+    }
+    
+    public anneeSelectionnee: string = '';
 }
