@@ -61,10 +61,7 @@
                                                 <i class="fas fa-eye"></i> Voir les notes
                                             </button>
                                             <button class="action-btn secondary" (click)="ouvrirGerer(annee)">
-                                                <i class="fas fa-edit"></i> Gerer
-                                            </button>
-                                            <button class="action-btn success" (click)="ouvrirResultats(annee)">
-                                                <i class="fas fa-trophy"></i> Resultat
+                                                <i class="fas fa-edit"></i> Gérer
                                             </button>
                                         </div>
                                     </div>
@@ -795,6 +792,11 @@
                     [disabled]="!tousLesElevesEnregistres">
                     <i class="fas fa-check-double"></i>
                     Enregistrer tous les élèves ({{ nbElevesEnregistres}}/{{ currentTrimestreState?.eleves?.length }})
+                </button>
+                
+                <!-- Bouton Resultat - affiche le classement -->
+                <button class="btn-footer" (click)="showClassementGlobal = true" [disabled]="classementGlobal.length === 0">
+                    <i class="fas fa-trophy"></i> Résultat
                 </button>
             </div>
         </div>
