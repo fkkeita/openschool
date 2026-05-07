@@ -189,66 +189,39 @@
                 </button>
             </div>
             <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'trimestres'">
-                <div class="resultats-sidebar">
-                    <h4><i class="fas fa-list"></i> Périodes</h4>
-                    <div class="periode-list">
-                        @for (tri of trimestresListeResultats; track tri.id) {
-                        <div class="periode-item" [class.active]="trimestreSelectionneResultats?.id === tri.id" (click)="ouvrirClassementPourTrimestre(tri)">
-                            <div class="periode-type-badge" [attr.data-type]="tri.type">{{ tri.type }}</div>
-                            <div class="periode-info">
-                                <span class="periode-titre">{{ tri.titre }}</span>
-                                <span class="periode-date">{{ tri.date }}</span>
-                            </div>
-                            <i class="fas fa-chevron-right"></i>
-                        </div>
-                        }
-                        @if (trimestresListeResultats.length === 0) {
-                        <p class="no-data"><i class="fas fa-info-circle"></i> Aucun trimestre enregistré</p>
-                        }
-                    </div>
-                </div>
-                <div class="resultats-main">
-                    @if (!trimestreSelectionneResultats) {
+                <div class="resultats-main resultats-main-full">
+                    @if (trimestresListeResultats.length === 0) {
                     <div class="resultats-welcome">
-                        <i class="fas fa-hand-pointer-up"></i>
-                        <p>Cliquez sur une période dans le panneau de gauche pour voir les résultats collectifs.</p>
+                        <i class="fas fa-info-circle"></i>
+                        <p>Aucun trimestre enregistré pour cette classe.</p>
                     </div>
                     } @else {
-                    <div class="classement-afficheur">
-                        <div class="classement-info">
-                            <span class="info-badge premiere">
-                                <i class="fas fa-crown"></i> La plus forte moyenne est : {{ premiereMoyenneClasse | number:'1.2-2' }}/20
-                            </span>
-                        </div>
-                        <table class="classement-table">
-                            <thead>
-                                <tr>
-                                    <th>Rang</th>
-                                    <th>Élève</th>
-                                    <th>Moyenne</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (item of classementGlobal; track item.rang) {
-                                <tr [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementGlobal.length - 2">
-                                    <td class="rang-cell">
-                                        @if (item.rang === 1) {
-                                        <span class="rang-badge or">1</span>
-                                        } @else if (item.rang === 2) {
-                                        <span class="rang-badge argent">2</span>
-                                        } @else if (item.rang === 3) {
-                                        <span class="rang-badge bronze">3</span>
-                                        } @else {
-                                        <span class="rang-number">{{ item.rang }}</span>
-                                        }
-                                    </td>
-                                    <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
-                                    <td class="moyenne-cell">{{ item.moyenne | number:'1.2-2' }}/20</td>
-                                </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    <table class="periodes-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Titre</th>
+                                <th>Date</th>
+                                <th>actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (tri of trimestresListeResultats; track tri.id) {
+                            <tr [class.active]="trimestreSelectionneResultats?.id === tri.id" (click)="ouvrirClassementPourTrimestre(tri)">
+                                <td>
+                                    <span class="type-badge" [attr.data-type]="tri.type">{{ tri.type }}</span>
+                                </td>
+                                <td class="titre-cell">{{ tri.titre }}</td>
+                                <td class="date-cell">{{ tri.date }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-action" title="Voir le classement">
+                                        <i class="fas fa-trophy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
                     }
                 </div>
             </div>

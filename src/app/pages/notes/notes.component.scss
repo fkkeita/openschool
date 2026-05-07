@@ -3171,6 +3171,104 @@
     min-height: 400px;
 }
 
+.resultats-main-full {
+    grid-column: 1 / -1;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.periodes-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.periodes-table thead {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.periodes-table thead th {
+    padding: 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.periodes-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.periodes-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.periodes-table tbody tr.active {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.periodes-table td {
+    padding: 14px;
+    font-size: 13px;
+}
+
+.periodes-table .type-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.periodes-table .type-badge[data-type="trimestre"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.periodes-table .type-badge[data-type="composition"] {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.periodes-table .type-badge[data-type="examen"] {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.periodes-table .titre-cell {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.periodes-table .date-cell {
+    color: #64748b;
+}
+
+.periodes-table .actions-cell {
+    text-align: center;
+}
+
+.periodes-table .btn-action {
+    padding: 8px 12px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.periodes-table .btn-action:hover {
+    background: #2563eb;
+}
+
 .resultats-sidebar {
     background: #f1f5f9;
     padding: 20px;
