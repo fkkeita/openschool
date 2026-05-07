@@ -3122,8 +3122,14 @@
    POPUP RESULTATS COLLECTIFS
    ============================================ */
 .resultats-collectifs-modal {
-    max-width: 900px;
-    min-height: 500px;
+    max-width: 1100px;
+    width: 95vw;
+    min-height: 600px;
+}
+
+.modal-xxl {
+    max-width: 1200px;
+    width: 98vw;
 }
 
 .resultats-onglets {
@@ -3303,6 +3309,94 @@
     display: block;
     font-size: 24px;
     margin-bottom: 10px;
+}
+
+/* ============================================
+   AFFICHEUR DE CLASSEMENT DANS RESULTATS COLLECTIFS
+   ============================================ */
+.classement-afficheur {
+    width: 100%;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.classement-afficheur .classement-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.classement-afficheur .classement-info .info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #92400e;
+}
+
+.classement-afficheur .classement-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.classement-afficheur .classement-table thead {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.classement-afficheur .classement-table thead th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.classement-afficheur .classement-table thead th:not(:first-child) {
+    text-align: center;
+}
+
+.classement-afficheur .classement-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s;
+}
+
+.classement-afficheur .classement-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.classement-afficheur .classement-table tbody tr.first {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.classement-afficheur .classement-table tbody tr.derniere {
+    background: #fee2e2;
+}
+
+.classement-afficheur .classement-table td {
+    padding: 12px;
+    font-size: 13px;
+}
+
+.classement-afficheur .rang-cell {
+    font-weight: 600;
+}
+
+.classement-afficheur .moyenne-cell {
+    text-align: center;
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+.classement-afficheur .periode-item.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
 }
 
 .eleve-name {

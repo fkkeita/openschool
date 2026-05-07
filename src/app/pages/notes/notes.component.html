@@ -173,7 +173,7 @@
 
     <!-- ═══════════ POPUP RESULTATS COLLECTIFS ═══════════ -->
     <div class="modal-overlay" *ngIf="showResultatsCollectifsModal" (click)="fermerResultatsCollectifsModal()">
-        <div class="modal-container modal-xl resultats-collectifs-modal" (click)="$event.stopPropagation()">
+        <div class="modal-container modal-xxl resultats-collectifs-modal" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h3><i class="fas fa-chart-bar"></i> Résultats Collectifs - {{ choixResultatsClasse }}</h3>
                 <button class="modal-close" (click)="fermerResultatsCollectifsModal()">×</button>
@@ -193,7 +193,7 @@
                     <h4><i class="fas fa-list"></i> Périodes</h4>
                     <div class="periode-list">
                         @for (tri of trimestresListeResultats; track tri.id) {
-                        <div class="periode-item" (click)="ouvrirClassementPourTrimestre(tri)">
+                        <div class="periode-item" [class.active]="trimestreSelectionneResultats?.id === tri.id" (click)="ouvrirClassementPourTrimestre(tri)">
                             <div class="periode-type-badge" [attr.data-type]="tri.type">{{ tri.type }}</div>
                             <div class="periode-info">
                                 <span class="periode-titre">{{ tri.titre }}</span>
@@ -208,10 +208,48 @@
                     </div>
                 </div>
                 <div class="resultats-main">
+                    @if (!trimestreSelectionneResultats) {
                     <div class="resultats-welcome">
                         <i class="fas fa-hand-pointer-up"></i>
                         <p>Cliquez sur une période dans le panneau de gauche pour voir les résultats collectifs.</p>
                     </div>
+                    } @else {
+                    <div class="classement-afficheur">
+                        <div class="classement-info">
+                            <span class="info-badge premiere">
+                                <i class="fas fa-crown"></i> La plus forte moyenne est : {{ premiereMoyenneClasse | number:'1.2-2' }}/20
+                            </span>
+                        </div>
+                        <table class="classement-table">
+                            <thead>
+                                <tr>
+                                    <th>Rang</th>
+                                    <th>Élève</th>
+                                    <th>Moyenne</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of classementGlobal; track item.rang) {
+                                <tr [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementGlobal.length - 2">
+                                    <td class="rang-cell">
+                                        @if (item.rang === 1) {
+                                        <span class="rang-badge or">1</span>
+                                        } @else if (item.rang === 2) {
+                                        <span class="rang-badge argent">2</span>
+                                        } @else if (item.rang === 3) {
+                                        <span class="rang-badge bronze">3</span>
+                                        } @else {
+                                        <span class="rang-number">{{ item.rang }}</span>
+                                        }
+                                    </td>
+                                    <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
+                                    <td class="moyenne-cell">{{ item.moyenne | number:'1.2-2' }}/20</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
                 </div>
             </div>
             <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'devoirs'">

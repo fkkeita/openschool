@@ -150,6 +150,7 @@ export class NotesComponent implements OnInit {
     public choixResultatsAnnee: string = '';
     public ongletResultatsActif: 'devoirs' | 'trimestres' = 'trimestres';
     public trimestresListeResultats: EvenementCollectif[] = [];
+    public trimestreSelectionneResultats: EvenementCollectif | null = null;
     
     /**
      * ==================================================================================================================================
@@ -490,7 +491,8 @@ selectClasseVoir(classe: string): void {
       * @param trimestre - Le trimestre pour lequel afficher le classement
       */
     ouvrirClassementPourTrimestre(trimestre: EvenementCollectif): void {
-        // Initialiser currentTrimestreState pour le classement
+        this.trimestreSelectionneResultats = trimestre;
+        
         const eleves = this.schoolData.elevesPourClasse(this.choixResultatsClasse);
         
         this.currentTrimestreState = {
@@ -501,8 +503,6 @@ selectClasseVoir(classe: string): void {
             elevesEnregistres: new Set<number>(),
             classe: this.choixResultatsClasse
         };
-        
-        this.showResultatsCollectifsModal = false;
         
         this.calculerClassementGlobal();
     }
