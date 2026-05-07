@@ -226,11 +226,42 @@
                 </div>
             </div>
             <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'devoirs'">
-                <div class="resultats-main">
+                <div class="resultats-main resultats-main-full">
+                    @if (listeDevoirsResultats.length === 0) {
                     <div class="resultats-welcome">
-                        <i class="fas fa-clock"></i>
-                        <p>Module en cours de développement...</p>
+                        <i class="fas fa-info-circle"></i>
+                        <p>Aucun devoir ou interrogation enregistré pour cette classe.</p>
                     </div>
+                    } @else {
+                    <table class="periodes-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Titre</th>
+                                <th>Matière</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (dev of listeDevoirsResultats; track dev.titre + dev.matiere) {
+                            <tr [class.active]="devoirSelectionneResultats?.titre === dev.titre" (click)="ouvrirClassementPourDevoir(dev)">
+                                <td>
+                                    <span class="type-badge" [attr.data-type]="dev.type">{{ dev.type }}</span>
+                                </td>
+                                <td class="titre-cell">{{ dev.titre }}</td>
+                                <td class="matiere-cell">{{ dev.matiere }}</td>
+                                <td class="date-cell">{{ dev.date }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-action" title="Voir le classement">
+                                        <i class="fas fa-trophy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                    }
                 </div>
             </div>
         </div>
@@ -1087,13 +1118,13 @@
     </div>
 
     <!-- ═══════════ POPUP CLASSEMENT DEVOIR ═══════════ -->
-    <div class="modal-overlay" *ngIf="showClassementDevoirModal" (click)="showClassementDevoirModal = false">
+    <div class="modal-overlay" *ngIf="showClassementDevoirModal" (click)="fermerClassementDevoirModal()">
         <div class="modal-container modal-xl" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h3><i class="fas fa-trophy"></i> Classement - {{ devoirSelectionneClassement?.titre }}</h3>
-                <button class="modal-close" (click)="showClassementDevoirModal = false">×</button>
+                <button class="modal-close" (click)="fermerClassementDevoirModal()">×</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body classement-body-scroll">
                 <div class="classement-info">
                     <span class="info-badge">
                         <i class="fas fa-book"></i> {{ devoirSelectionneClassement?.matiere }}
@@ -1133,7 +1164,7 @@
                 <button class="btn-footer btn-primary" (click)="imprimerClassementDevoir()">
                     <i class="fas fa-print"></i> Imprimer
                 </button>
-                <button class="btn-footer btn-outline" (click)="showClassementDevoirModal = false">
+                <button class="btn-footer btn-outline" (click)="fermerClassementDevoirModal()">
                     <i class="fas fa-check"></i> Terminer
                 </button>
             </div>
