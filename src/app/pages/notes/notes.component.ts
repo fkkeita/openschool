@@ -2241,36 +2241,37 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
 
 /**
      * ==================================================================================================================================
-      * IMPRIMER TOUS LES BULLETINS - PDF UNIFIE
-      * ==================================================================================================================================
-      * Genere un PDF unifie avec tous les bulletins et ouvre la fenetre d'impression.
-      */
+       * IMPRIMER TOUS LES BULLETINS - PDF UNIFIE
+       * ==================================================================================================================================
+       * Genere un PDF unifie avec tous les bulletins et ouvre la boite de dialogue d'impression.
+       */
     async imprimerTousBulletins(): Promise<void> {
         if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
         
-        await this.genererPdfTousBulletins();
+        await this.genererPdfTousBulletins(false, true);
     }
 
     /**
      * ==================================================================================================================================
-      * TELECHARGER TOUS LES BULLETINS - PDF UNIFIE
-      * ==================================================================================================================================
-      * Genere un PDF unifie avec tous les bulletins et le telecharge.
-      */
+       * TELECHARGER TOUS LES BULLETINS - PDF UNIFIE
+       * ==================================================================================================================================
+       * Genere un PDF unifie avec tous les bulletins et le telecharge.
+       */
     async telechargerTousBulletins(): Promise<void> {
         if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
         
-        await this.genererPdfTousBulletins(true);
+        await this.genererPdfTousBulletins(true, false);
     }
 
     /**
      * ==================================================================================================================================
-      * GENERER PDF TOUS LES BULLETINS UNIFIE
-      * ==================================================================================================================================
-      * Genere un seul PDF contenant tous les bulletins.
-      * @param telecharger - true pour telecharger, false pour juste afficher
-      */
-    private async genererPdfTousBulletins(telecharger: boolean = false): Promise<void> {
+       * GENERER PDF TOUS LES BULLETINS UNIFIE
+       * ==================================================================================================================================
+       * Genere un seul PDF contenant tous les bulletins.
+       * @param telecharger - true pour telecharger le PDF
+       * @param directementImprimer - true pour ouvrir directement la dialog d'impression
+       */
+    private async genererPdfTousBulletins(telecharger: boolean = false, directementImprimer: boolean = false): Promise<void> {
         const triId = this.currentTrimestreState!.trimestreId;
         const trimestre = this.evenements.find(e => e.id === triId);
         const classe = this.currentTrimestreState!.classe;
@@ -2335,6 +2336,15 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
                 link.href = URL.createObjectURL(pdfBlob);
                 link.download = `Bulletins_${classe}_${trimestre?.titre || 'trimestre'}.pdf`;
                 link.click();
+            } else if (directementImprimer) {
+                const pdfBlob = doc.output('blob');
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                const printWindow = window.open(pdfUrl);
+                if (printWindow) {
+                    printWindow.onload = () => {
+                        printWindow.print();
+                    };
+                }
             } else {
                 const pdfDataUri = doc.output('datauristring');
                 this.pdfApercuUrl = pdfDataUri;
