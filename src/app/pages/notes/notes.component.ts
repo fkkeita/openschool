@@ -143,6 +143,14 @@ export class NotesComponent implements OnInit {
     public showAttribuerNotesModal: { type: string; titre: string; evenementId?: number } | null = null;
     public showAttribuerTrimestreModal = false;
     
+    // Popups de resultats
+    public showChoixResultatsModal = false;
+    public showResultatsCollectifsModal = false;
+    public choixResultatsClasse: string = '';
+    public choixResultatsAnnee: string = '';
+    public ongletResultatsActif: 'devoirs' | 'trimestres' = 'trimestres';
+    public trimestresListeResultats: EvenementCollectif[] = [];
+    
     /**
      * ==================================================================================================================================
      * POPUP CONSULTATION NOTES ÉLÈVE (NOUVEAU DESIGN)
@@ -421,29 +429,104 @@ export class NotesComponent implements OnInit {
         this.showVoirModal = true;
     }
 
-    selectClasseVoir(classe: string): void {
-        this.showVoirModal = false;
-        this.classeConsultation = classe;
-        this.elevesConsultation = this.schoolData.elevesPourClasse(classe);
+selectClasseVoir(classe: string): void {
+        // Afficher le popup de choix entre resultats individuels et collectifs
+        this.choixResultatsClasse = classe;
+        this.choixResultatsAnnee = this.voirAnnee?.nom || '';
+        this.showChoixResultatsModal = true;
+    }
+    
+    /**
+     * ==================================================================================================================================
+      * OUVRIR LES RESULTATS INDIVIDUELS
+      * ==================================================================================================================================
+      * Ouvre le popup de consultation des notes (mode actuel).
+      */
+    ouvrirResultatsIndividuels(): void {
+        this.showChoixResultatsModal = false;
+        this.classeConsultation = this.choixResultatsClasse;
+        this.elevesConsultation = this.schoolData.elevesPourClasse(this.choixResultatsClasse);
         
-        // Sélectionner le premier élève par défaut
         if (this.elevesConsultation.length > 0) {
             this.eleveActuelConsultation = this.elevesConsultation[0];
         }
         
-        // Par défaut, afficher les devoirs/interrogations
         this.vueActiveConsultation = 'devoirs';
-        
-        // Ouvrir le nouveau popup de consultation
         this.showConsultationNotesModal = true;
     }
     
     /**
      * ==================================================================================================================================
-     * FERMER LE POPUP DE CONSULTATION NOTES
+      * OUVRIR LES RESULTATS COLLECTIFS
+      * ==================================================================================================================================
+      * Ouvre le popup avec les onglets Devoir et Trimestre pour voir les resultats par periode.
+      */
+    ouvrirResultatsCollectifs(): void {
+        this.showChoixResultatsModal = false;
+        this.showResultatsCollectifsModal = true;
+        this.ongletResultatsActif = 'trimestres';
+        this.preparerListeTrimestresResultats();
+    }
+    
+    /**
      * ==================================================================================================================================
-     * Ferme le popup de consultation des notes et réinitialise les propriétés.
-     */
+      * PREPARER LA LISTE DES TRIMESTRES POUR LES RESULTATS COLLECTIFS
+      * ==================================================================================================================================
+      * Recupere tous les trimestres/compositions pour la classe selectionnee.
+      */
+    private preparerListeTrimestresResultats(): void {
+        const classe = this.choixResultatsClasse;
+        
+        this.trimestresListeResultats = this.evenements.filter(e => 
+            e.classe === classe && (e.type === 'trimestre' || e.type === 'composition')
+        ).sort((a, b) => a.id - b.id);
+    }
+    
+    /**
+     * ==================================================================================================================================
+      * OUVRIR LE CLASSEMENT POUR UN TRIMESTRE
+      * ==================================================================================================================================
+      * Affiche le classement quand on clique sur un trimestre dans le panneau lateral.
+      * @param trimestre - Le trimestre pour lequel afficher le classement
+      */
+    ouvrirClassementPourTrimestre(trimestre: EvenementCollectif): void {
+        // Initialiser currentTrimestreState pour le classement
+        const eleves = this.schoolData.elevesPourClasse(this.choixResultatsClasse);
+        
+        this.currentTrimestreState = {
+            opened: true,
+            trimestreId: trimestre.id,
+            eleveIndex: 0,
+            eleves: eleves,
+            elevesEnregistres: new Set<number>(),
+            classe: this.choixResultatsClasse
+        };
+        
+        this.showResultatsCollectifsModal = false;
+        
+        this.calculerClassementGlobal();
+    }
+    
+    /**
+     * ==================================================================================================================================
+      * FERMER LE POPUP DE CHOIX DES RESULTATS
+      * ==================================================================================================================================
+      */
+    fermerChoixResultatsModal(): void {
+        this.showChoixResultatsModal = false;
+        this.choixResultatsClasse = '';
+        this.choixResultatsAnnee = '';
+    }
+    
+    /**
+     * ==================================================================================================================================
+      * FERMER LE POPUP DES RESULTATS COLLECTIFS
+      * ==================================================================================================================================
+      */
+    fermerResultatsCollectifsModal(): void {
+        this.showResultatsCollectifsModal = false;
+        this.trimestresListeResultats = [];
+    }
     fermerConsultationNotes(): void {
         this.showConsultationNotesModal = false;
         this.elevesConsultation = [];

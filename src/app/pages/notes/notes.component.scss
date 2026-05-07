@@ -3040,6 +3040,254 @@
     font-size: 14px;
 }
 
+/* ============================================
+   POPUP DE CHOIX RESULTATS
+   ============================================ */
+.choix-resultats-modal {
+    max-width: 500px;
+}
+
+.choix-resultats-body {
+    padding: 30px;
+}
+
+.choix-intro {
+    text-align: center;
+    color: #475569;
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+.choix-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.choix-card {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.choix-card:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    transform: translateX(5px);
+}
+
+.choix-card .choix-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.choix-card .choix-icon i {
+    font-size: 22px;
+    color: #fff;
+}
+
+.choix-card .choix-content {
+    flex: 1;
+}
+
+.choix-card .choix-content h4 {
+    margin: 0 0 5px 0;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.choix-card .choix-content p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.choix-card .choix-arrow {
+    color: #94a3b8;
+    font-size: 18px;
+}
+
+/* ============================================
+   POPUP RESULTATS COLLECTIFS
+   ============================================ */
+.resultats-collectifs-modal {
+    max-width: 900px;
+    min-height: 500px;
+}
+
+.resultats-onglets {
+    display: flex;
+    gap: 10px;
+    padding: 0 25px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.resultats-onglets .onglet-btn {
+    padding: 15px 20px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.resultats-onglets .onglet-btn:hover {
+    color: #3b82f6;
+}
+
+.resultats-onglets .onglet-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    font-weight: 600;
+}
+
+.resultats-onglets .onglet-btn i {
+    margin-right: 8px;
+}
+
+.resultats-collectifs-body {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 400px;
+}
+
+.resultats-sidebar {
+    background: #f1f5f9;
+    padding: 20px;
+    border-right: 1px solid #e2e8f0;
+}
+
+.resultats-sidebar h4 {
+    margin: 0 0 15px 0;
+    color: #334155;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.resultats-sidebar h4 i {
+    margin-right: 8px;
+    color: #3b82f6;
+}
+
+.periode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.periode-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.periode-item:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.periode-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: 10px;
+}
+
+.periode-type-badge[data-type="trimestre"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.periode-type-badge[data-type="composition"] {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.periode-type-badge[data-type="examen"] {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.periode-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.periode-titre {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.periode-date {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.periode-item > i {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.resultats-main {
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.resultats-welcome {
+    text-align: center;
+    color: #94a3b8;
+}
+
+.resultats-welcome i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    display: block;
+    opacity: 0.5;
+}
+
+.resultats-welcome p {
+    font-size: 15px;
+}
+
+.no-data {
+    text-align: center;
+    color: #94a3b8;
+    padding: 20px;
+    font-size: 13px;
+}
+
+.no-data i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
 .eleve-name {
     font-weight: 500;
     color: #334155;

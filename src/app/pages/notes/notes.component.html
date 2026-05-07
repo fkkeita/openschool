@@ -130,7 +130,102 @@
         </div>
     </div>
 
-    <!-- ═══════════ POPUP LISTE ÉLÈVES (après sélection classe) ═══════════ -->
+    <!-- ═══════════ POPUP DE CHOIX RESULTATS ═══════════ -->
+    <div class="modal-overlay" *ngIf="showChoixResultatsModal" (click)="fermerChoixResultatsModal()">
+        <div class="modal-container choix-resultats-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Résultats - {{ choixResultatsClasse }}</h3>
+                <button class="modal-close" (click)="fermerChoixResultatsModal()">×</button>
+            </div>
+            <div class="modal-body choix-resultats-body">
+                <p class="choix-intro">Choisissez le type de résultats à visualiser :</p>
+                
+                <div class="choix-options">
+                    <div class="choix-card" (click)="ouvrirResultatsIndividuels()">
+                        <div class="choix-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="choix-content">
+                            <h4>Résultats Individuels</h4>
+                            <p>Notes et moyennes par élève pour chaque devoir, interrogation, trimestre et composition.</p>
+                        </div>
+                        <div class="choix-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="choix-card" (click)="ouvrirResultatsCollectifs()">
+                        <div class="choix-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="choix-content">
+                            <h4>Résultats Collectifs</h4>
+                            <p>Statistiques globales, moyennes de classe et classement par période.</p>
+                        </div>
+                        <div class="choix-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP RESULTATS COLLECTIFS ═══════════ -->
+    <div class="modal-overlay" *ngIf="showResultatsCollectifsModal" (click)="fermerResultatsCollectifsModal()">
+        <div class="modal-container modal-xl resultats-collectifs-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Résultats Collectifs - {{ choixResultatsClasse }}</h3>
+                <button class="modal-close" (click)="fermerResultatsCollectifsModal()">×</button>
+            </div>
+            <div class="resultats-onglets">
+                <button class="onglet-btn" [class.active]="ongletResultatsActif === 'devoirs'"
+                    (click)="ongletResultatsActif = 'devoirs'">
+                    <i class="fas fa-pencil-alt"></i> Devoirs / Interrogations
+                </button>
+                <button class="onglet-btn" [class.active]="ongletResultatsActif === 'trimestres'"
+                    (click)="ongletResultatsActif = 'trimestres'">
+                    <i class="fas fa-calendar-alt"></i> Trimestres / Compositions
+                </button>
+            </div>
+            <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'trimestres'">
+                <div class="resultats-sidebar">
+                    <h4><i class="fas fa-list"></i> Périodes</h4>
+                    <div class="periode-list">
+                        @for (tri of trimestresListeResultats; track tri.id) {
+                        <div class="periode-item" (click)="ouvrirClassementPourTrimestre(tri)">
+                            <div class="periode-type-badge" [attr.data-type]="tri.type">{{ tri.type }}</div>
+                            <div class="periode-info">
+                                <span class="periode-titre">{{ tri.titre }}</span>
+                                <span class="periode-date">{{ tri.date }}</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        }
+                        @if (trimestresListeResultats.length === 0) {
+                        <p class="no-data"><i class="fas fa-info-circle"></i> Aucun trimestre enregistré</p>
+                        }
+                    </div>
+                </div>
+                <div class="resultats-main">
+                    <div class="resultats-welcome">
+                        <i class="fas fa-hand-pointer-up"></i>
+                        <p>Cliquez sur une période dans le panneau de gauche pour voir les résultats collectifs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'devoirs'">
+                <div class="resultats-main">
+                    <div class="resultats-welcome">
+                        <i class="fas fa-clock"></i>
+                        <p>Module en cours de développement...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP LISTE ÉLÈVES (apres selection classe) ═══════════ -->
     <div class="modal-overlay" *ngIf="showElevesModal" (click)="fermerElevesModal()">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <div class="modal-header">
