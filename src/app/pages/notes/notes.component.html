@@ -1043,6 +1043,103 @@
         </div>
     </div>
 
+    <!-- ═══════════ POPUP CONFIRMATION DEVOIR ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showConfirmationDevoirModal" (click)="fermerConfirmationDevoir()">
+        <div class="modal-container confirmation-modal" (click)="$event.stopPropagation()">
+            <div class="confirmation-header">
+                <div class="confirmation-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Confirmer l'enregistrement du devoir</h3>
+                <button class="modal-close" (click)="fermerConfirmationDevoir()">×</button>
+            </div>
+            <div class="modal-body confirmation-body">
+                <p class="confirmation-intro">
+                    Vérifiez les notes saisies pour <strong>{{ showAttribuerNotesModal?.titre }}</strong> 
+                    ({{ showAttribuerNotesModal?.type }}) :
+                </p>
+                <div class="confirmation-table">
+                    <div class="confirmation-table-header">
+                        <span>Élève</span>
+                        <span>Note/20</span>
+                    </div>
+                    <div class="confirmation-table-row" *ngFor="let att of formAttribuer">
+                        <span class="matiere">{{ getEleveName(att.eleveId) }}</span>
+                        <span class="moyenne" [class.high]="att.note >= 15" [class.medium]="att.note >= 10 && att.note < 15" [class.low]="att.note < 10">
+                            {{ att.note >= 0 ? (att.note / 2 | number:'1.2-2') : '-' }}
+                        </span>
+                    </div>
+                </div>
+                <p class="confirmation-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Attention: Après confirmation, vous ne pourrez plus modifier ces notes.
+                </p>
+            </div>
+            <div class="modal-footer confirmation-footer">
+                <button class="btn-cancel" (click)="fermerConfirmationDevoir()">
+                    <i class="fas fa-arrow-left"></i> Modifier
+                </button>
+                <button class="btn-confirm" (click)="confirmerEnregistrementDevoir()">
+                    <i class="fas fa-check"></i> Confirmer et enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP CLASSEMENT DEVOIR ═══════════ -->
+    <div class="modal-overlay" *ngIf="showClassementDevoirModal" (click)="showClassementDevoirModal = false">
+        <div class="modal-container modal-xl" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-trophy"></i> Classement - {{ devoirSelectionneClassement?.titre }}</h3>
+                <button class="modal-close" (click)="showClassementDevoirModal = false">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="classement-info">
+                    <span class="info-badge">
+                        <i class="fas fa-book"></i> {{ devoirSelectionneClassement?.matiere }}
+                    </span>
+                    <span class="info-badge premiere">
+                        <i class="fas fa-crown"></i> Plus haute note : {{ premiereNoteDevoir }}/20
+                    </span>
+                </div>
+                <table class="classement-table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Élève</th>
+                            <th>Note/20</th>
+                            <th>Appréciation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of classementDevoir" [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementDevoir.length - 2">
+                            <td class="rang-cell">
+                                <span *ngIf="item.rang === 1" class="rang-badge or">1</span>
+                                <span *ngIf="item.rang === 2" class="rang-badge argent">2</span>
+                                <span *ngIf="item.rang === 3" class="rang-badge bronze">3</span>
+                                <span *ngIf="item.rang > 3" class="rang-number">{{ item.rang }}</span>
+                            </td>
+                            <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
+                            <td class="moyenne-cell">{{ item.note / 2 | number:'1.2-2' }}/20</td>
+                            <td class="appreciation-cell">{{ getAppreciationDevoir(item.note) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer classement-footer">
+                <button class="btn-footer" (click)="telechargerClassementDevoirPdf()">
+                    <i class="fas fa-download"></i> PDF Classement
+                </button>
+                <button class="btn-footer btn-primary" (click)="imprimerClassementDevoir()">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn-footer btn-outline" (click)="showClassementDevoirModal = false">
+                    <i class="fas fa-check"></i> Terminer
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══════════ POPUP APERÇU BULLETIN PDF ═══════════ -->
     <div class="modal-overlay confirmation-overlay" *ngIf="showApercuBulletin" (click)="showApercuBulletin = false">
         <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">

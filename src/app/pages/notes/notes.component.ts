@@ -152,6 +152,13 @@ export class NotesComponent implements OnInit {
     public trimestresListeResultats: EvenementCollectif[] = [];
     public trimestreSelectionneResultats: EvenementCollectif | null = null;
     
+    // Popups pour les devoirs
+    public showConfirmationDevoirModal = false;
+    public showClassementDevoirModal = false;
+    public devoirSelectionneClassement: { type: string; titre: string; matiere: string; date: string } | null = null;
+    public classementDevoir: { eleve: Eleve; note: number; rang: number }[] = [];
+    public premiereNoteDevoir = 0;
+    
     /**
      * ==================================================================================================================================
      * POPUP CONSULTATION NOTES ÉLÈVE (NOUVEAU DESIGN)
@@ -1149,6 +1156,12 @@ selectClasseVoir(classe: string): void {
             return;
         }
         
+        this.showConfirmationDevoirModal = true;
+    }
+    
+    confirmerEnregistrementDevoir(): void {
+        if (!this.showAttribuerNotesModal) return;
+        
         const { type, titre } = this.showAttribuerNotesModal;
         const matiere = this.formDevoir.matiere;
         
@@ -1168,7 +1181,50 @@ selectClasseVoir(classe: string): void {
             this.notesStore.set(att.eleveId, notesEleve);
         });
         this.sauvegarderNotesDevoirsLocalStorage();
+        
+        this.showConfirmationDevoirModal = false;
         this.showAttribuerNotesModal = null;
+        
+        this.calculerClassementDevoir(type, titre, matiere);
+    }
+    
+    fermerConfirmationDevoir(): void {
+        this.showConfirmationDevoirModal = false;
+    }
+    
+    calculerClassementDevoir(type: string, titre: string, matiere: string): void {
+        const eleves = this.schoolData.elevesPourClasse(this.selectedClasse!);
+        
+        const notesAvecEleve: { eleve: Eleve; note: number }[] = [];
+        
+        for (const eleve of eleves) {
+            const notesEleve = this.notesStore.get(eleve.id) || [];
+            const noteDevoir = notesEleve.find(n => 
+                n.type === type && n.titre === titre && n.matiere === matiere
+            );
+            
+            if (noteDevoir && noteDevoir.note >= 0) {
+                notesAvecEleve.push({ eleve, note: noteDevoir.note });
+            }
+        }
+        
+        notesAvecEleve.sort((a, b) => b.note - a.note);
+        
+        this.classementDevoir = notesAvecEleve.map((item, index) => ({
+            ...item,
+            rang: index + 1
+        }));
+        
+        this.premiereNoteDevoir = this.classementDevoir.length > 0 ? this.classementDevoir[0].note : 0;
+        
+        this.devoirSelectionneClassement = {
+            type,
+            titre,
+            matiere: matiere || '',
+            date: new Date().toISOString().split('T')[0]
+        };
+        
+        this.showClassementDevoirModal = true;
     }
     
     getNombreNotesSaisies(): number {
@@ -1704,6 +1760,16 @@ selectClasseVoir(classe: string): void {
         if (moyenne < 14) return 'Assez-Bien';
         if (moyenne < 16) return 'Bien';
         if (moyenne < 18) return 'Très Bien';
+        return 'Excellent';
+    }
+    
+    getAppreciationDevoir(note: number): string {
+        if (note < 4) return 'Nul';
+        if (note < 8) return 'Insuffisant';
+        if (note < 12) return 'Passable';
+        if (note < 14) return 'Assez-Bien';
+        if (note < 16) return 'Bien';
+        if (note < 18) return 'Tres Bien';
         return 'Excellent';
     }
     
@@ -2580,4 +2646,120 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
     }
     
     public anneeSelectionnee: string = '';
+    
+    /**
+     * ==================================================================================================================================
+      * TELECHARGER CLASSEMENT DEVOIR EN PDF
+      * ==================================================================================================================================
+      */
+    async telechargerClassementDevoirPdf(): Promise<void> {
+        if (!this.devoirSelectionneClassement || this.classementDevoir.length === 0) return;
+        
+        try {
+            const jsPDF = await import('jspdf');
+            const { jsPDF: JsPDFClass } = jsPDF;
+            
+            const doc = new JsPDFClass({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+            
+            doc.setFillColor(44, 90, 160);
+            doc.rect(0, 0, pageWidth, 25, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CLASSEMENT - ' + this.devoirSelectionneClassement.titre.toUpperCase(), pageWidth / 2, 10, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(this.devoirSelectionneClassement.matiere + ' | ' + this.devoirSelectionneClassement.date, pageWidth / 2, 18, { align: 'center' });
+            
+            const startY = 35;
+            const headerHeight = 10;
+            const rowHeight = 8;
+            
+            doc.setFillColor(44, 90, 160);
+            doc.rect(margin, startY, contentWidth, headerHeight, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Rang', margin + 5, startY + 6.5);
+            doc.text('Eleve', margin + 20, startY + 6.5);
+            doc.text('Note/20', margin + contentWidth - 25, startY + 6.5, { align: 'right' });
+            doc.text(' Appreciation', margin + contentWidth - 5, startY + 6.5, { align: 'right' });
+            
+            this.classementDevoir.forEach((item, index) => {
+                const rowY = startY + headerHeight + (index * rowHeight);
+                
+                if (index < 3) {
+                    doc.setFillColor(255, 250, 240);
+                } else {
+                    doc.setFillColor(255, 255, 255);
+                }
+                doc.rect(margin, rowY, contentWidth, rowHeight, 'F');
+                
+                doc.setDrawColor(200, 210, 220);
+                doc.rect(margin, rowY, contentWidth, rowHeight, 'S');
+                
+                doc.setTextColor(50, 50, 50);
+                doc.setFontSize(8);
+                
+                if (item.rang === 1) {
+                    doc.setTextColor(255, 140, 0);
+                    doc.setFont('helvetica', 'bold');
+                } else if (item.rang === 2) {
+                    doc.setTextColor(128, 128, 128);
+                    doc.setFont('helvetica', 'bold');
+                } else if (item.rang === 3) {
+                    doc.setTextColor(205, 127, 50);
+                    doc.setFont('helvetica', 'bold');
+                } else {
+                    doc.setFont('helvetica', 'normal');
+                }
+                
+                doc.text(item.rang.toString(), margin + 5, rowY + 5.5);
+                doc.text(item.eleve.prenom + ' ' + item.eleve.nom, margin + 20, rowY + 5.5);
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(44, 90, 160);
+                doc.text((item.note / 2).toFixed(2), margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text(this.getAppreciationDevoir(item.note), margin + contentWidth - 5, rowY + 5.5, { align: 'right' });
+            });
+            
+            const pdfBlob = doc.output('blob');
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = 'Classement_' + this.devoirSelectionneClassement.titre + '.pdf';
+            link.click();
+        } catch (error) {
+            console.error('Erreur generation PDF:', error);
+        }
+    }
+    
+    /**
+     * ==================================================================================================================================
+      * IMPRIMER CLASSEMENT DEVOIR
+      * ==================================================================================================================================
+      */
+    async impremerClassementDevoir(): Promise<void> {
+        
+        await this.telechargerClassementDevoirPdf();
+    }
+
+    async imprimerClassementDevoir(): Promise<void> {
+        if (!this.devoirSelectionneClassement || this.classementDevoir.length === 0) return;
+        
+        await this.telechargerClassementDevoirPdf();
+    }
 }
