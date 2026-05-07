@@ -3179,76 +3179,114 @@
 
 .periodes-table {
     width: 100%;
-    border-collapse: collapse;
+    min-width: 700px;
+    border-collapse: separate;
     background: #fff;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-spacing: 0;
 }
 
 .periodes-table thead {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .periodes-table thead th {
-    padding: 14px;
+    padding: 16px;
     text-align: left;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.periodes-table thead th:first-child {
+    border-top-left-radius: 16px;
+}
+
+.periodes-table thead th:last-child {
+    border-top-right-radius: 16px;
+    text-align: center;
+}
+
+.periodes-table tbody {
+    display: block;
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+.periodes-table thead,
+.periodes-table tbody tr {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
 }
 
 .periodes-table tbody tr {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .periodes-table tbody tr:hover {
-    background: #f8fafc;
+    background: linear-gradient(90deg, #f0f9ff, #e0f2fe);
 }
 
 .periodes-table tbody tr.active {
-    background: #eff6ff;
-    border-left: 4px solid #3b82f6;
+    background: linear-gradient(90deg, #dbeafe, #bfdbfe);
+    border-left: 5px solid #3b82f6;
+}
+
+.periodes-table tbody tr.active td:first-child {
+    border-left: 5px solid #3b82f6;
 }
 
 .periodes-table td {
-    padding: 14px;
+    padding: 14px 16px;
     font-size: 13px;
+    vertical-align: middle;
 }
 
 .periodes-table .type-badge {
-    padding: 4px 10px;
-    border-radius: 4px;
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .periodes-table .type-badge[data-type="trimestre"] {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
 }
 
 .periodes-table .type-badge[data-type="composition"] {
-    background: #fef3c7;
-    color: #b45309;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
 }
 
 .periodes-table .type-badge[data-type="examen"] {
-    background: #fee2e2;
-    color: #dc2626;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #991b1b;
 }
 
 .periodes-table .titre-cell {
     font-weight: 600;
     color: #1e293b;
+    font-size: 14px;
 }
 
 .periodes-table .date-cell {
     color: #64748b;
+    font-size: 12px;
 }
 
 .periodes-table .actions-cell {
@@ -3256,17 +3294,43 @@
 }
 
 .periodes-table .btn-action {
-    padding: 8px 12px;
-    background: #3b82f6;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
+    font-weight: 600;
+    font-size: 12px;
 }
 
 .periodes-table .btn-action:hover {
-    background: #2563eb;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    transform: scale(1.05);
+}
+
+.periodes-table .btn-action i {
+    margin-right: 6px;
+}
+
+/* Scrollbar styling */
+.periodes-table tbody::-webkit-scrollbar {
+    width: 8px;
+}
+
+.periodes-table tbody::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.periodes-table tbody::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+    border-radius: 4px;
+}
+
+.periodes-table tbody::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #64748b, #475569);
 }
 
 .resultats-sidebar {
