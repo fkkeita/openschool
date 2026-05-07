@@ -1058,7 +1058,7 @@
                             </div>
                             <div class="attribution-input-wrap">
                                 <input type="number" [(ngModel)]="att.note" class="form-control attribution-input"
-                                    min="0" max="40" placeholder="—">
+                                    min="0" max="20" placeholder="—">
                                 <span class="attribution-max">/20</span>
                             </div>
                         </div>
@@ -1097,7 +1097,7 @@
                     <div class="confirmation-table-row" *ngFor="let att of formAttribuer">
                         <span class="matiere">{{ getEleveName(att.eleveId) }}</span>
                         <span class="moyenne" [class.high]="att.note >= 15" [class.medium]="att.note >= 10 && att.note < 15" [class.low]="att.note < 10">
-                            {{ att.note >= 0 ? (att.note / 2 | number:'1.2-2') : '-' }}
+                            {{ att.note >= 0 ? (att.note | number:'1.2-2') : '-' }}
                         </span>
                     </div>
                 </div>
@@ -1151,7 +1151,7 @@
                                 <span *ngIf="item.rang > 3" class="rang-number">{{ item.rang }}</span>
                             </td>
                             <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
-                            <td class="moyenne-cell">{{ item.note / 2 | number:'1.2-2' }}/20</td>
+                            <td class="moyenne-cell">{{ item.note | number:'1.2-2' }}/20</td>
                             <td class="appreciation-cell">{{ getAppreciationDevoir(item.note) }}</td>
                         </tr>
                     </tbody>

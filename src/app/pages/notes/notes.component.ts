@@ -2811,7 +2811,7 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
                 
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(44, 90, 160);
-                doc.text((item.note / 2).toFixed(2), margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
+                doc.text(item.note.toFixed(2), margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
                 
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(100, 100, 100);
@@ -2916,7 +2916,7 @@ async impremerClassementDevoir(): Promise<void> {
                 
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(44, 90, 160);
-                doc.text((item.note / 2).toFixed(2), margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
+                doc.text(item.note.toFixed(2), margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
                 
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(100, 100, 100);
