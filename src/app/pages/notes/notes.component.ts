@@ -83,6 +83,7 @@ interface AttributionTrimestreState {
     eleveIndex: number;                // Index de l'élève actuellement sélectionné (pour la progression)
     eleves: Eleve[];                  // Liste de TOUS les élèves de la classe
     elevesEnregistres: Set<number>;    // Set des IDs des élèves AYANT CLICQUÉ sur "Enregistrer cet élève"
+    classe: string;                 // Nom de la classe sélectionnée
 }
 
 /**
@@ -1119,7 +1120,8 @@ export class NotesComponent implements OnInit {
             trimestreId: evenement.id,
             eleveIndex: 0,
             eleves: eleves,
-            elevesEnregistres: new Set<number>()
+            elevesEnregistres: new Set<number>(),
+            classe: this.selectedClasse
         };
 
         // Préparer le formulaire pour le premier élève
@@ -1828,7 +1830,7 @@ private getCleVerrouillage(eleveId: number, trimestreId: number): string {
                             nomEcole: 'Nom de l\'École',
                             nom: eleve.nom,
                             prenoms: eleve.prenom,
-                            classe: this.classeConsultation || '',
+                            classe: this.currentTrimestreState?.classe || this.classeConsultation || '',
                             trimestre: trimestre.titre,
                             anneeScolaire: this.getAnneeScolaire(),
                             matieres: notes,
@@ -1988,7 +1990,7 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
                             nomEcole: 'Nom de l\'École',
                             nom: eleve.nom,
                             prenoms: eleve.prenom,
-                            classe: this.classeConsultation || '',
+                            classe: this.currentTrimestreState?.classe || this.classeConsultation || '',
                             trimestre: trimestre.titre,
                             anneeScolaire: this.getAnneeScolaire(),
                             matieres: notes,
@@ -2103,76 +2105,244 @@ async envoyerBulletinWhatsApp(eleve: Eleve | null): Promise<void> {
         this.showGererClasseModal = null;
     }
 
-    /**
+/**
      * ==================================================================================================================================
-     * TÉLÉCHARGER LE CLASSEMENT SOUS FORMAT IMPRIMÉ
-     * ==================================================================================================================================
-     * Génère un fichier texte avec le classement des élèves.
-     */
-    telechargerClassement(): void {
+      * TELECHARGER LE CLASSEMENT EN PDF
+      * ==================================================================================================================================
+      * Genere un PDF avec le tableau de classement des eleves.
+      */
+    async telechargerClassement(): Promise<void> {
         if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
         
-        const trimestre = this.evenements.find(e => e.id === this.currentTrimestreState!.trimestreId);
-        let contenu = `CLASSEMENT DU TRIMESTRE\n`;
-        contenu += `================\n\n`;
-        contenu += `Trimestre: ${trimestre?.titre || ''}\n`;
-        contenu += `Date: ${new Date().toLocaleDateString('fr-FR')}\n`;
-        contenu += `Nombre d'élèves: ${this.classementGlobal.length}\n`;
-        contenu += `Première moyenne: ${this.premiereMoyenneClasse.toFixed(2)}/20\n\n`;
-        contenu += `CLASSEMENT:\n`;
-        contenu += `---------\n`;
+        const triId = this.currentTrimestreState!.trimestreId;
+        const trimestre = this.evenements.find(e => e.id === triId);
         
-        for (const item of this.classementGlobal) {
-            const rangStr = item.rang.toString().padStart(2, ' ');
-            const moyenneStr = item.moyenne.toFixed(2);
-            contenu += `${rangStr}. ${item.eleve.prenom} ${item.eleve.nom} - ${moyenneStr}/20\n`;
+        try {
+            const jsPDF = await import('jspdf');
+            const { jsPDF: JsPDFClass } = jsPDF;
+            
+            const doc = new JsPDFClass({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+            
+            doc.setFillColor(44, 90, 160);
+            doc.rect(0, 0, pageWidth, 30, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CLASSEMENT DU TRIMESTRE', pageWidth / 2, 12, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(trimestre?.titre || '', pageWidth / 2, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.text(`Classe: ${this.currentTrimestreState!.classe} | Année: ${this.getAnneeScolaire()}`, pageWidth / 2, 26, { align: 'center' });
+            
+            doc.setTextColor(60, 60, 60);
+            doc.setFontSize(10);
+            doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, margin, 40);
+            doc.text(`Élèves classés: ${this.classementGlobal.length}`, pageWidth - margin, 40, { align: 'right' });
+            doc.text(`Première moyenne: ${this.premiereMoyenneClasse.toFixed(2)}/20`, margin, 46);
+            
+            const startY = 55;
+            const headerHeight = 10;
+            const rowHeight = 8;
+            
+            doc.setFillColor(44, 90, 160);
+            doc.rect(margin, startY, contentWidth, headerHeight, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Rang', margin + 5, startY + 6.5);
+            doc.text('Élève', margin + 25, startY + 6.5);
+            doc.text('Moyenne', margin + contentWidth - 25, startY + 6.5, { align: 'right' });
+            
+            doc.setDrawColor(200, 210, 220);
+            doc.setLineWidth(0.3);
+            
+            this.classementGlobal.forEach((item, index) => {
+                const rowY = startY + headerHeight + (index * rowHeight);
+                
+                if (index < 3) {
+                    doc.setFillColor(255, 250, 240);
+                    doc.rect(margin, rowY, contentWidth, rowHeight, 'F');
+                } else {
+                    doc.setFillColor(248, 248, 248);
+                    doc.rect(margin, rowY, contentWidth, rowHeight, 'F');
+                }
+                
+                doc.setDrawColor(200, 210, 220);
+                doc.rect(margin, rowY, contentWidth, rowHeight, 'S');
+                
+                doc.setTextColor(50, 50, 50);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                
+                if (item.rang === 1) {
+                    doc.setTextColor(255, 140, 0);
+                    doc.setFont('helvetica', 'bold');
+                } else if (item.rang === 2) {
+                    doc.setTextColor(128, 128, 128);
+                    doc.setFont('helvetica', 'bold');
+                } else if (item.rang === 3) {
+                    doc.setTextColor(205, 127, 50);
+                    doc.setFont('helvetica', 'bold');
+                }
+                
+                doc.text(item.rang.toString(), margin + 5, rowY + 5.5);
+                doc.text(`${item.eleve.prenom} ${item.eleve.nom}`, margin + 25, rowY + 5.5);
+                
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${item.moyenne.toFixed(2)}/20`, margin + contentWidth - 25, rowY + 5.5, { align: 'right' });
+            });
+            
+            const totalY = startY + headerHeight + (this.classementGlobal.length * rowHeight) + 10;
+            
+            if (totalY > pageHeight - 40) {
+                doc.addPage();
+                
+                doc.setFillColor(44, 90, 160);
+                doc.rect(0, 0, pageWidth, 20, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Signatures', pageWidth / 2, 13, { align: 'center' });
+            } else {
+                doc.setFillColor(248, 250, 252);
+                doc.rect(margin, totalY, contentWidth, 25, 'F');
+                doc.setDrawColor(200, 210, 220);
+                doc.rect(margin, totalY, contentWidth, 25, 'S');
+                
+                doc.setTextColor(60, 60, 60);
+                doc.setFontSize(9);
+                doc.text('Signature du Directeur', margin + 10, totalY + 15);
+                doc.text('Signature du Parent', margin + contentWidth - 40, totalY + 15);
+            }
+            
+            const pdfBlob = doc.output('blob');
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = `Classement_${trimestre?.titre || 'trimestre'}_${new Date().toISOString().split('T')[0]}.pdf`;
+            link.click();
+        } catch (error) {
+            console.error('Erreur generation PDF classement:', error);
         }
-        
-        const blob = new Blob([contenu], { type: 'text/plain;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `Classement_${trimestre?.titre || 'trimestre'}_${new Date().toISOString().split('T')[0]}.txt`;
-        link.click();
     }
 
-    /**
+/**
      * ==================================================================================================================================
-     * IMPRIMER TOUS LES BULLETINS
-     * ==================================================================================================================================
-     * Ouvre les bulletins PDF dans des onglets pour impression.
-     */
+      * IMPRIMER TOUS LES BULLETINS - PDF UNIFIE
+      * ==================================================================================================================================
+      * Genere un PDF unifie avec tous les bulletins et ouvre la fenetre d'impression.
+      */
     async imprimerTousBulletins(): Promise<void> {
         if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
         
-        for (const item of this.classementGlobal) {
-            const triId = this.currentTrimestreState!.trimestreId;
-            const clePdf = `bulletin_pdf_${triId}_${item.eleve.id}`;
-            const pdfData = localStorage.getItem(clePdf);
-            
-            if (pdfData) {
-                const win = window.open('');
-                if (win) {
-                    win.document.write(`<iframe src="${pdfData}" style="width:100%;height:100%;border:none;"></iframe>`);
-                }
-            } else {
-                await this.genererBulletinPdf(item.eleve, this.premiereMoyenneClasse, triId);
-                await new Promise(r => setTimeout(r, 500));
-            }
-        }
+        await this.genererPdfTousBulletins();
     }
 
     /**
      * ==================================================================================================================================
-     * TÉLÉCHARGER TOUS LES BULLETINS
-     * ==================================================================================================================================
-     * Télécharge les PDF de tous les élèves.
-     */
+      * TELECHARGER TOUS LES BULLETINS - PDF UNIFIE
+      * ==================================================================================================================================
+      * Genere un PDF unifie avec tous les bulletins et le telecharge.
+      */
     async telechargerTousBulletins(): Promise<void> {
         if (!this.currentTrimestreState || this.classementGlobal.length === 0) return;
         
-        for (const item of this.classementGlobal) {
-            await this.telechargerBulletinPdf(item.eleve, this.premiereMoyenneClasse, this.currentTrimestreState!.trimestreId);
-            await new Promise(r => setTimeout(r, 300));
+        await this.genererPdfTousBulletins(true);
+    }
+
+    /**
+     * ==================================================================================================================================
+      * GENERER PDF TOUS LES BULLETINS UNIFIE
+      * ==================================================================================================================================
+      * Genere un seul PDF contenant tous les bulletins.
+      * @param telecharger - true pour telecharger, false pour juste afficher
+      */
+    private async genererPdfTousBulletins(telecharger: boolean = false): Promise<void> {
+        const triId = this.currentTrimestreState!.trimestreId;
+        const trimestre = this.evenements.find(e => e.id === triId);
+        const classe = this.currentTrimestreState!.classe;
+        
+        try {
+            const jsPDF = await import('jspdf');
+            const { jsPDF: JsPDFClass } = jsPDF;
+            
+            const doc = new JsPDFClass({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            for (let i = 0; i < this.classementGlobal.length; i++) {
+                if (i > 0) {
+                    doc.addPage();
+                }
+                
+                const item = this.classementGlobal[i];
+                const eleve = item.eleve;
+                
+                const cleStorage = `notes_trimestre_${triId}_${eleve.id}`;
+                const data = localStorage.getItem(cleStorage);
+                
+                if (!data) continue;
+                
+                const notes: any[] = JSON.parse(data);
+                if (notes.length === 0) continue;
+                
+                let totalCoef = 0;
+                let totalMoyCoef = 0;
+                
+                for (const note of notes) {
+                    totalCoef += note.coefficient || 0;
+                    totalMoyCoef += (note.moyenneCoefficientee || 0);
+                }
+                
+                const moyenne = totalCoef > 0 ? totalMoyCoef / totalCoef : 0;
+                
+                const dataPdf: any = {
+                    nomEcole: 'Nom de l\'École',
+                    nom: eleve.nom,
+                    prenoms: eleve.prenom,
+                    classe: classe,
+                    trimestre: trimestre?.titre || '',
+                    anneeScolaire: this.getAnneeScolaire(),
+                    matieres: notes,
+                    moyenneTrimestre: Math.round(moyenne * 100) / 100
+                };
+                
+                if (this.premiereMoyenneClasse > 0) {
+                    dataPdf.premiereMoyenne = this.premiereMoyenneClasse;
+                }
+                
+                BulletinPdfComponent.genererPdfUnifie(doc, i === 0, dataPdf);
+            }
+            
+            if (telecharger) {
+                const pdfBlob = doc.output('blob');
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(pdfBlob);
+                link.download = `Bulletins_${classe}_${trimestre?.titre || 'trimestre'}.pdf`;
+                link.click();
+            } else {
+                const pdfDataUri = doc.output('datauristring');
+                this.pdfApercuUrl = pdfDataUri;
+                this.pdfApercuSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(pdfDataUri);
+                this.showApercuBulletin = true;
+            }
+        } catch (error) {
+            console.error('Erreur generation PDF unifie:', error);
         }
     }
 }

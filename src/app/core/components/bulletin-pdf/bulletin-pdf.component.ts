@@ -335,6 +335,24 @@ export class BulletinPdfComponent {
     if (valeur === undefined || valeur === null) return '0.00';
     return valeur.toFixed(2);
   }
+
+  static genererPdfUnifie(doc: any, estPremierePage: boolean, data: BulletinData): void {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const contentWidth = pageWidth - (margin * 2);
+
+    if (!estPremierePage) {
+      doc.setFillColor(248, 248, 248);
+      doc.rect(0, 0, pageWidth, 35, 'F');
+    }
+
+    BulletinPdfComponent.genererEnTeteStatic(doc, pageWidth, margin, data);
+    BulletinPdfComponent.genererInformationsEleveStatic(doc, margin, contentWidth, data);
+    BulletinPdfComponent.genererTableauStatic(doc, margin, contentWidth, data);
+    BulletinPdfComponent.genererRecapitulatifStatic(doc, margin, contentWidth, data);
+    BulletinPdfComponent.genererSignaturesStatic(doc, pageWidth, pageHeight, margin);
+  }
 }
 
 interface BulletinData {
