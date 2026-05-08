@@ -9,20 +9,6 @@
             </div>
         </header>
 
-        <!-- Children Selector -->
-        <div *ngIf="children.length > 1" class="children-selector">
-            <button *ngFor="let child of children" (click)="selectChild(child)"
-                [class.active]="selectedChild?.id === child.id" class="child-button">
-                <div class="child-avatar">
-                    <span class="material-icons">person</span>
-                </div>
-                <div>
-                    <p class="child-name">{{ child.name }}</p>
-                    <p class="child-class">{{ child.className }}</p>
-                </div>
-            </button>
-        </div>
-
         <!-- Child Overview -->
         <div *ngIf="selectedChild" class="child-overview">
             <!-- Stats Cards -->
