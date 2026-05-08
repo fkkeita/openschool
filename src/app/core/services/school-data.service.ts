@@ -542,11 +542,40 @@ export class SchoolDataService {
     private initialiserElevesDemo(): void {
         // Vider d'abord les anciennes données
         this._eleves = [];
-        const prenoms = ['Issa', 'Awa', 'Moussa', 'Fatoumata', 'Sékou', 'Nana', 'Amadou', 'Kadiatou'];
+        const prenoms = ['Issa', 'Awa', 'Moussa', 'Fatoumata', 'Sékou', 'Nana', 'Amadou', 'Kadiatou', 'Oumou', 'Djibril'];
         const noms = ['Traoré', 'Keïta', 'Cissé', 'Diallo', 'Coulibaly', 'Koné', 'Sangaré', 'Marega'];
+        
+        // Définition des parents spécifiques avec leurs enfants
+        const elevesSpecifiques = [
+            { prenom: 'Awa', nom: 'Diallo', classe: '1ère Année A', parent: 'Fatoumata Traoré' },
+            { prenom: 'Oumou', nom: 'Diallo', classe: '5ème Année A', parent: 'Fatoumata Traoré' },
+            { prenom: 'Sékou', nom: 'Diallo', classe: '7ème Année A', parent: 'Fatoumata Traoré' }
+        ];
+        
         let id = 1;
+        
+        // Ajouter les 3 enfants spécifiques de Fatoumata Traoré
+        elevesSpecifiques.forEach(eleve => {
+            this._eleves.push({
+                id: id++,
+                prenom: eleve.prenom,
+                nom: eleve.nom,
+                fullName: `${eleve.prenom} ${eleve.nom}`,
+                classe: eleve.classe,
+                notes: { maths: '00.0', francais: '00.0', anglais: '00.0' },
+                presence: 'Présent',
+                email: `${eleve.prenom.toLowerCase()}.${eleve.nom.toLowerCase()}@ecole.ml`,
+                telephone: `+223 ${Math.floor(Math.random() * 10000000).toString().padStart(8, '0')}`,
+                parent: eleve.parent
+            });
+        });
+        
+        // Ajouter d'autres élèves aléatoires pour les autres classes
         this.toutesLesClasses().forEach(classe => {
-            const nb = Math.floor(Math.random() * 10) + 15; // 15-25
+            // Sauter les classes qui ont déjà nos élèves spécifiques
+            if (classe === '1ère Année A' || classe === '5ème Année A' || classe === '7ème Année A') return;
+            
+            const nb = Math.floor(Math.random() * 10) + 10;
             for (let i = 0; i < nb; i++) {
                 const prenom = prenoms[Math.floor(Math.random() * prenoms.length)];
                 const nom = noms[Math.floor(Math.random() * noms.length)];
@@ -565,7 +594,16 @@ export class SchoolDataService {
                 });
             }
         });
+        
         this.sauvegarderEleves();
+    }
+    
+    /**
+     * Récupérer les enfants d'un parent spécifique
+     * @param parentName - Nom du parent (ex: "Fatoumata Traoré")
+     */
+    getElevesParParent(parentName: string): Eleve[] {
+        return this._eleves.filter(e => e.parent === parentName);
     }
 
     private sauvegarderEleves(): void {
