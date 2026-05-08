@@ -701,6 +701,12 @@ $card-hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
             color: #10b981;
             font-weight: 800;
         }
+
+        .payment-bar {
+            .payment-progress {
+                background: $success-gradient !important;
+            }
+        }
     }
 
     .stat-icon-wrapper {
