@@ -126,7 +126,7 @@
                     </div>
                 </div>
 
-                <div class="stat-card" [style.--delay]="0.3" [class.payment-alert]="selectedChild.stats.payment.reste > 0">
+                <div class="stat-card" [style.--delay]="0.3" [class.payment-alert]="selectedChild.stats.payment.reste > 0" [class.payment-paid]="selectedChild.stats.payment.reste === 0">
                     <div class="stat-icon-wrapper" [class.warning]="selectedChild.stats.payment.reste > 0" [class.success]="selectedChild.stats.payment.reste === 0">
                         <span class="material-icons">account_balance_wallet</span>
                     </div>
@@ -135,7 +135,7 @@
                             <span *ngIf="selectedChild.stats.payment.reste > 0">Reste à payer</span>
                             <span *ngIf="selectedChild.stats.payment.reste === 0">Scolarités à jour</span>
                         </p>
-                        <p class="stat-value" [class.debt-value]="selectedChild.stats.payment.reste > 0">
+                        <p class="stat-value" [class.debt-value]="selectedChild.stats.payment.reste > 0" [class.paid-value]="selectedChild.stats.payment.reste === 0">
                             {{ selectedChild.stats.payment.reste | number }} F
                         </p>
                         <div class="payment-details" *ngIf="selectedChild.stats.payment.reste > 0">
@@ -147,10 +147,15 @@
                                 / {{ selectedChild.stats.payment.montantTotal | number }} F
                             </p>
                         </div>
-                        <p class="stat-hint" *ngIf="selectedChild.stats.payment.reste === 0">
-                            <span class="material-icons">check_circle</span>
-                            Toutes les scolarités sont payées
-                        </p>
+                        <div class="payment-details-paid" *ngIf="selectedChild.stats.payment.reste === 0">
+                            <div class="payment-bar paid-bar">
+                                <div class="payment-progress" [style.width]="(selectedChild.stats.payment.montantPaye / selectedChild.stats.payment.montantTotal * 100) + '%'"></div>
+                            </div>
+                            <p class="payment-info-paid">
+                                Payé: <strong>{{ selectedChild.stats.payment.montantPaye | number }} F</strong> 
+                                / {{ selectedChild.stats.payment.montantTotal | number }} F
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

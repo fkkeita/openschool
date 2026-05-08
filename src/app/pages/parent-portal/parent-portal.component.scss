@@ -417,6 +417,60 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
                 }
             }
         }
+
+        // Payment Paid - Green highlighting
+        &.payment-paid {
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            animation: pulse-success 2s infinite;
+
+            .stat-icon-wrapper.success {
+                background: $success-gradient;
+            }
+
+            .paid-value {
+                color: #10b981;
+                font-weight: 800;
+            }
+
+            .payment-details-paid {
+                margin-top: 12px;
+
+                .paid-bar {
+                    height: 8px;
+                    background: rgba(16, 185, 129, 0.2);
+                    border-radius: 4px;
+                    overflow: hidden;
+                    margin-bottom: 8px;
+
+                    .payment-progress {
+                        height: 100%;
+                        background: $success-gradient;
+                        border-radius: 4px;
+                        transition: width 0.6s ease;
+                    }
+                }
+
+                .payment-info-paid {
+                    font-size: 12px;
+                    color: #065f46;
+                    margin: 0;
+
+                    strong {
+                        color: #047857;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@keyframes pulse-success {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(16, 185, 129, 0.3);
     }
 }
 
