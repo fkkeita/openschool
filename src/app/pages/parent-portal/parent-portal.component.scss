@@ -172,6 +172,10 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     &.show {
         opacity: 1;
         visibility: visible;
+
+        .notification-popup {
+            transform: scale(1);
+        }
     }
 }
 
@@ -185,10 +189,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     overflow: hidden;
     transform: scale(0.9);
     transition: transform 0.3s ease;
-
-    .notification-modal-overlay.show & {
-        transform: scale(1);
-    }
 
     .popup-header {
         padding: 20px 24px;
