@@ -374,38 +374,19 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
-    // Payment Card - Special styling for visibility
-    &.payment-card {
-        border: 2px solid transparent;
-        position: relative;
-        overflow: hidden;
+    // Payment Alert - Only highlight when there's a debt
+    &.payment-alert {
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        animation: pulse-warning 2s infinite;
 
-        &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #e5e7eb;
+        .stat-icon-wrapper.warning {
+            background: $warning-gradient;
         }
 
-        &.has-debt {
-            border: 2px solid rgba(245, 158, 11, 0.4);
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-
-            &::before {
-                background: $warning-gradient;
-            }
-
-            animation: pulse-warning 2s infinite;
-        }
-
-        .payment-value {
-            &.debt {
-                color: #f59e0b;
-                text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
-            }
+        .debt-value {
+            color: #f59e0b;
+            font-weight: 800;
         }
 
         .payment-details {
@@ -434,21 +415,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
                 strong {
                     color: #b45309;
                 }
-            }
-        }
-
-        .success-hint {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #059669;
-            background: rgba(5, 150, 105, 0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-top: 8px;
-
-            .material-icons {
-                font-size: 18px;
             }
         }
     }
