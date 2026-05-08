@@ -1,3 +1,38 @@
+.page-layout {
+    display: grid;
+    grid-template-columns: 256px 1fr;
+    min-height: 100vh;
+}
+
+.page-content {
+    padding: var(--spacing-xl);
+    background-color: var(--color-bg-secondary);
+    min-height: 100vh;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+
+    h1 {
+        font-size: var(--font-size-2xl);
+        color: var(--color-primary);
+        margin: 0;
+    }
+
+    .subtitle {
+        color: var(--color-text-secondary);
+        margin: var(--spacing-xs) 0 0 0;
+        font-size: var(--font-size-sm);
+    }
+}
+
 @use '../students/students.component.scss' as *;
 
 .children-selector {
