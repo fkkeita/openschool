@@ -643,6 +643,66 @@ $card-hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
         border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
+    // Payment Alert - Orange highlighting when there's a debt
+    &.payment-alert {
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        animation: pulse-warning 2s infinite;
+
+        .stat-icon-wrapper.warning {
+            background: $warning-gradient;
+        }
+
+        .debt-value {
+            color: #f59e0b;
+            font-weight: 800;
+        }
+
+        .payment-details {
+            margin-top: 12px;
+
+            .payment-bar {
+                height: 8px;
+                background: rgba(245, 158, 11, 0.2);
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 8px;
+
+                .payment-progress {
+                    height: 100%;
+                    background: $warning-gradient;
+                    border-radius: 4px;
+                }
+            }
+
+            .payment-info {
+                font-size: 12px;
+                color: #92400e;
+                margin: 0;
+
+                strong {
+                    color: #b45309;
+                }
+            }
+        }
+    }
+
+    // Payment Paid - Green highlighting when fully paid
+    &.payment-paid {
+        border: 2px solid rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        animation: pulse-success 2s infinite;
+
+        .stat-icon-wrapper.success {
+            background: $success-gradient;
+        }
+
+        .paid-value {
+            color: #10b981;
+            font-weight: 800;
+        }
+    }
+
     .stat-icon-wrapper {
         width: 56px;
         height: 56px;
