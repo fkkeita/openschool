@@ -8,6 +8,12 @@
                 <h1>Bienvenue sur votre Portail Parent</h1>
                 <p class="subtitle">Suivez la scolarité de vos enfants en temps réel</p>
             </div>
+            <div class="header-actions">
+                <div class="notification-bell" title="Notifications">
+                    <span class="material-icons">notifications</span>
+                    <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                </div>
+            </div>
             <div class="header-decoration"></div>
         </header>
 

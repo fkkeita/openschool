@@ -40,6 +40,7 @@ export class ParentPortalComponent implements OnInit {
   selectedChild: ChildData | null = null;
   currentSlide = 0;
   parentName = '';
+  unreadMessages = 3;
 
   private authService = inject(AuthService);
   private schoolData = inject(SchoolDataService);
