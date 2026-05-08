@@ -85,35 +85,6 @@
                 </div>
             </div>
         </div>
-                            <div class="child-info">
-                                <h3 class="child-name">{{ child.name }}</h3>
-                                <span class="child-class">
-                                    <span class="material-icons">school</span>
-                                    {{ child.className }}
-                                </span>
-                            </div>
-                            <div class="card-status">
-                                <span class="status-dot" [class.active]="selectedChild?.id === child.id"></span>
-                                <span class="status-text">{{ selectedChild?.id === child.id ? 'Sélectionné' : 'Cliquer pour voir' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="slider-btn next" (click)="nextSlide()" [disabled]="currentSlide === children.length - 1">
-                    <span class="material-icons">chevron_right</span>
-                </button>
-            </div>
-
-            <!-- Slider Dots -->
-            <div class="slider-dots">
-                <button class="dot" 
-                        *ngFor="let child of children; let i = index"
-                        [class.active]="currentSlide === i"
-                        (click)="goToSlide(i)">
-                </button>
-            </div>
-        </div>
 
         <!-- No Children Message -->
         <div class="no-children" *ngIf="children.length === 0">
@@ -155,14 +126,31 @@
                     </div>
                 </div>
 
-                <div class="stat-card" [style.--delay]="0.3" [class.warning]="selectedChild.stats.pendingPayments > 0">
-                    <div class="stat-icon-wrapper" [class.warning]="selectedChild.stats.pendingPayments > 0">
-                        <span class="material-icons">payment</span>
+                <div class="stat-card payment-card" [style.--delay]="0.3" [class.has-debt]="selectedChild.stats.payment.reste > 0">
+                    <div class="stat-icon-wrapper" [class.warning]="selectedChild.stats.payment.reste > 0" [class.success]="selectedChild.stats.payment.reste === 0">
+                        <span class="material-icons">account_balance_wallet</span>
                     </div>
                     <div class="stat-content">
-                        <p class="stat-label">Paiements en attente</p>
-                        <p class="stat-value">{{ selectedChild.stats.pendingPayments }}</p>
-                        <p class="stat-hint" *ngIf="selectedChild.stats.pendingPayments === 0">Tout est à jour</p>
+                        <p class="stat-label">
+                            <span *ngIf="selectedChild.stats.payment.reste > 0">Reste à payer</span>
+                            <span *ngIf="selectedChild.stats.payment.reste === 0">Scolarités à jour</span>
+                        </p>
+                        <p class="stat-value payment-value" [class.debt]="selectedChild.stats.payment.reste > 0">
+                            {{ selectedChild.stats.payment.reste | number }} F
+                        </p>
+                        <div class="payment-details" *ngIf="selectedChild.stats.payment.reste > 0">
+                            <div class="payment-bar">
+                                <div class="payment-progress" [style.width]="(selectedChild.stats.payment.montantPaye / selectedChild.stats.payment.montantTotal * 100) + '%'"></div>
+                            </div>
+                            <p class="payment-info">
+                                Payé: <strong>{{ selectedChild.stats.payment.montantPaye | number }} F</strong> 
+                                / {{ selectedChild.stats.payment.montantTotal | number }} F
+                            </p>
+                        </div>
+                        <p class="stat-hint success-hint" *ngIf="selectedChild.stats.payment.reste === 0">
+                            <span class="material-icons">check_circle</span>
+                            Toutes les scolarités sont payées
+                        </p>
                     </div>
                 </div>
             </div>

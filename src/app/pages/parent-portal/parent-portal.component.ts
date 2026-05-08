@@ -18,7 +18,11 @@ interface ChildData {
   stats: {
     averageGrade: number;
     attendanceRate: number;
-    pendingPayments: number;
+    payment: {
+      montantTotal: number;
+      montantPaye: number;
+      reste: number;
+    };
   };
   recentGrades: { subject: string; value: number; date: string }[];
   recentAbsences: { date: string; reason: string; justified: boolean }[];
@@ -58,21 +62,32 @@ export class ParentPortalComponent implements OnInit {
     const parentDemo = 'Fatoumata Traoré';
     const eleves = this.schoolData.getElevesParParent(parentDemo);
     
-    this.children = eleves.map(eleve => ({
-      id: eleve.id,
-      name: `${eleve.prenom} ${eleve.nom}`,
-      firstName: eleve.prenom,
-      lastName: eleve.nom,
-      className: eleve.classe || 'Non assignée',
-      photo: this.getAvatarColor(eleve.prenom),
-      stats: {
-        averageGrade: Math.round((Math.random() * 5 + 10) * 10) / 10,
-        attendanceRate: Math.floor(Math.random() * 15 + 85),
-        pendingPayments: Math.floor(Math.random() * 3)
-      },
-      recentGrades: this.generateRecentGrades(),
-      recentAbsences: this.generateRecentAbsences()
-    }));
+    this.children = eleves.map((eleve, index) => {
+      // Données de paiement réalistes pour chaque enfant
+      const montantTotal = 200000;
+      const montantPaye = [150000, 180000, 200000][index] || 150000;
+      const reste = montantTotal - montantPaye;
+      
+      return {
+        id: eleve.id,
+        name: `${eleve.prenom} ${eleve.nom}`,
+        firstName: eleve.prenom,
+        lastName: eleve.nom,
+        className: eleve.classe || 'Non assignée',
+        photo: this.getAvatarColor(eleve.prenom),
+        stats: {
+          averageGrade: Math.round((Math.random() * 5 + 10) * 10) / 10,
+          attendanceRate: Math.floor(Math.random() * 15 + 85),
+          payment: {
+            montantTotal,
+            montantPaye,
+            reste
+          }
+        },
+        recentGrades: this.generateRecentGrades(),
+        recentAbsences: this.generateRecentAbsences()
+      };
+    });
 
     if (this.children.length > 0) {
       this.selectedChild = this.children[0];
