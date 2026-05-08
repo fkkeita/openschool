@@ -1,9 +1,4 @@
-<div class="page-layout">
-    <app-sidebar></app-sidebar>
-
-    <main class="page-content">
-        <!-- Header -->
-        <!-- Notification Popup - Centered Modal -->
+<!-- Notification Popup - Outside of page layout for proper overlay -->
 <div class="notification-modal-overlay" [class.show]="showNotifications" (click)="closeNotifications()">
     <div class="notification-popup" (click)="$event.stopPropagation()">
         <div class="popup-header">
@@ -63,7 +58,12 @@
     </div>
 </div>
 
-<header class="page-header">
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <!-- Header -->
+        <header class="page-header">
             <div class="header-content">
                 <h1>Bienvenue sur votre Portail Parent</h1>
                 <p class="subtitle">Suivez la scolarité de vos enfants en temps réel</p>
