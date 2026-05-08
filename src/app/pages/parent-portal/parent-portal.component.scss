@@ -6,7 +6,7 @@ $success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
 $warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 $danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 $card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-$card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+$card-hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 
 @keyframes fadeInUp {
     from {
@@ -45,6 +45,33 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
     50% {
         transform: translateY(-5px);
+    }
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(245, 158, 11, 0.3);
+    }
+}
+
+@keyframes pulse-success {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(16, 185, 129, 0.3);
+    }
+}
+
+@keyframes pulse-notification {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
     }
 }
 
@@ -152,7 +179,21 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         white-space: nowrap;
     }
 
-    // Notification Modal - Centered
+    h1 {
+        font-size: 28px;
+        color: #1a1a2e;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        color: #6b7280;
+        margin: 8px 0 0 0;
+        font-size: 15px;
+    }
+}
+
+// Notification Modal - Centered
 .notification-modal-overlay {
     position: fixed;
     top: 0;
@@ -174,7 +215,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         visibility: visible;
     }
 
-    // Make sure popup is visible when overlay is shown
     &.show .notification-popup {
         transform: scale(1);
         opacity: 1;
@@ -335,30 +375,7 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
-    @keyframes pulse-notification {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-        }
-    }
-
-    h1 {
-        font-size: 28px;
-        color: #1a1a2e;
-        margin: 0;
-        font-weight: 700;
-    }
-
-    .subtitle {
-        color: #6b7280;
-        margin: 8px 0 0 0;
-        font-size: 15px;
-    }
-}
-
-// ==================== CHILDREN SLIDER ====================
+// Children Slider
 .children-slider-section {
     margin-bottom: 32px;
     animation: fadeInUp 0.6s ease-out 0.2s both;
@@ -532,7 +549,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
-// Slider Dots
 .slider-dots {
     display: flex;
     justify-content: center;
@@ -559,7 +575,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
-// No Children
 .no-children {
     animation: fadeInUp 0.6s ease-out;
 
@@ -586,7 +601,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
-// ==================== CHILDREN GRID ( <= 3 children) ====================
 .children-grid-section {
     margin-bottom: 32px;
     animation: fadeInUp 0.6s ease-out 0.2s both;
@@ -598,12 +612,10 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     gap: 20px;
 }
 
-// ==================== CHILD OVERVIEW ====================
 .child-overview {
     animation: fadeInUp 0.6s ease-out 0.3s both;
 }
 
-// Stats Grid
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -631,182 +643,104 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
-    // Payment Alert - Only highlight when there's a debt
-    &.payment-alert {
-        border: 2px solid rgba(245, 158, 11, 0.4);
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        animation: pulse-warning 2s infinite;
+    .stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
 
-        .stat-icon-wrapper.warning {
-            background: $warning-gradient;
+        .material-icons {
+            font-size: 28px;
         }
 
-        .debt-value {
-            color: #f59e0b;
-            font-weight: 800;
-        }
-
-        .payment-details {
-            margin-top: 12px;
-
-            .payment-bar {
-                height: 8px;
-                background: rgba(245, 158, 11, 0.2);
-                border-radius: 4px;
-                overflow: hidden;
-                margin-bottom: 8px;
-
-                .payment-progress {
-                    height: 100%;
-                    background: $warning-gradient;
-                    border-radius: 4px;
-                    transition: width 0.6s ease;
-                }
-            }
-
-            .payment-info {
-                font-size: 12px;
-                color: #92400e;
-                margin: 0;
-
-                strong {
-                    color: #b45309;
-                }
-            }
-        }
-    }
-
-    // Payment Paid - Green highlighting (separate from payment-alert)
-    &.payment-paid {
-        border: 2px solid rgba(16, 185, 129, 0.4);
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-        animation: pulse-success 2s infinite;
-
-        .stat-icon-wrapper.success {
+        &.success {
             background: $success-gradient;
+            color: white;
         }
 
-        .paid-value {
-            color: #10b981;
+        &.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        &.warning {
+            background: $warning-gradient;
+            color: white;
+        }
+    }
+
+    .stat-content {
+        flex: 1;
+
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0 0 4px 0;
+        }
+
+        .stat-value {
+            font-size: 28px;
             font-weight: 800;
+            color: #1a1a2e;
+            margin: 0 0 12px 0;
         }
 
-        .payment-details-paid {
-            margin-top: 12px;
+        .stat-bar {
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
 
-            .paid-bar {
-                height: 8px;
-                background: rgba(16, 185, 129, 0.2);
-                border-radius: 4px;
-                overflow: hidden;
-                margin-bottom: 8px;
-
-                .payment-progress {
-                    height: 100%;
-                    background: $success-gradient;
-                    border-radius: 4px;
-                    transition: width 0.6s ease;
-                }
-            }
-
-            .payment-info-paid {
-                font-size: 12px;
-                color: #065f46;
-                margin: 0;
-
-                strong {
-                    color: #047857;
-                }
+            .stat-progress {
+                height: 100%;
+                background: $primary-gradient;
+                border-radius: 3px;
+                transition: width 0.6s ease;
             }
         }
-    }
-}
 
-@keyframes pulse-success {
-    0%, 100% {
-        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
-    }
-    50% {
-        box-shadow: 0 4px 30px rgba(16, 185, 129, 0.3);
-    }
-}
-
-@keyframes pulse-warning {
-    0%, 100% {
-        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
-    }
-    50% {
-        box-shadow: 0 4px 30px rgba(245, 158, 11, 0.3);
-    }
-}
-
-.stat-icon-wrapper {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    .material-icons {
-        font-size: 28px;
+        .stat-hint {
+            font-size: 12px;
+            color: #10b981;
+            margin: 8px 0 0 0;
+        }
     }
 
-    &.success {
-        background: $success-gradient;
-        color: white;
-    }
-
-    &.info {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-    }
-
-    &.warning {
-        background: $warning-gradient;
-        color: white;
-    }
-}
-
-.stat-content {
-    flex: 1;
-
-    .stat-label {
-        font-size: 13px;
-        color: #6b7280;
-        margin: 0 0 4px 0;
-    }
-
-    .stat-value {
-        font-size: 28px;
-        font-weight: 800;
-        color: #1a1a2e;
-        margin: 0 0 12px 0;
-    }
-
-    .stat-bar {
+    .payment-bar {
         height: 6px;
         background: #f3f4f6;
         border-radius: 3px;
         overflow: hidden;
+        margin-top: 12px;
 
-        .stat-progress {
+        .payment-progress {
             height: 100%;
-            background: $primary-gradient;
+            background: $warning-gradient;
             border-radius: 3px;
             transition: width 0.6s ease;
         }
     }
 
-    .stat-hint {
+    .payment-info {
         font-size: 12px;
-        color: #10b981;
+        color: #6b7280;
         margin: 8px 0 0 0;
+
+        strong {
+            color: #1a1a2e;
+        }
+    }
+
+    &.paid {
+        .stat-icon-wrapper.success {
+            background: $success-gradient;
+        }
     }
 }
 
-// Content Grid
 .content-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -975,56 +909,6 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
-.messages-preview {
-    margin-bottom: 16px;
-
-    .message-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 12px;
-        background: #f9fafb;
-
-        &.unread {
-            background: rgba(102, 126, 234, 0.05);
-            border-left: 3px solid #667eea;
-        }
-
-        .message-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            .material-icons {
-                font-size: 20px;
-                color: white;
-            }
-        }
-
-        .message-content {
-            flex: 1;
-
-            .message-title {
-                font-weight: 600;
-                color: #1a1a2e;
-                margin: 0 0 4px 0;
-                font-size: 14px;
-            }
-
-            .message-preview {
-                color: #9ca3af;
-                margin: 0;
-                font-size: 13px;
-            }
-        }
-    }
-}
-
 .info-message {
     display: flex;
     align-items: center;
@@ -1077,5 +961,4 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     .content-grid {
         grid-template-columns: 1fr;
     }
-}   
- 
+}
