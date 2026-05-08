@@ -113,6 +113,13 @@ export class SidebarComponent implements OnInit {
             icon: 'settings',
             route: '/settings',
             roles: ['ADMIN']
+        },
+        {
+            id: 'parent-portal',
+            label: 'Portail Parent',
+            icon: 'family_restroom',
+            route: '/parent-portal',
+            roles: ['PARENT']
         }
     ];
 

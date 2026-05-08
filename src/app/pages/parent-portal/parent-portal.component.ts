@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from '../../core/layout/sidebar/sidebar.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { SchoolDataService } from '../../core/services/school-data.service';
 
 /**
  * Composant Parent Portal - Portail Parents
@@ -18,31 +19,29 @@ export class ParentPortalComponent implements OnInit {
   children: any[] = [];
   selectedChild: any = null;
 
-  constructor(private authService: AuthService) { }
+  private authService = inject(AuthService);
+  private schoolData = inject(SchoolDataService);
+
+  constructor() { }
 
   ngOnInit(): void {
-    // Mock data pour les enfants
-    this.children = [
-      {
-        id: 1,
-        name: 'Sophie Durand',
-        className: 'Terminale A',
-        photo: 'assets/avatar1.png',
-        stats: {
-          averageGrade: 14.5,
-          attendanceRate: 95,
-          pendingPayments: 0
-        },
-        recentGrades: [
-          { subject: 'Mathématiques', value: 16.5, date: '2026-01-15' },
-          { subject: 'Français', value: 14, date: '2026-01-18' },
-          { subject: 'Physique', value: 15, date: '2026-01-12' }
-        ],
-        recentAbsences: [
-          { date: '2026-01-10', reason: 'Maladie', justified: true }
-        ]
-      }
-    ];
+    this.loadChildrenFromService();
+  }
+
+  private loadChildrenFromService(): void {
+    const tousEleves = this.schoolData.tousLesEleves;
+    this.children = tousEleves.map(eleve => ({
+      id: eleve.id,
+      name: `${eleve.prenom} ${eleve.nom}`,
+      className: eleve.classe || 'Non assignée',
+      stats: {
+        averageGrade: 0,
+        attendanceRate: 100,
+        pendingPayments: 0
+      },
+      recentGrades: [],
+      recentAbsences: []
+    }));
 
     if (this.children.length > 0) {
       this.selectedChild = this.children[0];
