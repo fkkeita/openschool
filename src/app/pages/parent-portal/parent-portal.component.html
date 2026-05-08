@@ -9,9 +9,50 @@
                 <p class="subtitle">Suivez la scolarité de vos enfants en temps réel</p>
             </div>
             <div class="header-actions">
-                <div class="notification-bell" title="Notifications">
-                    <span class="material-icons">notifications</span>
-                    <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                <div class="notification-container">
+                    <div class="notification-bell" title="Notifications">
+                        <span class="material-icons">mail</span>
+                        <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                    </div>
+                    <span class="notification-label">Messages de l'école</span>
+                    <div class="notification-popup">
+                        <div class="popup-header">
+                            <h4>Messages</h4>
+                            <span class="unread-count">{{ unreadMessages }} non lu(s)</span>
+                        </div>
+                        <div class="popup-messages">
+                            <div class="message-item unread">
+                                <span class="message-icon">
+                                    <span class="material-icons">admin_panel_settings</span>
+                                </span>
+                                <div class="message-content">
+                                    <p class="message-title">Administration</p>
+                                    <p class="message-preview">Information importante...</p>
+                                </div>
+                            </div>
+                            <div class="message-item">
+                                <span class="message-icon">
+                                    <span class="material-icons">event</span>
+                                </span>
+                                <div class="message-content">
+                                    <p class="message-title">Réunion Parents</p>
+                                    <p class="message-preview">Réunion prévue le...</p>
+                                </div>
+                            </div>
+                            <div class="message-item">
+                                <span class="message-icon">
+                                    <span class="material-icons">assignment</span>
+                                </span>
+                                <div class="message-content">
+                                    <p class="message-title">Bulletin Trimestre</p>
+                                    <p class="message-preview">Disponibles maintenant...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="popup-footer">
+                            <span>Voir tous les messages</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="header-decoration"></div>
@@ -245,33 +286,6 @@
                         <p class="info-message">
                             <span class="material-icons">info</span>
                             Voir l'emploi du temps complet
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Messages -->
-                <div class="card" style="--delay: 0.7s">
-                    <div class="card-header">
-                        <h2>
-                            <span class="material-icons">mail</span>
-                            Messages
-                        </h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="messages-preview">
-                            <div class="message-item unread">
-                                <span class="message-icon">
-                                    <span class="material-icons">admin_panel_settings</span>
-                                </span>
-                                <div class="message-content">
-                                    <p class="message-title">Administration</p>
-                                    <p class="message-preview">Information importante...</p>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="info-message">
-                            <span class="material-icons">inbox</span>
-                            Voir tous les messages
                         </p>
                     </div>
                 </div>
