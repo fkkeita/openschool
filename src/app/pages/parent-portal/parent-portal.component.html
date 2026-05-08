@@ -3,19 +3,19 @@
 
     <main class="page-content">
         <!-- Header -->
-        <header class="page-header">
+        <header class="page-header" (click)="closeNotifications()">
             <div class="header-content">
                 <h1>Bienvenue sur votre Portail Parent</h1>
                 <p class="subtitle">Suivez la scolarité de vos enfants en temps réel</p>
             </div>
             <div class="header-actions">
                 <div class="notification-container">
-                    <div class="notification-bell" title="Notifications">
+                    <div class="notification-bell" title="Notifications" (click)="toggleNotifications($event)">
                         <span class="material-icons">mail</span>
                         <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
                     </div>
                     <span class="notification-label">Messages de l'école</span>
-                    <div class="notification-popup">
+                    <div class="notification-popup" [class.show]="showNotifications" (click)="$event.stopPropagation()">
                         <div class="popup-header">
                             <h4>Messages</h4>
                             <span class="unread-count">{{ unreadMessages }} non lu(s)</span>

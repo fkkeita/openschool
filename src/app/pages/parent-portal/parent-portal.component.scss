@@ -167,7 +167,7 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
         z-index: 101;
         overflow: hidden;
 
-        .notification-container:hover & {
+        &.show {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);

@@ -41,6 +41,7 @@ export class ParentPortalComponent implements OnInit {
   currentSlide = 0;
   parentName = '';
   unreadMessages = 3;
+  showNotifications = false;
 
   private authService = inject(AuthService);
   private schoolData = inject(SchoolDataService);
@@ -168,5 +169,14 @@ export class ParentPortalComponent implements OnInit {
 
   getInitials(firstName: string, lastName: string): string {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  }
+
+  toggleNotifications(event: Event): void {
+    event.stopPropagation();
+    this.showNotifications = !this.showNotifications;
+  }
+
+  closeNotifications(): void {
+    this.showNotifications = false;
   }
 }
