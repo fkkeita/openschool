@@ -1,65 +1,65 @@
-<!-- Notification Popup - Outside of page layout for proper overlay -->
-<div class="notification-modal-overlay" [class.show]="showNotifications" (click)="closeNotifications()">
-    <div class="notification-popup" (click)="$event.stopPropagation()">
-        <div class="popup-header">
-            <h4>Messages de l'école</h4>
-            <button class="close-btn" (click)="closeNotifications()">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-        <div class="popup-subheader">
-            <span class="unread-count">{{ unreadMessages }} message(s) non lu(s)</span>
-        </div>
-        <div class="popup-messages">
-            <div class="message-item unread">
-                <span class="message-icon">
-                    <span class="material-icons">admin_panel_settings</span>
-                </span>
-                <div class="message-content">
-                    <p class="message-title">Administration</p>
-                    <p class="message-preview">Information importante concernant la rentrée scolaire...</p>
-                    <p class="message-time">Il y a 2 heures</p>
-                </div>
-            </div>
-            <div class="message-item">
-                <span class="message-icon">
-                    <span class="material-icons">event</span>
-                </span>
-                <div class="message-content">
-                    <p class="message-title">Réunion Parents</p>
-                    <p class="message-preview">Réunion prévue le 15 Juin à 10h00...</p>
-                    <p class="message-time">Hier</p>
-                </div>
-            </div>
-            <div class="message-item">
-                <span class="message-icon">
-                    <span class="material-icons">assignment</span>
-                </span>
-                <div class="message-content">
-                    <p class="message-title">Bulletin Trimestre</p>
-                    <p class="message-preview">Les bulletins du 2ème trimestre sont disponibles...</p>
-                    <p class="message-time">Il y a 3 jours</p>
-                </div>
-            </div>
-            <div class="message-item">
-                <span class="message-icon">
-                    <span class="material-icons">school</span>
-                </span>
-                <div class="message-content">
-                    <p class="message-title">Absence de votre enfant</p>
-                    <p class="message-preview">Votre enfant était absent aujourd'hui...</p>
-                    <p class="message-time">Il y a 5 jours</p>
-                </div>
-            </div>
-        </div>
-        <div class="popup-footer">
-            <button class="view-all-btn">Voir tous les messages</button>
-        </div>
-    </div>
-</div>
-
 <div class="page-layout">
     <app-sidebar></app-sidebar>
+
+    <!-- Notification Popup - Inside main for proper positioning -->
+    <div class="notification-modal-overlay" [class.show]="showNotifications" (click)="closeNotifications()">
+        <div class="notification-popup" (click)="$event.stopPropagation()">
+            <div class="popup-header">
+                <h4>Messages de l'école</h4>
+                <button class="close-btn" (click)="closeNotifications()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="popup-subheader">
+                <span class="unread-count">{{ unreadMessages }} message(s) non lu(s)</span>
+            </div>
+            <div class="popup-messages">
+                <div class="message-item unread">
+                    <span class="message-icon">
+                        <span class="material-icons">admin_panel_settings</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Administration</p>
+                        <p class="message-preview">Information importante concernant la rentrée scolaire...</p>
+                        <p class="message-time">Il y a 2 heures</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">event</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Réunion Parents</p>
+                        <p class="message-preview">Réunion prévue le 15 Juin à 10h00...</p>
+                        <p class="message-time">Hier</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">assignment</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Bulletin Trimestre</p>
+                        <p class="message-preview">Les bulletins du 2ème trimestre sont disponibles...</p>
+                        <p class="message-time">Il y a 3 jours</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">school</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Absence de votre enfant</p>
+                        <p class="message-preview">Votre enfant était absent aujourd'hui...</p>
+                        <p class="message-time">Il y a 5 jours</p>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="view-all-btn">Voir tous les messages</button>
+            </div>
+        </div>
+    </div>
 
     <main class="page-content">
         <!-- Header -->
