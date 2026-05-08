@@ -630,7 +630,12 @@ export class SchoolDataService {
 
     private estDonneeObsolete(): boolean {
         if (this._eleves.length === 0) return false;
-        return this._eleves[0].prenom.startsWith('Élève');
+        // Vérifier si les données commences par "Élève" OU si "Fatoumata Traoré" n'est pas parent de quelqu'un
+        if (this._eleves[0].prenom.startsWith('Élève')) return true;
+        // Vérifier si le parent "Fatoumata Traoré" a des enfants
+        const enfantsFatoumata = this._eleves.filter(e => e.parent === 'Fatoumata Traoré');
+        if (enfantsFatoumata.length === 0) return true;
+        return false;
     }
 
     // ══════════════ MÉTHODES UTILITAIRES ══════════════
