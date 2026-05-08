@@ -828,13 +828,20 @@ selectClasseVoir(classe: string): void {
      * ==================================================================================================================================
      * CALCULER L'APPRÉCIATION POUR UN DEVOIR/INTERROGATION
      * ==================================================================================================================================
-     * Même règle que pour les trimestres.
+     * Règle:
+     * - [0, 6.99] -> "Nul"
+     * - [7, 9.99] -> "Insuffisant"
+     * - [10, 11.99] -> "Passable"
+     * - [12, 13.99] -> "Assez-Bien"
+     * - [14, 15.99] -> "Bien"
+     * - [16, 17.99] -> "Très Bien"
+     * - [18, 20] -> "Excellent"
      * 
      * @param note - Note sur 20
      * @returns Appréciation correspondante
      */
     determinerAppreciationDevoir(note: number): string {
-        if (note < 4) return 'Nul';
+        if (note < 7) return 'Nul';
         if (note < 10) return 'Insuffisant';
         if (note < 12) return 'Passable';
         if (note < 14) return 'Assez-Bien';
@@ -1820,14 +1827,14 @@ selectClasseVoir(classe: string): void {
      * DÉTERMINER L'APPRÉCIATION AUTOMATIQUEMENT
      * ==================================================================================================================================
      * 
-     * Tableau d'appréciation:
-     * - "Nul" si Moyenne/20 = 0
-     * - "Insuffisant" si Moyenne/20 <= 9
-     * - "Passable" si Moyenne/20 <= 11
-     * - "Assez-Bien" si Moyenne/20 <= 13
-     * - "Bien" si Moyenne/20 <= 15
-     * - "Très Bien" si Moyenne/20 <= 17
-     * - "Excellent" si Moyenne/20 <= 20
+     * Règle:
+     * - [0, 6.99] -> "Nul"
+     * - [7, 9.99] -> "Insuffisant"
+     * - [10, 11.99] -> "Passable"
+     * - [12, 13.99] -> "Assez-Bien"
+     * - [14, 15.99] -> "Bien"
+     * - [16, 17.99] -> "Très Bien"
+     * - [18, 20] -> "Excellent"
      * 
      * @param ligne - La ligne d'attribution
      * @returns L'appréciation automatiquement déterminée
@@ -1835,7 +1842,7 @@ selectClasseVoir(classe: string): void {
     determinerAppreciation(ligne: LigneAttributionTrimestre): string {
         const moyenne = this.calculerMoyenne(ligne);
         
-        if (moyenne < 4) return 'Nul';
+        if (moyenne < 7) return 'Nul';
         if (moyenne < 10) return 'Insuffisant';
         if (moyenne < 12) return 'Passable';
         if (moyenne < 14) return 'Assez-Bien';
@@ -1845,17 +1852,17 @@ selectClasseVoir(classe: string): void {
     }
     
     getAppreciationDevoir(note: number): string {
-        if (note < 4) return 'Nul';
-        if (note < 8) return 'Insuffisant';
+        if (note < 7) return 'Nul';
+        if (note < 10) return 'Insuffisant';
         if (note < 12) return 'Passable';
         if (note < 14) return 'Assez-Bien';
         if (note < 16) return 'Bien';
-        if (note < 18) return 'Tres Bien';
+        if (note < 18) return 'Très Bien';
         return 'Excellent';
     }
     
     getAppreciationTrimestre(moyenne: number): string {
-        if (moyenne < 4) return 'Nul';
+        if (moyenne < 7) return 'Nul';
         if (moyenne < 10) return 'Insuffisant';
         if (moyenne < 12) return 'Passable';
         if (moyenne < 14) return 'Assez-Bien';
