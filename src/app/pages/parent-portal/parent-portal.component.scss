@@ -329,6 +329,18 @@ $card-hover-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
     }
 }
 
+// ==================== CHILDREN GRID ( <= 3 children) ====================
+.children-grid-section {
+    margin-bottom: 32px;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
 // ==================== CHILD OVERVIEW ====================
 .child-overview {
     animation: fadeInUp 0.6s ease-out 0.3s both;
