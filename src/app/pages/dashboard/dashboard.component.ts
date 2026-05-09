@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SidebarComponent } from '../../core/layout/sidebar/sidebar.component';
 import { StudentService } from '../../services/api/student.service';
 import { AttendanceService } from '../../services/api/attendance.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { DashboardStatsDto } from '../../models/dtos';
 
 /**
@@ -100,11 +102,28 @@ export class DashboardComponent implements OnInit {
 
     constructor(
         private studentService: StudentService,
-        private attendanceService: AttendanceService
+        private attendanceService: AttendanceService,
+        private router: Router,
+        private authService: AuthService
     ) { }
 
     ngOnInit(): void {
+        this.redirectByRole();
         this.loadDashboardData();
+    }
+
+    private redirectByRole(): void {
+        const currentUser = this.authService.currentUserValue;
+        if (currentUser) {
+            if (currentUser.role === 'TEACHER') {
+                this.router.navigate(['/teacher-portal']);
+                return;
+            }
+            if (currentUser.role === 'PARENT') {
+                this.router.navigate(['/parent-portal']);
+                return;
+            }
+        }
     }
 
     /**
