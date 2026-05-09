@@ -1,0 +1,289 @@
+<!-- Notification Popup - Outside of page layout for proper overlay -->
+<div class="notification-modal-overlay" [class.show]="showNotifications" (click)="closeNotifications()">
+    <div class="notification-popup" (click)="$event.stopPropagation()">
+        <div class="popup-header">
+            <h4>Messages de l'école</h4>
+            <button class="close-btn" (click)="closeNotifications()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="popup-subheader">
+            <span class="unread-count">{{ unreadMessages }} message(s) non lu(s)</span>
+        </div>
+        <div class="popup-messages">
+            <div class="message-item unread">
+                <span class="message-icon">
+                    <span class="material-icons">admin_panel_settings</span>
+                </span>
+                <div class="message-content">
+                    <p class="message-title">Direction</p>
+                    <p class="message-preview">Réunion des enseignants demain à 14h...</p>
+                    <p class="message-time">Il y a 1 heure</p>
+                </div>
+            </div>
+            <div class="message-item">
+                <span class="message-icon">
+                    <span class="material-icons">event</span>
+                </span>
+                <div class="message-content">
+                    <p class="message-title">Emploi du temps modifié</p>
+                    <p class="message-preview">Votre emploi du temps a été mis à jour...</p>
+                    <p class="message-time">Hier</p>
+                </div>
+            </div>
+        </div>
+        <div class="popup-footer">
+            <button class="view-all-btn">Voir tous les messages</button>
+        </div>
+    </div>
+</div>
+
+<div class="page-layout">
+    <app-sidebar></app-sidebar>
+
+    <main class="page-content">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1>Bienvenue sur votre Portail Enseignant</h1>
+                <p class="subtitle">Gérez vos classes et suivre vos élèves</p>
+            </div>
+            <div class="header-actions">
+                <div class="notification-container">
+                    <div class="notification-bell" title="Notifications" (click)="toggleNotifications($event)">
+                        <span class="material-icons">mail</span>
+                        <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                    </div>
+                    <span class="notification-label">Messages</span>
+                </div>
+            </div>
+            <div class="header-decoration"></div>
+        </header>
+
+        <!-- Classes Slider (> 3 classes) or Grid (<= 3 classes) -->
+        <div class="classes-slider-section" *ngIf="classes.length > 3">
+            <div class="slider-container">
+                <button class="slider-btn prev" (click)="prevSlide()" [disabled]="currentSlide === 0">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+
+                <div class="slider-wrapper">
+                    <div class="slider-track" [style.transform]="'translateX(-' + (currentSlide * (100 / classes.length)) + '%)'">
+                        <div class="classe-card" 
+                             *ngFor="let classe of classes; let i = index"
+                             [class.active]="selectedClasse?.id === classe.id"
+                             (click)="goToSlide(i)">
+                            <div class="card-glow"></div>
+                            <div class="classe-avatar" [style.background]="'linear-gradient(135deg, ' + classe.photo + ', ' + classe.photo + '99)'">
+                                <span class="avatar-initials">{{ getInitials(classe.nom) }}</span>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <div class="classe-info">
+                                <h3 class="classe-nom">{{ classe.nom }}</h3>
+                                <span class="classe-niveau">
+                                    <span class="material-icons">school</span>
+                                    {{ classe.niveau }}
+                                </span>
+                            </div>
+                            <div class="card-status">
+                                <span class="status-dot" [class.active]="selectedClasse?.id === classe.id"></span>
+                                <span class="status-text">{{ selectedClasse?.id === classe.id ? 'Sélectionné' : 'Cliquer pour voir' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="slider-btn next" (click)="nextSlide()" [disabled]="currentSlide === classes.length - 1">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Slider Dots -->
+            <div class="slider-dots">
+                <button class="dot" 
+                        *ngFor="let classe of classes; let i = index"
+                        [class.active]="currentSlide === i"
+                        (click)="goToSlide(i)">
+                </button>
+            </div>
+        </div>
+
+        <!-- Classes Grid (<= 3 classes) -->
+        <div class="classes-grid-section" *ngIf="classes.length > 0 && classes.length <= 3">
+            <div class="grid-container">
+                <div class="classe-card" 
+                     *ngFor="let classe of classes; let i = index"
+                     [class.active]="selectedClasse?.id === classe.id"
+                     (click)="selectClasse(classe)">
+                    <div class="card-glow"></div>
+                    <div class="classe-avatar" [style.background]="'linear-gradient(135deg, ' + classe.photo + ', ' + classe.photo + '99)'">
+                        <span class="avatar-initials">{{ getInitials(classe.nom) }}</span>
+                        <div class="avatar-ring"></div>
+                    </div>
+                    <div class="classe-info">
+                        <h3 class="classe-nom">{{ classe.nom }}</h3>
+                        <span class="classe-niveau">
+                            <span class="material-icons">school</span>
+                            {{ classe.niveau }}
+                        </span>
+                    </div>
+                    <div class="card-status">
+                        <span class="status-dot" [class.active]="selectedClasse?.id === classe.id"></span>
+                        <span class="status-text">{{ selectedClasse?.id === classe.id ? 'Sélectionné' : 'Cliquer pour voir' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classe Overview with Stats -->
+        <div *ngIf="selectedClasse" class="classe-overview">
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card" style="--delay: 0.1s">
+                    <div class="stat-icon-wrapper info">
+                        <span class="material-icons">people</span>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Nombre d'élèves</p>
+                        <p class="stat-value">{{ selectedClasse.stats.nombreEleves }}</p>
+                        <div class="stat-bar">
+                            <div class="stat-progress" [style.width]="(selectedClasse.stats.nombreEleves / 30 * 100) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="--delay: 0.2s">
+                    <div class="stat-icon-wrapper success">
+                        <span class="material-icons">trending_up</span>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Moyenne de la classe</p>
+                        <p class="stat-value">{{ selectedClasse.stats.moyenneClasse }}/20</p>
+                        <div class="stat-bar">
+                            <div class="stat-progress" [style.width]="(selectedClasse.stats.moyenneClasse / 20 * 100) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="--delay: 0.3s">
+                    <div class="stat-icon-wrapper warning">
+                        <span class="material-icons">event_available</span>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">Taux de présence</p>
+                        <p class="stat-value">{{ selectedClasse.stats.presenceRate }}%</p>
+                        <div class="stat-bar">
+                            <div class="stat-progress" [style.width]="selectedClasse.stats.presenceRate + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Matières enseignées -->
+                <div class="card" style="--delay: 0.4s">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">menu_book</span>
+                            Matières enseignées
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div *ngFor="let matiere of selectedClasse.matieres" class="matiere-item">
+                            <span class="matiere-icon">
+                                <span class="material-icons">assignment</span>
+                            </span>
+                            <span class="matiere-nom">{{ matiere }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prochain cours -->
+                <div class="card" style="--delay: 0.5s">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">schedule</span>
+                            Prochain cours
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="prochain-cours" *ngIf="selectedClasse.prochainCours">
+                            <div class="cours-time">{{ selectedClasse.prochainCours.heure }}</div>
+                            <div class="cours-details">
+                                <p class="cours-matiere">{{ selectedClasse.prochainCours.matiere }}</p>
+                                <p class="cours-classe">{{ selectedClasse.nom }}</p>
+                            </div>
+                        </div>
+                        <p *ngIf="!selectedClasse.prochainCours" class="empty-message">
+                            <span class="material-icons">event_busy</span>
+                            Aucun cours prévu
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card" style="--delay: 0.6s">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">flash_on</span>
+                            Actions rapides
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="action-buttons">
+                            <button class="action-btn primary">
+                                <span class="material-icons">edit_note</span>
+                                Saisir notes
+                            </button>
+                            <button class="action-btn secondary">
+                                <span class="material-icons">fact_check</span>
+                                Faire l'appel
+                            </button>
+                            <button class="action-btn secondary">
+                                <span class="material-icons">history_edu</span>
+                                Cahier de texte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistiques détaillées -->
+                <div class="card" style="--delay: 0.7s">
+                    <div class="card-header">
+                        <h2>
+                            <span class="material-icons">analytics</span>
+                            Aperçu rapide
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-stats">
+                            <div class="quick-stat">
+                                <span class="qs-icon good">
+                                    <span class="material-icons">check_circle</span>
+                                </span>
+                                <span class="qs-label">Devoirs notés</span>
+                                <span class="qs-value">12</span>
+                            </div>
+                            <div class="quick-stat">
+                                <span class="qs-icon warning">
+                                    <span class="material-icons">pending</span>
+                                </span>
+                                <span class="qs-label">Notes en attente</span>
+                                <span class="qs-value">5</span>
+                            </div>
+                            <div class="quick-stat">
+                                <span class="qs-icon info">
+                                    <span class="material-icons">event</span>
+                                </span>
+                                <span class="qs-label">Séances ce mois</span>
+                                <span class="qs-value">18</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
