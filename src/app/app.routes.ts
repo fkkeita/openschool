@@ -100,6 +100,12 @@ export const routes: Routes = [
         data: { roles: ['PARENT'] }
     },
     {
+        path: 'teacher-portal',
+        loadComponent: () => import('./pages/teacher-portal/teacher-portal.component').then(m => m.TeacherPortalComponent),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['TEACHER'] }
+    },
+    {
         path: 'unauthorized',
         loadComponent: () => import('./pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
     },

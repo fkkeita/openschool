@@ -56,7 +56,7 @@
                                             </div>
                                         </div>
                                         <p class="year-description">{{ annee.description }}</p>
-                                        <div class="year-actions">
+<div class="year-actions">
                                             <button class="action-btn primary" (click)="ouvrirVoir(annee)">
                                                 <i class="fas fa-eye"></i> Voir les notes
                                             </button>
@@ -130,7 +130,144 @@
         </div>
     </div>
 
-    <!-- ═══════════ POPUP LISTE ÉLÈVES (après sélection classe) ═══════════ -->
+    <!-- ═══════════ POPUP DE CHOIX RESULTATS ═══════════ -->
+    <div class="modal-overlay" *ngIf="showChoixResultatsModal" (click)="fermerChoixResultatsModal()">
+        <div class="modal-container choix-resultats-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Résultats - {{ choixResultatsClasse }}</h3>
+                <button class="modal-close" (click)="fermerChoixResultatsModal()">×</button>
+            </div>
+            <div class="modal-body choix-resultats-body">
+                <p class="choix-intro">Choisissez le type de résultats à visualiser :</p>
+                
+                <div class="choix-options">
+                    <div class="choix-card" (click)="ouvrirResultatsIndividuels()">
+                        <div class="choix-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="choix-content">
+                            <h4>Résultats Individuels</h4>
+                            <p>Notes et moyennes par élève pour chaque devoir, interrogation, trimestre et composition.</p>
+                        </div>
+                        <div class="choix-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="choix-card" (click)="ouvrirResultatsCollectifs()">
+                        <div class="choix-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="choix-content">
+                            <h4>Résultats Collectifs</h4>
+                            <p>Statistiques globales, moyennes de classe et classement par période.</p>
+                        </div>
+                        <div class="choix-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP RESULTATS COLLECTIFS ═══════════ -->
+    <div class="modal-overlay" *ngIf="showResultatsCollectifsModal" (click)="fermerResultatsCollectifsModal()">
+        <div class="modal-container modal-xxl resultats-collectifs-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Résultats Collectifs - {{ choixResultatsClasse }}</h3>
+                <button class="modal-close" (click)="fermerResultatsCollectifsModal()">×</button>
+            </div>
+            <div class="resultats-onglets">
+                <button class="onglet-btn" [class.active]="ongletResultatsActif === 'devoirs'"
+                    (click)="ongletResultatsActif = 'devoirs'">
+                    <i class="fas fa-pencil-alt"></i> Devoirs / Interrogations
+                </button>
+                <button class="onglet-btn" [class.active]="ongletResultatsActif === 'trimestres'"
+                    (click)="ongletResultatsActif = 'trimestres'">
+                    <i class="fas fa-calendar-alt"></i> Trimestres / Compositions
+                </button>
+            </div>
+            <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'trimestres'">
+                <div class="resultats-main resultats-main-full">
+                    @if (trimestresListeResultats.length === 0) {
+                    <div class="resultats-welcome">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Aucun trimestre enregistré pour cette classe.</p>
+                    </div>
+                    } @else {
+                    <table class="periodes-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Titre</th>
+                                <th>Date</th>
+                                <th>actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (tri of trimestresListeResultats; track tri.id) {
+                            <tr [class.active]="trimestreSelectionneResultats?.id === tri.id" (click)="ouvrirClassementPourTrimestre(tri)">
+                                <td>
+                                    <span class="type-badge" [attr.data-type]="tri.type">{{ tri.type }}</span>
+                                </td>
+                                <td class="titre-cell">{{ tri.titre }}</td>
+                                <td class="date-cell">{{ tri.date }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-action" title="Voir le classement">
+                                        <i class="fas fa-trophy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                    }
+                </div>
+            </div>
+            <div class="modal-body resultats-collectifs-body" *ngIf="ongletResultatsActif === 'devoirs'">
+                <div class="resultats-main resultats-main-full">
+                    @if (listeDevoirsResultats.length === 0) {
+                    <div class="resultats-welcome">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Aucun devoir ou interrogation enregistré pour cette classe.</p>
+                    </div>
+                    } @else {
+                    <table class="periodes-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Titre</th>
+                                <th>Matière</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (dev of listeDevoirsResultats; track dev.titre + dev.matiere) {
+                            <tr [class.active]="devoirSelectionneResultats?.titre === dev.titre" (click)="ouvrirClassementPourDevoir(dev)">
+                                <td>
+                                    <span class="type-badge" [attr.data-type]="dev.type">{{ dev.type }}</span>
+                                </td>
+                                <td class="titre-cell">{{ dev.titre }}</td>
+                                <td class="matiere-cell">{{ dev.matiere }}</td>
+                                <td class="date-cell">{{ dev.date }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn-action" title="Voir le classement">
+                                        <i class="fas fa-trophy"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP LISTE ÉLÈVES (apres selection classe) ═══════════ -->
     <div class="modal-overlay" *ngIf="showElevesModal" (click)="fermerElevesModal()">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <div class="modal-header">
@@ -148,38 +285,258 @@
         </div>
     </div>
 
-    <!-- ═══════════ POPUP NOTES D'UN ÉLÈVE ═══════════ -->
-    <div class="modal-overlay" *ngIf="selectedEleve" (click)="fermerNotesEleve()">
-        <div class="modal-container" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-check"></i> Notes de {{ selectedEleve.prenom }} {{ selectedEleve.nom }}</h3>
-                <button class="modal-close" (click)="fermerNotesEleve()">×</button>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════
+         POPUP CONSULTATION NOTES ÉLÈVE - NOUVEAU DESIGN AVEC PANNEAU LATÉRAL
+         ======================================================================================
+         
+         Ce popup s'affiche quand on clique sur "Voir les notes" après sélection d'une classe.
+         
+         Structure:
+         - Panneau latéral gauche: liste des élèves avec barre de recherche
+         - Partie droite: tableau des moyennes des trimestre/composition
+         
+         Colonnes du tableau:
+         - Titre du Trimestre/Composition
+         - Moyenne
+         - Aperçu du Bulletin
+         - Actions (Télécharger / Envoyer au parent)
+    -->
+    <div class="modal-overlay consultation-overlay" *ngIf="showConsultationNotesModal"
+        (click)="fermerConsultationNotes()">
+        <div class="modal-container consultation-modal" (click)="$event.stopPropagation()">
+
+            <!-- En-tête du popup -->
+            <div class="consultation-header">
+                <h3><i class="fas fa-user-graduate"></i> Notes des élèves - {{ classeConsultation }}</h3>
+                <button class="modal-close" (click)="fermerConsultationNotes()">×</button>
             </div>
-            <div class="modal-body notes-modal-body">
-                <div class="no-notes" *ngIf="getNotesEleve(selectedEleve.id).length === 0">
-                    <i class="fas fa-clipboard"></i>
-                    <p>Aucune note enregistrée</p>
+
+            <!-- Corps du popup - DEUX ZONES: Latérale + Principale -->
+            <div class="consultation-body">
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PANNEAU LATÉRAL GAUCHE - LISTE DES ÉLÈVES
+                -->
+                <div class="consultation-sidebar">
+
+                    <!-- Titre du panneau -->
+                    <div class="sidebar-header">
+                        <h4><i class="fas fa-users"></i> Élèves</h4>
+                        <span class="eleve-count">{{ elevesFiltresConsultation.length }} / {{ elevesConsultation.length
+                            }}</span>
+                    </div>
+
+                    <!-- Champ de recherche -->
+                    <div class="sidebar-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" [(ngModel)]="rechercheEleveConsultation"
+                            placeholder="Rechercher un élève...">
+                    </div>
+
+                    <!-- Liste des élèves -->
+                    <div class="sidebar-eleves">
+                        @for (eleve of elevesFiltresConsultation; track eleve.id) {
+                        <div class="eleve-list-item" [class.active]="eleveActuelConsultation?.id === eleve.id"
+                            (click)="selectEleveConsultation(eleve)">
+                            <div class="eleve-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="eleve-info">
+                                <span class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</span>
+                            </div>
+                        </div>
+                        }
+                    </div>
                 </div>
-                <table class="eleves-table" *ngIf="getNotesEleve(selectedEleve.id).length > 0">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Titre</th>
-                            <th>Matière</th>
-                            <th>Note</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let note of getNotesEleve(selectedEleve.id)">
-                            <td><span class="note-type-badge" [attr.data-type]="note.type">{{ note.type }}</span></td>
-                            <td>{{ note.titre }}</td>
-                            <td>{{ note.matiere }}</td>
-                            <td><span class="note-value" [class.high]="note.note >= 15" [class.low]="note.note < 10">{{ note.note }}/20</span></td>
-                            <td>{{ note.date }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PARTIE DROITE - TABLEAU DES MOYENNES + NOTES
+                -->
+                <div class="consultation-main">
+
+                    <!-- Informations de l'élève sélectionné -->
+                    <div class="eleve-summary" *ngIf="eleveActuelConsultation">
+                        <div class="eleve-summary-header">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>{{ eleveActuelConsultation.prenom }} {{ eleveActuelConsultation.nom }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Boutons de filtre (vue + mois) -->
+                    <div class="filtres-container">
+                        <div class="vue-filtres">
+                            <button class="filtre-btn" [class.active]="vueActiveConsultation === 'devoirs'"
+                                (click)="changerVueConsultation('devoirs')">
+                                <i class="fas fa-pencil-alt"></i>
+                                Devoirs / Interrogations
+                            </button>
+                            <button class="filtre-btn" [class.active]="vueActiveConsultation === 'trimestres'"
+                                (click)="changerVueConsultation('trimestres')">
+                                <i class="fas fa-calendar-alt"></i>
+                                Trimestres / Compositions
+                            </button>
+                        </div>
+
+                        <!-- Filtre par mois -->
+                        <div class="mois-filtre" *ngIf="getMoisDisponiblesConsultation().length > 0">
+                            <select class="form-control" [(ngModel)]="moisConsultation"
+                                (change)="changerMoisConsultation(moisConsultation)">
+                                <option [ngValue]="null">Tous les mois</option>
+                                @for (mois of getMoisDisponiblesConsultation(); track mois) {
+                                <option [ngValue]="mois">{{ getNomMois(mois) }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tableau pour les_DEVOIRS/INTERROGATIONS -->
+                    <div class="notes-table-container" *ngIf="vueActiveConsultation === 'devoirs'">
+                        <table class="notes-table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Notes</th>
+                                    <th>Appréciation</th>
+                                    <th>Aperçu</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (note of getDonneesDevoirsEleve(eleveActuelConsultation?.id || 0); track note.id) {
+                                <tr>
+                                    <td>
+                                        <div class="note-info">
+                                            <span class="note-type-badge" [attr.data-type]="note.type">{{ note.type
+                                                }}</span>
+                                            <span class="note-titre">{{ note.titre }}</span>
+                                            <span class="note-matiere">{{ note.matiere }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="note-value" [class.high]="note.note >= 15"
+                                            [class.medium]="note.note >= 10 && note.note < 15"
+                                            [class.low]="note.note < 10">
+                                            {{ note.note | number:'1.2-2' }}/20
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="appreciation"
+                                            [attr.data-appreciation]="determinerAppreciationDevoir(note.note)">
+                                            {{ determinerAppreciationDevoir(note.note) || '--' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-apercu"
+                                            (click)="voirFichierDevoir(note, eleveActuelConsultation)"
+                                            [title]="getFichierUpload(eleveActuelConsultation?.id || 0, getDevoirIdFromTitre(note.titre, note.type)) ? 'Voir le fichier joint' : 'Générer un reçu'">
+                                            <i class="fas fa-eye"></i>
+                                            @if (getFichierUpload(eleveActuelConsultation?.id || 0,
+                                            getDevoirIdFromTitre(note.titre, note.type))) {
+                                            Voir
+                                            } @else {
+                                            Reçu
+                                            }
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span class="note-date">{{ note.date }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="actions-btns">
+                                            <button class="btn-action btn-download" title="Télécharger"
+                                                (click)="telechargerOuGenererRecu(note, eleveActuelConsultation)">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </button>
+                                            <button class="btn-action btn-send" title="Envoyer au parent"
+                                                (click)="envoyerNoteParent(note, eleveActuelConsultation)">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                </tr>
+                                }
+                                @if (getDonneesDevoirsEleve(eleveActuelConsultation?.id || 0).length === 0) {
+                                <tr>
+                                    <td colspan="6" class="no-data">
+                                        <i class="fas fa-clipboard"></i>
+                                        <p>Aucun devoir ou interrogation enregistré</p>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tableau pour les TRIMESTRES/COMPOSITIONS -->
+                    <div class="moyennes-table-container" *ngIf="vueActiveConsultation === 'trimestres'">
+                        <table class="moyennes-table">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Moyenne</th>
+                                    <th>Appréciation</th>
+                                    <th>Aperçu Bulletin</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (trimestre of getDonneesTrimestresEleve(eleveActuelConsultation?.id || 0); track
+                                trimestre.id) {
+                                <tr>
+                                    <td>
+                                        <div class="trimestre-info">
+                                            <span class="trimestre-type" [attr.data-type]="trimestre.type">{{
+                                                trimestre.type }}</span>
+                                            <span class="trimestre-titre">{{ trimestre.titre }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="moyenne-value" [class.high]="trimestre.moyenne >= 15"
+                                            [class.medium]="trimestre.moyenne >= 10 && trimestre.moyenne < 15"
+                                            [class.low]="trimestre.moyenne < 10">
+                                            {{ trimestre.moyenne | number:'1.2-2' }}/20
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="appreciation-default">{{
+                                            getAppreciationTrimestre(trimestre.moyenne) }}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-apercu"
+                                            (click)="genererBulletinPdf(eleveActuelConsultation)">
+                                            <i class="fas fa-eye"></i> Voir
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span class="trimestre-date">{{ trimestre.date }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="actions-btns">
+                                            <button class="btn-action btn-download" title="Télécharger le bulletin"
+                                                (click)="telechargerBulletin()">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                            <button class="btn-action btn-send" title="Envoyer au parent"
+                                                (click)="envoyerBulletinWhatsApp(eleveActuelConsultation)">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                }
+                                @if (getDonneesTrimestresEleve(eleveActuelConsultation?.id || 0).length === 0) {
+                                <tr>
+                                    <td colspan="6" class="no-data">
+                                        <i class="fas fa-clipboard"></i>
+                                        <p>Aucune note de trimestre enregistrée</p>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -220,144 +577,722 @@
     <div class="modal-overlay" *ngIf="showCreateDevoirModal" (click)="showCreateDevoirModal = false">
         <div class="modal-container" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fas fa-pencil-alt"></i> Nouveau {{ formDevoir.type === 'devoir' ? 'Devoir' :
-                    'Interrogation' }}</h3>
+                <h3>
+                    <i class="fas fa-pencil-alt"></i>
+                    Nouveau {{ formDevoir.type === 'devoir' ? 'Devoir' : 'Interrogation' }}
+                </h3>
                 <button class="modal-close" (click)="showCreateDevoirModal = false">×</button>
             </div>
             <div class="modal-body form-modal-body">
+                <!-- Type d'évaluation -->
                 <div class="form-group">
-                    <label>Type</label>
+                    <label>Type d'évaluation</label>
                     <select class="form-control" [(ngModel)]="formDevoir.type">
                         <option value="devoir">Devoir</option>
                         <option value="interrogation">Interrogation</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Titre</label><input class="form-control" [(ngModel)]="formDevoir.titre">
+
+                <!-- Titre du devoir -->
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input class="form-control" [(ngModel)]="formDevoir.titre"
+                        placeholder="Ex: Devoir de Mathématiques">
                 </div>
-                <div class="form-group"><label>Matière</label>
+
+                <!-- Matière (depuis le service partagé!) -->
+                <div class="form-group" *ngIf="selectedClasse">
+                    <label>Matière</label>
                     <select class="form-control" [(ngModel)]="formDevoir.matiere">
-                        <option *ngFor="let m of getMatieresClasse()" [value]="m">{{ m }}</option>
+                        <option value="">-- Sélectionner une matière --</option>
+                        <option *ngFor="let m of getMatieresClasse(selectedClasse)" [value]="m">{{ m }}</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Date</label><input type="date" class="form-control"
-                        [(ngModel)]="formDevoir.date"></div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" class="form-control" [(ngModel)]="formDevoir.date">
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-prev" (click)="showCreateDevoirModal = false">Annuler</button>
-                <button class="btn-submit" (click)="creerDevoir()">Créer et attribuer les notes</button>
+                <button class="btn-prev" (click)="showCreateDevoirModal = false">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-submit" (click)="creerDevoir()"
+                    [disabled]="!formDevoir.titre || !formDevoir.matiere">
+                    <i class="fas fa-check"></i> Créer et attribuer les notes
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════ MODALE CRÉATION ÉVÉNEMENT COLLECTIF ═══════════ -->
+    <!-- ═══════════ MODALE CRÉATION TRIMESTRE (NOUVEAU!) ═══════════ -->
     <div class="modal-overlay" *ngIf="showCreateEvenementModal" (click)="showCreateEvenementModal = false">
         <div class="modal-container modal-large" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3><i class="fas fa-calendar-alt"></i> Nouvel événement</h3>
+                <h3>
+                    <i class="fas fa-calendar-alt"></i>
+                    Créer {{ formTrimestre.type === 'trimestre' ? 'un Trimestre' :
+                    formTrimestre.type === 'composition' ? 'une Composition' : 'un Examen' }}
+                </h3>
                 <button class="modal-close" (click)="showCreateEvenementModal = false">×</button>
             </div>
-            <div class="modal-body evenement-modal-body">
+            <div class="modal-body trimestre-creation-body">
+                <!-- Titre et Type -->
                 <div class="form-row">
-                    <div class="form-group half"><label>Type</label><select class="form-control"
-                            [(ngModel)]="formEvenement.type">
+                    <div class="form-group half">
+                        <label>Type d'évaluation</label>
+                        <select class="form-control" [(ngModel)]="formTrimestre.type">
                             <option value="trimestre">Trimestre</option>
                             <option value="composition">Composition</option>
                             <option value="examen">Examen</option>
-                        </select></div>
-                    <div class="form-group half"><label>Titre</label><input class="form-control"
-                            [(ngModel)]="formEvenement.titre"></div>
-                </div>
-                <div class="form-group"><label>Date</label><input type="date" class="form-control"
-                        [(ngModel)]="formEvenement.date"></div>
-
-                <h4 class="evenement-subtitle">Ajouter une matière</h4>
-                <div class="form-row">
-                    <div class="form-group half"><label>Nom</label><input class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.nom"></div>
-                    <div class="form-group half"><label>Moyenne classe/20</label><input type="number"
-                            class="form-control" [(ngModel)]="formEvenement.nouvelleMatiere.moyenneClasse" step="0.01">
+                        </select>
+                    </div>
+                    <div class="form-group half">
+                        <label>Titre</label>
+                        <input class="form-control" [(ngModel)]="formTrimestre.titre" placeholder="Ex: 1er Trimestre">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group half"><label>Note max</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.noteMax"></div>
-                    <div class="form-group half"><label>Moyenne/20</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.moyenne" step="0.01"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group half"><label>Coefficient</label><input type="number" class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.coefficient" step="1"></div>
-                    <div class="form-group half"><label>Appréciation</label><input class="form-control"
-                            [(ngModel)]="formEvenement.nouvelleMatiere.appreciation"></div>
-                </div>
-                <button class="btn-ajouter" (click)="ajouterMatiereEvenement()"><i class="fas fa-plus"></i>
-                    Ajouter</button>
 
-                <table *ngIf="formEvenement.matieres.length > 0" class="eleves-table">
-                    <thead>
-                        <tr>
-                            <th>Matière</th>
-                            <th>Moy.classe</th>
-                            <th>Note max</th>
-                            <th>Moy/20</th>
-                            <th>Coef</th>
-                            <th>Moy coef</th>
-                            <th>Appr.</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let m of formEvenement.matieres; let i = index">
-                            <td>{{ m.nom }}</td>
-                            <td>{{ m.moyenneClasse }}</td>
-                            <td>{{ m.noteMax }}</td>
-                            <td>{{ m.moyenne }}</td>
-                            <td>{{ m.coefficient }}</td>
-                            <td>{{ m.moyenneCoefficientee | number:'1.2-2' }}</td>
-                            <td>{{ m.appreciation }}</td>
-                            <td><button class="btn-action supprimer" (click)="supprimerMatiereEvenement(i)"><i
-                                        class="fas fa-trash"></i></button></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="evenement-totaux" *ngIf="formEvenement.matieres.length > 0">
-                    <span>Total coefficient : {{ formEvenement.totalCoefficient }}</span>
-                    <span>Total moy coef : {{ formEvenement.totalMoyenneCoefficientee | number:'1.2-2' }}</span>
-                    <span>Moyenne générale : {{ formEvenement.moyenneGenerale | number:'1.2-2' }}</span>
+                <!-- Date -->
+                <div class="form-group">
+                    <label>Date de l'évaluation</label>
+                    <input type="date" class="form-control" [(ngModel)]="formTrimestre.date">
+                </div>
+
+                <!-- MATIÈRES (NOUVEAU: on coche!) -->
+                <div class="matiere-section">
+                    <h4 class="matiere-section-title">
+                        <i class="fas fa-check-square"></i>
+                        Matières évaluées
+                        <span class="matiere-count">({{ formTrimestre.matieres.length }} cochée(s))</span>
+                    </h4>
+                    <p class="matiere-hint">
+                        Cochez les matières sur lesquelles les élèves seront évalués.
+                        Les notes détaillées seront saisies par élève ensuite.
+                    </p>
+
+                    <div class="matiere-grid" *ngIf="selectedClasse">
+                        <label class="matiere-checkbox" *ngFor="let matiere of getMatieresClasse(selectedClasse)"
+                            [class.checked]="isMatiereSelected(matiere)">
+                            <input type="checkbox" [checked]="isMatiereSelected(matiere)"
+                                (change)="toggleMatiereTrimestre(matiere)" style="display: none;">
+                            <span class="checkbox-icon">
+                                <i class="fas" [class.fa-check-square]="isMatiereSelected(matiere)"
+                                    [class.fa-square]="!isMatiereSelected(matiere)"></i>
+                            </span>
+                            <span class="matiere-name">{{ matiere }}</span>
+                        </label>
+                    </div>
+
+                    <div class="no-matiere-warning" *ngIf="!selectedClasse">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Veuillez sélectionner une classe d'abord.
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-prev" (click)="showCreateEvenementModal = false">Annuler</button>
-                <button class="btn-submit" (click)="enregistrerEvenement()">Enregistrer</button>
+                <button class="btn-prev" (click)="showCreateEvenementModal = false">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-submit" (click)="enregistrerEvenement()"
+                    [disabled]="!formTrimestre.titre || formTrimestre.matieres.length === 0">
+                    <i class="fas fa-check"></i> Créer et saisir les notes
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════ MODALE ATTRIBUTION NOTES ═══════════ -->
-    <div class="modal-overlay" *ngIf="showAttribuerNotesModal as ctx" (click)="showAttribuerNotesModal = null">
-        <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════════════
+     MODALE ATTRIBUTION NOTES DE TRIMESTRE - NOUVELLE VERSION AVEC PANNEAU LATERAL
+     ═══════════════════════════════════════════════════════════════════════════════════════ -->
+
+    <!--
+        NOUVELLE STRUCTURE:
+        - Popup plus grand (modal-xl)
+        - Panneau latéral gauche: liste des élèves + recherche
+        - Zone principale à droite: formulaire de saisie
+        
+        L'utilisateur peut:
+        1. Rechercher un élève spécifique
+        2. Cliquer sur un élève pour voir ses notes
+        3. Naviguer librement entre les élèves
+        4. Enregistrer soit un élève, soit tous
+    -->
+    <div class="modal-overlay" *ngIf="showAttribuerTrimestreModal" (click)="fermerAttribuerTrimestreModal()">
+        <!-- Classe modal-xl pour un popup plus grand -->
+        <div class="modal-container modal-xl" (click)="$event.stopPropagation()">
+
+            <!-- EN-TÊTE DU MODAL -->
             <div class="modal-header">
-                <h3><i class="fas fa-clipboard-list"></i> Attribuer les notes — {{ ctx.titre }}</h3>
-                <button class="modal-close" (click)="showAttribuerNotesModal = null">×</button>
+                <h3>
+                    <i class="fas fa-user-graduate"></i>
+                    Saisie des notes de trimestre
+                    <!-- Afficher le nom de l'élève actuel -->
+                    @if (getEleveActuel(); as eleveActuel) {
+                    <span class="eleve-actuel-name">{{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
+                    }
+                </h3>
+                <button class="modal-close" (click)="fermerAttribuerTrimestreModal()">×</button>
             </div>
-            <div class="modal-body attribution-modal-body">
-                <div class="attribution-intro">
-                    <p>Saisissez la note de chaque élève (sur 20) :</p>
+
+            <!-- CORPS DU MODAL - DEUX ZONES: Latérale + Principale -->
+            <div class="modal-body trimestre-modal-body">
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     PANNEAU LATERAL GAUCHE - LISTE DES ÉLÈVES
+                     ═══════════════════════════════════════════════════════════════════ -->
+                <div class="trimestre-sidebar">
+
+                    <!-- Titre du panneau -->
+                    <div class="sidebar-header">
+                        <h4><i class="fas fa-users"></i> Élèves</h4>
+                        <span class="eleve-count">{{ elevesFiltresTrimestre.length }} / {{
+                            currentTrimestreState?.eleves?.length || 0 }}</span>
+                    </div>
+
+                    <!-- Champ de recherche -->
+                    <div class="sidebar-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" [(ngModel)]="rechercheEleveTrimestre" placeholder="Rechercher un élève...">
+                    </div>
+
+                    <!-- Liste des élèves - on peut cliquer sur n'importe lequel -->
+                    <div class="sidebar-eleves">
+                        @for (eleve of elevesFiltresTrimestre; track eleve.id) {
+                        <div class="eleve-list-item" [class.active]="getEleveActuel()?.id === eleve.id"
+                            [class.has-notes]="aDesNotesTemporaires(eleve.id)"
+                            [class.confirmed]="aSesNotesEnregistrees(eleve.id)"
+                            (click)="selectEleveForTrimestre(eleve)">
+                            <div class="eleve-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="eleve-info">
+                                <span class="eleve-nom">{{ eleve.prenom }} {{ eleve.nom }}</span>
+                                @if (aSesNotesEnregistrees(eleve.id)) {
+                                <span class="eleve-status confirmed"><i class="fas fa-check-circle"></i>
+                                    Enregistré</span>
+                                } @else if (aDesNotesTemporaires(eleve.id)) {
+                                <span class="eleve-status"><i class="fas fa-edit"></i> Notes saisies</span>
+                                }
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Indicateur de progression -->
+                    <div class="sidebar-progress">
+                        <div class="progress-text">
+                            {{ nbElevesEnregistres }} / {{ currentTrimestreState?.eleves?.length || 0 }} élèves
+                            enregistré(s)
+                        </div>
+                        <div class="progress-bar-compact">
+                            <div class="progress-fill"
+                                [style.width.%]="(nbElevesEnregistres / (currentTrimestreState?.eleves?.length || 1)) * 100">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="eleve-list attribution-list">
-                    <div class="eleve-item attribution-item" *ngFor="let att of formAttribuer; let i = index">
-                        <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
-                        <div class="attribution-input-wrap">
-                            <input type="number" [(ngModel)]="att.note" class="form-control attribution-input" min="0"
-                                max="40" placeholder="0">
-                            <span class="attribution-max">/20</span>
+
+                <!-- ═══════════════════════════════════════════════════════════════════
+                     ZONE PRINCIPALE DROITE - FORMULAIRE DE SAISIE
+                     ═══════════════════════════════════════════════════════════ -->
+                <div class="trimestre-main">
+
+                    <!-- Indicateur de progression - BARRE SIMPLE (%) avec sticky pour rester visible -->
+                    <div class="saisie-progress sticky">
+                        <div class="progress-info">
+                            <span>Progression: {{ nbElevesEnregistres }} / {{ currentTrimestreState?.eleves?.length || 0
+                                }} élèves</span>
+                            @if (getEleveActuel(); as eleveActuel) {
+                            <span class="progress-name">Actuel: {{ eleveActuel.prenom }} {{ eleveActuel.nom }}</span>
+                            }
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"
+                                [style.width.%]="(nbElevesEnregistres / (currentTrimestreState?.eleves?.length || 1)) * 100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indicateur mode consultation -->
+                    @if (modeConsultationTrimestre) {
+                    <div class="consultation-banner">
+                        <i class="fas fa-lock"></i>
+                        <span>Notes verrouillées — Consultation seule</span>
+                    </div>
+                    }
+
+                    <!-- Instructions -->
+                    <p class="saisie-hint" [class.consultation-hint]="modeConsultationTrimestre">
+                        <i class="fas fa-info-circle"></i>
+                        @if (modeConsultationTrimestre) {
+                        Consultation des notes confirmées:
+                        } @else {
+                        Saisissez les notes pour chaque matière cochée lors de la création du trimestre:
+                        }
+                    </p>
+
+                    <!-- Formulaire par matière - une ligne par matière -->
+                    <div class="saisie-matieres">
+                        <div class="saisie-ligne" *ngFor="let ligne of formAttribuerTrimestre; let i = index">
+                            <!-- Nom de la matière à gauche -->
+                            <div class="ligne-matiere">{{ ligne.matiere }}</div>
+
+                            <!-- Champs de saisie à droite -->
+                            <div class="ligne-champs" [class.readonly]="modeConsultationTrimestre">
+                                <div class="champ">
+                                    <label>Moy. Classe/20</label>
+                                    <input type="number" [(ngModel)]="ligne.moyenneClasse"
+                                        (change)="miseAJourAutomatique(i)" [readonly]="modeConsultationTrimestre"
+                                        step="0.01" min="0" max="20" class="form-control">
+                                </div>
+                                <div class="champ">
+                                    <label>Note/40</label>
+                                    <input type="number" [(ngModel)]="ligne.noteCompo"
+                                        (change)="miseAJourAutomatique(i)" [readonly]="modeConsultationTrimestre"
+                                        step="0.01" min="0" max="40" class="form-control">
+                                </div>
+                                <div class="champ auto-calc">
+                                    <label>Moy/20</label>
+                                    <input type="number" [(ngModel)]="ligne.moyenne" readonly class="form-control"
+                                        step="0.01" min="0" max="20">
+                                </div>
+                                <div class="champ">
+                                    <label>Coef</label>
+                                    <input type="number" [(ngModel)]="ligne.coefficient" readonly class="form-control"
+                                        step="1" min="1">
+                                </div>
+                                <div class="champ coef-calc">
+                                    <label>Moy coef</label>
+                                    <span class="calc-result">
+                                        {{ ligne.moyenne * ligne.coefficient | number:'1.2-2' }}
+                                    </span>
+                                </div>
+                                <div class="champ auto-calc">
+                                    <label>Appréciation</label>
+                                    <span class="appreciation-badge" [attr.data-appreciation]="ligne.appreciation">
+                                        {{ ligne.appreciation || '--' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Moyenne générale du trimestre pour l'élève actuel -->
+                    <div class="moyenne-general-box">
+                        <div class="moyenne-general-label">
+                            <i class="fas fa-chart-line"></i>
+                            @if (getEleveActuel(); as eleveActuel) {
+                            {{ getTitreTrimestre() }} - {{ eleveActuel.prenom }} {{ eleveActuel.nom }}
+                            }
+                        </div>
+                        <div class="moyenne-general-value">
+                            {{ moyenneGeneraleTrimestre | number:'1.2-2' }} <span>/ 20</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+
+            <!-- PIED DU MODAL - BOUTONS D'ACTION -->
+            <div class="modal-footer trimestre-footer">
+                <button class="btn-prev" (click)="fermerAttribuerTrimestreModal()">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+
+                <!-- Bouton apperçu du bulletin PDF - uniquement si les notes sont verrouillées (mode consultation) -->
+                @if (modeConsultationTrimestre) {
+                <button class="btn-preview" (click)="genererBulletinPdf(getEleveActuel())">
+                    <i class="fas fa-file-pdf"></i> Aperçu bulletin
+                </button>
+                }
+
+                <!-- Bouton enregistrer UN SEUL élève (dynamique avec le nom) - OUVRE LE POPUP DE CONFIRMATION -->
+                <button class="btn-submit" (click)="ouvrirConfirmationTrimestre()" [disabled]="eleveActuelEnregistre">
+                    <i class="fas fa-save"></i>
+                    @if (getEleveActuel(); as eleveActuel) {
+                    {{ eleveActuelEnregistre ? 'Enregistré' : 'Enregistrer l\'élève ' + eleveActuel.prenom + ' ' + eleveActuel.nom }}
+                    }
+                </button>
+
+                <!-- Bouton passer à l'élève suivant -->
+                <button class="btn-next" (click)="siguienteEleveTrimestre()"
+                    [disabled]="(currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0)">
+                    <i class="fas fa-arrow-right"></i>
+                    {{ (currentTrimestreState?.eleveIndex || 0) + 1 >= (currentTrimestreState?.eleves?.length || 0) ?
+                    'Dernier élève' : 'Élève suivant' }}
+                </button>
+
+                <!-- Bouton enregistrer TOUS les élèves - uniquement activé quand tous ont enregistré -->
+                <button class="btn-submit btn-submit-all" (click)="enregistrerTousLesEleves()"
+                    [disabled]="!tousLesElevesEnregistres">
+                    <i class="fas fa-check-double"></i>
+                    Enregistrer tous les élèves ({{ nbElevesEnregistres}}/{{ currentTrimestreState?.eleves?.length }})
+                </button>
+                
+                <!-- Bouton Resultat - affiche le classement -->
+                <button class="btn-footer" (click)="showClassementGlobal = true" [disabled]="classementGlobal.length === 0">
+                    <i class="fas fa-trophy"></i> Résultat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════
+         POPUP DE CONFIRMATION ENREGISTREMENT TRIMESTRE
+         ==================================================================================================================================
+         
+         Ce popup s'affiche quand l'utilisateur clique sur "Enregistrer l'élève [Prénom Nom]".
+         Il affiche:
+         - Le résumé des notes saisies pour chaque matière
+         - La moyenne du trimestre pour l'élève
+         - Un bouton pour confirmer (enregistre définitivement)
+         - Un bouton pour annuler (pour modifier)
+         
+         Design professionnel avec animations.
+    -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showConfirmationTrimestreModal"
+        (click)="fermerConfirmationTrimestre()">
+        <div class="modal-container confirmation-modal" (click)="$event.stopPropagation()">
+
+            <!-- En-tête du popup avec icône animée -->
+            <div class="confirmation-header">
+                <div class="confirmation-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Confirmer l'enregistrement</h3>
+                <button class="modal-close" (click)="fermerConfirmationTrimestre()">×</button>
+            </div>
+
+            <!-- Corps du popup avec résumé des notes -->
+            <div class="modal-body confirmation-body">
+                <p class="confirmation-intro">
+                    Vérifiez les notes de <strong>{{ getEleveActuel()?.prenom }} {{ getEleveActuel()?.nom }}</strong>
+                    pour le {{ getTitreTrimestre() }} avant de confirmer:
+                </p>
+
+                <!-- Tableau récapitulatif des notes -->
+                <div class="confirmation-table">
+                    <div class="confirmation-table-header">
+                        <span>Matière</span>
+                        <span>Moy. Classe</span>
+                        <span>Note/40</span>
+                        <span>Moy/20</span>
+                        <span>Coef</span>
+                        <span>Moy. Coef</span>
+                        <span>Appréciation</span>
+                    </div>
+
+                    <div class="confirmation-table-row" *ngFor="let ligne of formAttribuerTrimestre">
+                        <span class="matiere">{{ ligne.matiere }}</span>
+                        <span>{{ ligne.moyenneClasse | number:'1.2-2' }}</span>
+                        <span>{{ ligne.noteCompo | number:'1.2-2' }}</span>
+                        <span class="moyenne">{{ ligne.moyenne | number:'1.2-2' }}</span>
+                        <span>{{ ligne.coefficient }}</span>
+                        <span class="moyenne-coef">{{ ligne.moyenneCoefficientee | number:'1.2-2' }}</span>
+                        <span class="appreciation" [attr.data-appreciation]="ligne.appreciation">
+                            {{ ligne.appreciation || '--' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Moyenne générale -->
+                <div class="confirmation-moyenne">
+                    <span class="label">Moyenne générale du {{ getTitreTrimestre() }}:</span>
+                    <span class="value">{{ moyenneGeneraleTrimestre | number:'1.2-2' }} / 20</span>
+                </div>
+
+                <p class="confirmation-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Attention: Après confirmation, vous ne pourrez plus modifier ces notes.
+                </p>
+            </div>
+
+            <!-- Pied du popup avec boutons -->
+            <div class="modal-footer confirmation-footer">
+                <button class="btn-cancel" (click)="fermerConfirmationTrimestre()">
+                    <i class="fas fa-arrow-left"></i> Modifier
+                </button>
+                <button class="btn-confirm" (click)="confirmerEnregistrementTrimestre()">
+                    <i class="fas fa-check"></i> Confirmer et enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODALE ATTRIBUTION NOTES SIMPLES ═══════════ -->
+    <div class="modal-overlay" *ngIf="showAttribuerNotesModal as ctx" (click)="showAttribuerNotesModal = null">
+        <div class="modal-container attribution-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-clipboard-check"></i> Saisie des Notes</h3>
+                <button class="modal-close" (click)="showAttribuerNotesModal = null">×</button>
+            </div>
+            <div class="modal-body attribution-modal-body">
+                <div class="attribution-header">
+                    <div class="attribution-info">
+                        <span class="info-badge"><i class="fas fa-book"></i> {{ formDevoir.matiere }}</span>
+                        <span class="info-badge"><i class="fas fa-tag"></i> {{ ctx.titre }}</span>
+                        <span class="info-badge type-badge"><i class="fas fa-clock"></i> {{ ctx.type }}</span>
+                    </div>
+                    <div class="attribution-stats">
+                        <span class="stat-item">
+                            <strong>{{ formAttribuer.length }}</strong> élève(s)
+                        </span>
+                        <span class="stat-item">
+                            <strong>{{ getNombreNotesSaisies() }}</strong> note(s)
+                        </span>
+                    </div>
+                </div>
+                <div class="attribution-list">
+                    <div class="attribution-list-header">
+                        <span>Élève</span>
+                        <span>Note</span>
+                    </div>
+                    <div class="attribution-scroll">
+                        <div class="attribution-row" *ngFor="let att of formAttribuer; let i = index"
+                            [class.has-note]="att.note > 0">
+                            <div class="eleve-info">
+                                <span class="eleve-number">{{ i + 1 }}</span>
+                                <span class="attribution-name">{{ getEleveName(att.eleveId) }}</span>
+                            </div>
+                            <div class="attribution-input-wrap">
+                                <input type="number" [(ngModel)]="att.note" class="form-control attribution-input"
+                                    min="0" max="20" placeholder="—">
+                                <span class="attribution-max">/20</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer attribution-footer">
                 <button class="btn-prev" (click)="showAttribuerNotesModal = null">Annuler</button>
-                <button class="btn-submit" (click)="enregistrerAttribution()">Enregistrer</button>
+                <button class="btn-submit" (click)="enregistrerAttribution()">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP CONFIRMATION DEVOIR ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showConfirmationDevoirModal" (click)="fermerConfirmationDevoir()">
+        <div class="modal-container confirmation-modal" (click)="$event.stopPropagation()">
+            <div class="confirmation-header">
+                <div class="confirmation-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Confirmer l'enregistrement du devoir</h3>
+                <button class="modal-close" (click)="fermerConfirmationDevoir()">×</button>
+            </div>
+            <div class="modal-body confirmation-body">
+                <p class="confirmation-intro">
+                    Vérifiez les notes saisies pour <strong>{{ showAttribuerNotesModal?.titre }}</strong> 
+                    ({{ showAttribuerNotesModal?.type }}) :
+                </p>
+                <div class="confirmation-table">
+                    <div class="confirmation-table-header">
+                        <span>Élève</span>
+                        <span>Note/20</span>
+                    </div>
+                    <div class="confirmation-table-row" *ngFor="let att of formAttribuer">
+                        <span class="matiere">{{ getEleveName(att.eleveId) }}</span>
+                        <span class="moyenne" [class.high]="att.note >= 15" [class.medium]="att.note >= 10 && att.note < 15" [class.low]="att.note < 10">
+                            {{ att.note >= 0 ? (att.note | number:'1.2-2') : '-' }}
+                        </span>
+                    </div>
+                </div>
+                <p class="confirmation-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Attention: Après confirmation, vous ne pourrez plus modifier ces notes.
+                </p>
+            </div>
+            <div class="modal-footer confirmation-footer">
+                <button class="btn-cancel" (click)="fermerConfirmationDevoir()">
+                    <i class="fas fa-arrow-left"></i> Modifier
+                </button>
+                <button class="btn-confirm" (click)="confirmerEnregistrementDevoir()">
+                    <i class="fas fa-check"></i> Confirmer et enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP CLASSEMENT DEVOIR ═══════════ -->
+    <div class="modal-overlay" *ngIf="showClassementDevoirModal" (click)="fermerClassementDevoirModal()">
+        <div class="modal-container modal-xl" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-trophy"></i> Classement - {{ devoirSelectionneClassement?.titre }}</h3>
+                <button class="modal-close" (click)="fermerClassementDevoirModal()">×</button>
+            </div>
+            <div class="modal-body classement-body-scroll">
+                <div class="classement-info">
+                    <span class="info-badge">
+                        <i class="fas fa-book"></i> {{ devoirSelectionneClassement?.matiere }}
+                    </span>
+                    <span class="info-badge premiere">
+                        <i class="fas fa-crown"></i> Plus haute note : {{ premiereNoteDevoir }}/20
+                    </span>
+                </div>
+                <table class="classement-table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Élève</th>
+                            <th>Note/20</th>
+                            <th>Appréciation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of classementDevoir" [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementDevoir.length - 2">
+                            <td class="rang-cell">
+                                <span *ngIf="item.rang === 1" class="rang-badge or">1</span>
+                                <span *ngIf="item.rang === 2" class="rang-badge argent">2</span>
+                                <span *ngIf="item.rang === 3" class="rang-badge bronze">3</span>
+                                <span *ngIf="item.rang > 3" class="rang-number">{{ item.rang }}</span>
+                            </td>
+                            <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
+                            <td class="moyenne-cell">{{ item.note | number:'1.2-2' }}/20</td>
+                            <td class="appreciation-cell">{{ getAppreciationDevoir(item.note) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer classement-footer">
+                <button class="btn-footer" (click)="telechargerClassementDevoirPdf()">
+                    <i class="fas fa-download"></i> PDF Classement
+                </button>
+                <button class="btn-footer btn-primary" (click)="imprimerClassementDevoir()">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn-footer btn-outline" (click)="fermerClassementDevoirModal()">
+                    <i class="fas fa-check"></i> Terminer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP APERÇU BULLETIN PDF ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuBulletin" (click)="showApercuBulletin = false">
+        <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">
+            <div class="apercu-header">
+                <h3><i class="fas fa-file-pdf"></i> Aperçu du Bulletin</h3>
+                <button class="modal-close" (click)="showApercuBulletin = false">×</button>
+            </div>
+            <div class="apercu-content">
+                <iframe [src]="pdfApercuSafeUrl" class="pdf-iframe" type="application/pdf"></iframe>
+            </div>
+            <div class="apercu-footer">
+                <button class="btn-download" (click)="telechargerBulletin()">
+                    <i class="fas fa-download"></i> Télécharger PDF
+                </button>
+                <button class="btn-close" (click)="showApercuBulletin = false">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP APERÇU REÇU DE NOTE ═══════════ -->
+    <div class="modal-overlay confirmation-overlay" *ngIf="showApercuRecu" (click)="fermerApercuRecu()">
+        <div class="modal-container apercu-modal" (click)="$event.stopPropagation()">
+            <div class="apercu-header">
+                <h3><i class="fas fa-file-pdf"></i> Reçu de Note</h3>
+                <button class="modal-close" (click)="fermerApercuRecu()">×</button>
+            </div>
+            <div class="apercu-content">
+                <iframe [src]="apercuRecuSafeUrl" class="pdf-iframe" type="application/pdf"></iframe>
+            </div>
+            <div class="apercu-footer">
+                <button class="btn-download" (click)="telechargerRecuDirect()">
+                    <i class="fas fa-download"></i> Télécharger
+                </button>
+                <button class="btn-close" (click)="fermerApercuRecu()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ POPUP CLASSEMENT GLOBAL ═══════════ -->
+    <div class="modal-overlay" *ngIf="showClassementGlobal" (click)="fermerClassementGlobal()">
+        <div class="modal-container classement-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="fas fa-trophy"></i> Classement du Trimestre</h3>
+                <button class="modal-close" (click)="fermerClassementGlobal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="classement-info">
+                    <span class="info-badge premiere">
+                        <i class="fas fa-crown"></i> La plus forte moyenne est : {{ premiereMoyenneClasse |
+                        number:'1.2-2' }}/20
+</span>
+                </div>
+                <div class="classement-table-container">
+                    <table class="classement-table">
+                        <thead>
+                            <tr>
+                                <th>Rang</th>
+                                <th>Élève</th>
+                                <th>Moyenne</th>
+                                <th>Aperçu</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (item of classementGlobal; track item.rang) {
+                            <tr [class.first]="item.rang === 1" [class.derniere]="item.rang >= classementGlobal.length - 2">
+                                <td class="rang-cell">
+                                    @if (item.rang === 1) {
+                                    <span class="rang-badge or">1</span>
+                                    } @else if (item.rang === 2) {
+                                    <span class="rang-badge argent">2</span>
+                                    } @else if (item.rang === 3) {
+                                    <span class="rang-badge bronze">3</span>
+                                    } @else {
+                                    <span class="rang-number">{{ item.rang }}</span>
+                                    }
+                                </td>
+                                <td class="eleve-name">{{ item.eleve.prenom }} {{ item.eleve.nom }}</td>
+                                <td class="moyenne-cell">{{ item.moyenne | number:'1.2-2' }}/20</td>
+                                <td>
+                                    <button class="btn-action btn-preview" title="Aperçu"
+                                        (click)="genererBulletinPdf(item.eleve, premiereMoyenneClasse, currentTrimestreState?.trimestreId)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <div class="actions-btns">
+                                        <button class="btn-action btn-download" title="Télécharger PDF"
+                                            (click)="telechargerBulletinPdf(item.eleve, premiereMoyenneClasse, currentTrimestreState?.trimestreId)">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn-action btn-send" title="Envoyer au parent"
+                                            (click)="envoyerBulletinWhatsApp(item.eleve)">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer classement-footer">
+                <div class="footer-left">
+                    <button class="btn-footer" (click)="telechargerClassement()">
+                        <i class="fas fa-list-ol"></i> Classement
+                    </button>
+                </div>
+                <div class="footer-center">
+                    <button class="btn-footer btn-primary" (click)="imprimerTousBulletins()">
+                        <i class="fas fa-print"></i> Imprimer PDF
+                    </button>
+                    <button class="btn-footer btn-success" (click)="telechargerTousBulletins()">
+                        <i class="fas fa-file-pdf"></i> Tous les PDF
+                    </button>
+                </div>
+                <div class="footer-right">
+                    <button class="btn-footer btn-outline" (click)="fermerAttribuerTrimestreModal(); fermerClassementGlobal()">
+                        <i class="fas fa-check"></i> Terminer
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -1,54 +1,230 @@
 <div class="page-layout">
     <app-sidebar></app-sidebar>
 
-    <main class="page-content">
-        <header class="page-header">
-            <div>
-                <h1>Portail Parents</h1>
-                <p class="subtitle">Suivez la scolarité de vos enfants</p>
+    <!-- Notification Popup - Inside main for proper positioning -->
+    <div class="notification-modal-overlay" [class.show]="showNotifications" (click)="closeNotifications()">
+        <div class="notification-popup" (click)="$event.stopPropagation()">
+            <div class="popup-header">
+                <h4>Messages de l'école</h4>
+                <button class="close-btn" (click)="closeNotifications()">
+                    <span class="material-icons">close</span>
+                </button>
             </div>
+            <div class="popup-subheader">
+                <span class="unread-count">{{ unreadMessages }} message(s) non lu(s)</span>
+            </div>
+            <div class="popup-messages">
+                <div class="message-item unread">
+                    <span class="message-icon">
+                        <span class="material-icons">admin_panel_settings</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Administration</p>
+                        <p class="message-preview">Information importante concernant la rentrée scolaire...</p>
+                        <p class="message-time">Il y a 2 heures</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">event</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Réunion Parents</p>
+                        <p class="message-preview">Réunion prévue le 15 Juin à 10h00...</p>
+                        <p class="message-time">Hier</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">assignment</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Bulletin Trimestre</p>
+                        <p class="message-preview">Les bulletins du 2ème trimestre sont disponibles...</p>
+                        <p class="message-time">Il y a 3 jours</p>
+                    </div>
+                </div>
+                <div class="message-item">
+                    <span class="message-icon">
+                        <span class="material-icons">school</span>
+                    </span>
+                    <div class="message-content">
+                        <p class="message-title">Absence de votre enfant</p>
+                        <p class="message-preview">Votre enfant était absent aujourd'hui...</p>
+                        <p class="message-time">Il y a 5 jours</p>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="view-all-btn">Voir tous les messages</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-content">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1>Bienvenue sur votre Portail Parent</h1>
+                <p class="subtitle">Suivez la scolarité de vos enfants en temps réel</p>
+            </div>
+            <div class="header-actions">
+                <div class="notification-container">
+                    <div class="notification-bell" title="Notifications" (click)="toggleNotifications($event)">
+                        <span class="material-icons">mail</span>
+                        <span class="notification-badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+                    </div>
+                    <span class="notification-label">Messages de l'école</span>
+                </div>
+            </div>
+            <div class="header-decoration"></div>
         </header>
 
-        <!-- Children Selector -->
-        <div *ngIf="children.length > 1" class="children-selector">
-            <button *ngFor="let child of children" (click)="selectChild(child)"
-                [class.active]="selectedChild?.id === child.id" class="child-button">
-                <div class="child-avatar">
-                    <span class="material-icons">person</span>
+<!-- Children Cards - Slider mode (> 3 children) -->
+        <div class="children-slider-section" *ngIf="children.length > 3">
+            <div class="slider-container">
+                <button class="slider-btn prev" (click)="prevSlide()" [disabled]="currentSlide === 0">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+
+                <div class="slider-wrapper">
+                    <div class="slider-track" [style.transform]="'translateX(-' + (currentSlide * (100 / children.length)) + '%)'">
+                        <div class="child-card" 
+                             *ngFor="let child of children; let i = index"
+                             [class.active]="selectedChild?.id === child.id"
+                             (click)="goToSlide(i)">
+                            <div class="card-glow"></div>
+                            <div class="child-avatar" [style.background]="'linear-gradient(135deg, ' + child.photo + ', ' + child.photo + '99)'">
+                                <span class="avatar-initials">{{ getInitials(child.firstName, child.lastName) }}</span>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <div class="child-info">
+                                <h3 class="child-name">{{ child.name }}</h3>
+                                <span class="child-class">
+                                    <span class="material-icons">school</span>
+                                    {{ child.className }}
+                                </span>
+                            </div>
+                            <div class="card-status">
+                                <span class="status-dot" [class.active]="selectedChild?.id === child.id"></span>
+                                <span class="status-text">{{ selectedChild?.id === child.id ? 'Sélectionné' : 'Cliquer pour voir' }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <p class="child-name">{{ child.name }}</p>
-                    <p class="child-class">{{ child.className }}</p>
-                </div>
-            </button>
+
+                <button class="slider-btn next" (click)="nextSlide()" [disabled]="currentSlide === children.length - 1">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Slider Dots -->
+            <div class="slider-dots">
+                <button class="dot" 
+                        *ngFor="let child of children; let i = index"
+                        [class.active]="currentSlide === i"
+                        (click)="goToSlide(i)">
+                </button>
+            </div>
         </div>
 
-        <!-- Child Overview -->
+        <!-- Children Cards - Grid mode (<= 3 children) -->
+        <div class="children-grid-section" *ngIf="children.length > 0 && children.length <= 3">
+            <div class="grid-container">
+                <div class="child-card" 
+                     *ngFor="let child of children; let i = index"
+                     [class.active]="selectedChild?.id === child.id"
+                     (click)="selectChild(child); currentSlide = i">
+                    <div class="card-glow"></div>
+                    <div class="child-avatar" [style.background]="'linear-gradient(135deg, ' + child.photo + ', ' + child.photo + '99)'">
+                        <span class="avatar-initials">{{ getInitials(child.firstName, child.lastName) }}</span>
+                        <div class="avatar-ring"></div>
+                    </div>
+                    <div class="child-info">
+                        <h3 class="child-name">{{ child.name }}</h3>
+                        <span class="child-class">
+                            <span class="material-icons">school</span>
+                            {{ child.className }}
+                        </span>
+                    </div>
+                    <div class="card-status">
+                        <span class="status-dot" [class.active]="selectedChild?.id === child.id"></span>
+                        <span class="status-text">{{ selectedChild?.id === child.id ? 'Sélectionné' : 'Cliquer pour voir' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Children Message -->
+        <div class="no-children" *ngIf="children.length === 0">
+            <div class="empty-state">
+                <span class="material-icons">family_restroom</span>
+                <h3>Aucun enfant enregistré</h3>
+                <p>Contactez l'administration pour associer vos enfants à votre compte.</p>
+            </div>
+        </div>
+
+        <!-- Child Overview with Stats -->
         <div *ngIf="selectedChild" class="child-overview">
+
             <!-- Stats Cards -->
             <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="material-icons stat-icon success">school</span>
-                    <div>
+                <div class="stat-card" style="--delay: 0.1s">
+                    <div class="stat-icon-wrapper success">
+                        <span class="material-icons">school</span>
+                    </div>
+                    <div class="stat-content">
                         <p class="stat-label">Moyenne Générale</p>
                         <p class="stat-value">{{ selectedChild.stats.averageGrade }}/20</p>
+                        <div class="stat-bar">
+                            <div class="stat-progress" [style.width]="(selectedChild.stats.averageGrade / 20 * 100) + '%'"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <span class="material-icons stat-icon info">event_available</span>
-                    <div>
+                <div class="stat-card" style="--delay: 0.2s">
+                    <div class="stat-icon-wrapper info">
+                        <span class="material-icons">event_available</span>
+                    </div>
+                    <div class="stat-content">
                         <p class="stat-label">Taux de Présence</p>
                         <p class="stat-value">{{ selectedChild.stats.attendanceRate }}%</p>
+                        <div class="stat-bar">
+                            <div class="stat-progress" [style.width]="selectedChild.stats.attendanceRate + '%'"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <span
-                        [class]="'material-icons stat-icon ' + (selectedChild.stats.pendingPayments > 0 ? 'warning' : 'success')">payment</span>
-                    <div>
-                        <p class="stat-label">Paiements en attente</p>
-                        <p class="stat-value">{{ selectedChild.stats.pendingPayments }}</p>
+                <div class="stat-card" [style.--delay]="0.3" [class.payment-alert]="selectedChild.stats.payment.reste > 0" [class.payment-paid]="selectedChild.stats.payment.reste === 0">
+                    <div class="stat-icon-wrapper" [class.warning]="selectedChild.stats.payment.reste > 0" [class.success]="selectedChild.stats.payment.reste === 0">
+                        <span class="material-icons">account_balance_wallet</span>
+                    </div>
+                    <div class="stat-content">
+                        <p class="stat-label">
+                            <span *ngIf="selectedChild.stats.payment.reste > 0">Reste à payer</span>
+                            <span *ngIf="selectedChild.stats.payment.reste === 0">Scolarités à jour</span>
+                        </p>
+                        <p class="stat-value" [class.debt-value]="selectedChild.stats.payment.reste > 0" [class.paid-value]="selectedChild.stats.payment.reste === 0">
+                            {{ selectedChild.stats.payment.reste | number }} F
+                        </p>
+                        <div class="payment-details" *ngIf="selectedChild.stats.payment.reste > 0">
+                            <div class="payment-bar">
+                                <div class="payment-progress" [style.width]="(selectedChild.stats.payment.montantPaye / selectedChild.stats.payment.montantTotal * 100) + '%'"></div>
+                            </div>
+                            <p class="payment-info">
+                                Payé: <strong>{{ selectedChild.stats.payment.montantPaye | number }} F</strong> 
+                                / {{ selectedChild.stats.payment.montantTotal | number }} F
+                            </p>
+                        </div>
+                        <div class="payment-details-paid" *ngIf="selectedChild.stats.payment.reste === 0">
+                            <div class="payment-bar paid-bar">
+                                <div class="payment-progress" [style.width]="(selectedChild.stats.payment.montantPaye / selectedChild.stats.payment.montantTotal * 100) + '%'"></div>
+                            </div>
+                            <p class="payment-info-paid">
+                                Payé: <strong>{{ selectedChild.stats.payment.montantPaye | number }} F</strong> 
+                                / {{ selectedChild.stats.payment.montantTotal | number }} F
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -56,7 +232,7 @@
             <!-- Content Grid -->
             <div class="content-grid">
                 <!-- Recent Grades -->
-                <div class="card">
+                <div class="card" style="--delay: 0.4s">
                     <div class="card-header">
                         <h2>
                             <span class="material-icons">grade</span>
@@ -64,18 +240,25 @@
                         </h2>
                     </div>
                     <div class="card-body">
-                        <div *ngFor="let grade of selectedChild.recentGrades" class="grade-item">
-                            <div>
+                        <div *ngFor="let grade of selectedChild.recentGrades; let i = index" class="grade-item" [style.animation-delay]="(i * 0.1) + 's'">
+                            <div class="grade-info">
                                 <p class="grade-subject">{{ grade.subject }}</p>
                                 <p class="grade-date">{{ grade.date | date: 'dd/MM/yyyy' }}</p>
                             </div>
-                            <span class="grade-value">{{ grade.value }}/20</span>
+                            <div class="grade-value-wrapper">
+                                <span class="grade-value">{{ grade.value }}</span>
+                                <span class="grade-max">/20</span>
+                            </div>
                         </div>
+                        <p *ngIf="selectedChild.recentGrades.length === 0" class="empty-message">
+                            <span class="material-icons">info</span>
+                            Aucune note enregistrée
+                        </p>
                     </div>
                 </div>
 
                 <!-- Recent Absences -->
-                <div class="card">
+                <div class="card" style="--delay: 0.5s">
                     <div class="card-header">
                         <h2>
                             <span class="material-icons">event_busy</span>
@@ -83,23 +266,24 @@
                         </h2>
                     </div>
                     <div class="card-body">
-                        <div *ngFor="let absence of selectedChild.recentAbsences" class="absence-item">
-                            <div>
+                        <div *ngFor="let absence of selectedChild.recentAbsences; let i = index" class="absence-item" [style.animation-delay]="(i * 0.1) + 's'">
+                            <div class="absence-info">
                                 <p class="absence-date">{{ absence.date | date: 'dd/MM/yyyy' }}</p>
                                 <p class="absence-reason">{{ absence.reason }}</p>
                             </div>
-                            <span [class]="'badge badge-' + (absence.justified ? 'success' : 'warning')">
+                            <span class="badge" [class.badge-success]="absence.justified" [class.badge-warning]="!absence.justified">
                                 {{ absence.justified ? 'Justifiée' : 'Non justifiée' }}
                             </span>
                         </div>
-                        <p *ngIf="selectedChild.recentAbsences.length === 0" class="empty-message">
-                            Aucune absence récente
+                        <p *ngIf="selectedChild.recentAbsences.length === 0" class="empty-message success">
+                            <span class="material-icons">check_circle</span>
+                            Aucune absence récente - Excellent !
                         </p>
                     </div>
                 </div>
 
                 <!-- Calendar -->
-                <div class="card">
+                <div class="card" style="--delay: 0.6s">
                     <div class="card-header">
                         <h2>
                             <span class="material-icons">calendar_today</span>
@@ -107,25 +291,23 @@
                         </h2>
                     </div>
                     <div class="card-body">
+                        <div class="schedule-preview">
+                            <div class="schedule-item">
+                                <span class="schedule-time">08:00</span>
+                                <span class="schedule-matiere">Mathématiques</span>
+                            </div>
+                            <div class="schedule-item">
+                                <span class="schedule-time">09:00</span>
+                                <span class="schedule-matiere">Français</span>
+                            </div>
+                            <div class="schedule-item">
+                                <span class="schedule-time">10:00</span>
+                                <span class="schedule-matiere">Anglais</span>
+                            </div>
+                        </div>
                         <p class="info-message">
                             <span class="material-icons">info</span>
-                            L'emploi du temps sera disponible prochainement
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Messages -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>
-                            <span class="material-icons">mail</span>
-                            Messages
-                        </h2>
-                    </div>
-                    <div class="card-body">
-                        <p class="info-message">
-                            <span class="material-icons">inbox</span>
-                            Aucun nouveau message
+                            Voir l'emploi du temps complet
                         </p>
                     </div>
                 </div>

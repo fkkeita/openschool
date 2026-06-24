@@ -105,6 +105,7 @@ export class ClassesComponent implements OnInit {
         const noms = this.schoolData.classesPourAnnee(annee.nom);
         noms.forEach(nom => {
           if (!this.classesMap.has(nom)) {
+            const elevesReels = this.schoolData.elevesPourClasse(nom);
             this.classesMap.set(nom, {
               nom,
               annee: annee.nom,
@@ -115,21 +116,15 @@ export class ClassesComponent implements OnInit {
                 { nom: 'Tableau', quantite: 1 },
                 { nom: 'Poubelle', quantite: 1 }
               ],
-              eleves: this.genererElevesFictifs(nom)
+              eleves: elevesReels.map(e => ({ id: e.id, prenom: e.prenom, nom: e.nom }))
             });
+          } else {
+            const elevesReels = this.schoolData.elevesPourClasse(nom);
+            this.classesMap.get(nom)!.eleves = elevesReels.map(e => ({ id: e.id, prenom: e.prenom, nom: e.nom }));
           }
         });
       });
     });
-  }
-
-  private genererElevesFictifs(classe: string): Eleve[] {
-    const nb = Math.floor(Math.random() * 25) + 5;
-    const eleves: Eleve[] = [];
-    for (let i = 1; i <= nb; i++) {
-      eleves.push({ id: Date.now() + i, prenom: `Élève${i}`, nom: classe });
-    }
-    return eleves;
   }
 
   // ═══════════════════════════════════════════════════════════
